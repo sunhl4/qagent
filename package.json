@@ -3,6 +3,6 @@
   "private": true,
   "type": "module",
   "version": "0.0.0",
-  "description": "QCCD vibe agent skeleton — fill slots, do not invent a loop",
+  "description": "Qagent contract runtime — fill slots, do not invent a loop",
   "workspaces": ["packages/*"]
 }

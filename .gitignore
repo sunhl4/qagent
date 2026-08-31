@@ -1,4 +1,5 @@
 .qagent/
+.qvibe/
 .dsh-home/
 .dsh-runtime/
 node_modules/

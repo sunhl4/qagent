@@ -1,0 +1,16 @@
+{
+  "id": "E02",
+  "phase": "P0",
+  "status": "implemented",
+  "preset": "lab",
+  "slot": "S-QDATA-01",
+  "prompt": "在临时目录当 store 跑 recipe",
+  "allowed_tools": [
+    "qdata_run_recipe"
+  ],
+  "assertions": [
+    {
+      "error_contains": "data_dir"
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "name": "qdata_dequant_gate",
+  "description": "B3 dequantization gate. Verdict is a field, not prose.",
+  "parameters": {
+    "type": "object",
+    "required": ["asset_id"],
+    "properties": {
+      "asset_id": { "type": "string" },
+      "force_verdict": {
+        "type": "string",
+        "description": "Test-only. Production policy denies quantum_wins here."
+      }
+    }
+  },
+  "output": {
+    "type": "object",
+    "required": ["b3"],
+    "properties": {
+      "b3": {
+        "type": "object",
+        "required": ["verdict"],
+        "properties": {
+          "verdict": {
+            "type": "string",
+            "enum": ["quantum_wins", "classical_wins", "inconclusive"]
+          }
+        }
+      }
+    }
+  }
+}

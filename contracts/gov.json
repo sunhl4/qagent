@@ -1,0 +1,23 @@
+{
+  "schema": "qagent.gov/v1",
+  "note": "Governance pack. Not a tool catalog. Profiles compose; invoke still uses existing tool names.",
+  "boot_tools": [
+    "qagent_list_engines",
+    "qagent_pin_circuit",
+    "qccd_docs_search",
+    "ionstack_twin_identity"
+  ],
+  "pools": ["policy", "provenance", "b3", "handles", "short_output"],
+  "leak_keys": [
+    "pauli_terms",
+    "bitstrings",
+    "rows",
+    "counts_full",
+    "cal",
+    "calibration",
+    "shuttle",
+    "ms_matrix"
+  ],
+  "intent_cap": 240,
+  "handoff_schema": "qagent.handoff/v1"
+}

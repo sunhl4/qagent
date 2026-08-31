@@ -1,0 +1,146 @@
+{
+  "version": "1.0.0",
+  "note": "Fill surface is the Python Protocol. Do not import qdata / qchem / ionstack / qiskit / cirq / pennylane. Wrap REST/CLI only.",
+  "handles": ["circuit_id", "asset_id", "twin_id"],
+  "twin_issuer": "ionstack",
+  "forbidden_imports": [
+    "qdata",
+    "ionstack",
+    "qchem",
+    "qcchem",
+    "qiskit",
+    "cirq",
+    "pennylane"
+  ],
+  "native": ["catalog", "pin"],
+  "ports": [
+    {
+      "id": "catalog",
+      "engine": null,
+      "status": "native",
+      "note": "Qagent-owned. Reads contracts/engines/catalog.json only.",
+      "methods": [
+        {
+          "name": "list_engines",
+          "tool": "qagent_list_engines",
+          "slot": "S-ENG-01"
+        }
+      ]
+    },
+    {
+      "id": "pin",
+      "engine": null,
+      "status": "native",
+      "note": "Qagent-owned handle table. No package home.",
+      "methods": [
+        {
+          "name": "pin_circuit",
+          "tool": "qagent_pin_circuit",
+          "slot": "S-ENG-02"
+        }
+      ]
+    },
+    {
+      "id": "qdata",
+      "engine": "qdata",
+      "status": "wired",
+      "methods": [
+        {"name": "list_providers", "tool": "qdata_list_providers", "slot": "S-QDATA-07"},
+        {"name": "run_recipe", "tool": "qdata_run_recipe", "slot": "S-QDATA-04"},
+        {"name": "submit_job", "tool": "qdata_submit_job", "slot": "S-QDATA-08"},
+        {"name": "get_job", "tool": "qdata_get_job", "slot": "S-QDATA-03"},
+        {"name": "list_assets", "tool": "qdata_list_assets", "slot": "S-QDATA-08"},
+        {"name": "get_run_record", "tool": "qdata_get_run_record", "slot": "S-QDATA-05"},
+        {"name": "dequant_gate", "tool": "qdata_dequant_gate", "slot": "S-QDATA-06"},
+        {"name": "sandbox_exec", "tool": "qdata_sandbox_exec", "slot": "S-SAND-01"}
+      ]
+    },
+    {
+      "id": "qchem",
+      "engine": "qchem",
+      "status": "wired",
+      "methods": [
+        {"name": "run", "tool": "qchem_run", "slot": "S-QCHEM-01"},
+        {"name": "export_parity", "tool": "qchem_export_parity", "slot": "S-QCHEM-02"}
+      ]
+    },
+    {
+      "id": "ionstack",
+      "engine": "ionstack",
+      "status": "wired",
+      "note": "Only port allowed to return twin_id.",
+      "methods": [
+        {"name": "twin_identity", "tool": "ionstack_twin_identity", "slot": "S-TWIN-01"},
+        {"name": "twin_run", "tool": "ionstack_twin_run", "slot": "S-TWIN-02"},
+        {"name": "compile_estimate", "tool": "ionstack_compile_estimate", "slot": "S-TWIN-03"}
+      ]
+    },
+    {
+      "id": "route",
+      "engine": "route",
+      "status": "wired",
+      "swaps_tool": "ionstack_compile_estimate",
+      "note": "Same tool name and schema. Swap backend later. Do not register a second tool.",
+      "methods": [
+        {
+          "name": "compile_estimate",
+          "tool": "ionstack_compile_estimate",
+          "slot": "S-ROUTE-01"
+        }
+      ]
+    },
+    {
+      "id": "qiskit",
+      "engine": "qiskit",
+      "status": "wired",
+      "note": "Wrap ionstack.interop when filled. Aer / IBM must not emit twin_id.",
+      "methods": [
+        {"name": "import_circuit", "tool": "qiskit_import_circuit", "slot": "S-QISKIT-01"},
+        {"name": "export_circuit", "tool": "qiskit_export_circuit", "slot": "S-QISKIT-02"},
+        {"name": "transpile", "tool": "qiskit_transpile", "slot": "S-QISKIT-03"},
+        {"name": "aer_run", "tool": "qiskit_aer_run", "slot": "S-QISKIT-04"},
+        {"name": "ibm_run", "tool": "qiskit_ibm_run", "slot": "S-QISKIT-05"}
+      ]
+    },
+    {
+      "id": "cirq",
+      "engine": "cirq",
+      "status": "wired",
+      "note": "Wired interop. Simulator must not emit twin_id. provenance=cirq, not qccd-twin.",
+      "methods": [
+        {"name": "import_circuit", "tool": "cirq_import_circuit", "slot": "S-CIRQ-01"},
+        {"name": "export_circuit", "tool": "cirq_export_circuit", "slot": "S-CIRQ-02"},
+        {"name": "simulator_run", "tool": "cirq_simulator_run", "slot": "S-CIRQ-03"}
+      ]
+    },
+    {
+      "id": "pennylane",
+      "engine": "pennylane",
+      "status": "reserved",
+      "note": "Reserved interop. Not on PortRegistry. Simulator must not emit twin_id. provenance=pennylane, not qccd-twin.",
+      "methods": [
+        {"name": "import_circuit", "tool": "pennylane_import_circuit", "slot": "S-PL-01"},
+        {"name": "export_circuit", "tool": "pennylane_export_circuit", "slot": "S-PL-02"},
+        {"name": "simulator_run", "tool": "pennylane_simulator_run", "slot": "S-PL-03"}
+      ]
+    },
+    {
+      "id": "docs",
+      "engine": null,
+      "status": "wired",
+      "methods": [
+        {"name": "search", "tool": "qccd_docs_search", "slot": "S-DOCS-01"}
+      ]
+    },
+    {
+      "id": "codex",
+      "engine": null,
+      "status": "wired",
+      "note": "Runtime seam, not a science engine. Never sees twin_run.",
+      "methods": [
+        {"name": "oneshot", "tool": "subagent_codex", "slot": "S-CODEX-01"},
+        {"name": "attended", "tool": "subagent_codex_attended", "slot": "S-CODEX-02"}
+      ]
+    }
+  ]
+}

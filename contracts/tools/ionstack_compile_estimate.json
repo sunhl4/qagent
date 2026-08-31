@@ -1,0 +1,21 @@
+{
+  "name": "ionstack_compile_estimate",
+  "description": "Logical circuit to MapQccd/schedule summary. Not a twin signoff.",
+  "parameters": {
+    "type": "object",
+    "required": ["circuit"],
+    "properties": {
+      "circuit": { "type": "object" }
+    }
+  },
+  "output": {
+    "type": "object",
+    "required": ["makespan_ns"],
+    "properties": {
+      "makespan_ns": { "type": "number" },
+      "summary": { "type": "object" }
+    },
+    "not": { "required": ["ok"] }
+  },
+  "forbidden_output_keys": ["ok", "twin_id", "signoff"]
+}

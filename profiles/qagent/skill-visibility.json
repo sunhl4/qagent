@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "source": "skills",
+  "note": "R-01b. Host skill-filesystem lists $DSH_HOME/skills after start_runtime skills sync. Algo must not see Twin.",
+  "skills": [
+    {
+      "id": "vibe-across-engines",
+      "visible": ["lab", "sign"]
+    },
+    {
+      "id": "h2-uccsd",
+      "visible": []
+    },
+    {
+      "id": "twin-run",
+      "visible": ["lab", "sign"]
+    },
+    {
+      "id": "read-b3",
+      "visible": ["lab", "sign"]
+    },
+    {
+      "id": "run-frozen-recipe",
+      "visible": ["lab", "sign"]
+    },
+    {
+      "id": "write-provider",
+      "visible": ["algo"]
+    },
+    {
+      "id": "qchem-scenario",
+      "visible": ["algo"]
+    }
+  ]
+}

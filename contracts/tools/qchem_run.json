@@ -1,0 +1,32 @@
+{
+  "name": "qchem_run",
+  "description": "Company qchem-run. Pass the scenario that matches this request. Returns asset_id. Some scenarios also pin circuit_id. Do not TwinRun.",
+  "parameters": {
+    "type": "object",
+    "required": [
+      "scenario"
+    ],
+    "properties": {
+      "scenario": {
+        "type": "string"
+      },
+      "overrides": {
+        "type": "object"
+      }
+    }
+  },
+  "output": {
+    "type": "object",
+    "required": [
+      "asset_id"
+    ],
+    "properties": {
+      "asset_id": {
+        "type": "string"
+      },
+      "summary": {
+        "type": "object"
+      }
+    }
+  }
+}

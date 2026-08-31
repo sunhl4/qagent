@@ -1,0 +1,16 @@
+{
+  "id": "E04",
+  "phase": "P0",
+  "status": "implemented",
+  "preset": "lab",
+  "slot": "S-QDATA-02",
+  "prompt": "跑不存在的 recipe foo_bar",
+  "allowed_tools": [
+    "qdata_run_recipe"
+  ],
+  "assertions": [
+    {
+      "decision": "deny"
+    }
+  ]
+}

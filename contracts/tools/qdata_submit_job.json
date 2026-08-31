@@ -1,0 +1,38 @@
+{
+  "name": "qdata_submit_job",
+  "description": "Submit sample-to-solver | shadow-predict | surrogate.",
+  "parameters": {
+    "type": "object",
+    "required": [
+      "kind",
+      "payload"
+    ],
+    "properties": {
+      "kind": {
+        "type": "string",
+        "enum": [
+          "sample-to-solver",
+          "shadow-predict",
+          "surrogate"
+        ]
+      },
+      "payload": {
+        "type": "object"
+      },
+      "shots": {
+        "type": "integer"
+      }
+    }
+  },
+  "output": {
+    "type": "object",
+    "required": [
+      "job_id"
+    ],
+    "properties": {
+      "job_id": {
+        "type": "string"
+      }
+    }
+  }
+}

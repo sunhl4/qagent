@@ -1,0 +1,28 @@
+{
+  "name": "ionstack_twin_identity",
+  "description": "GET /v1/twin/identity. Machine identity only; never emits twin_id.",
+  "parameters": {
+    "type": "object",
+    "properties": {}
+  },
+  "output": {
+    "type": "object",
+    "required": [
+      "preset",
+      "live"
+    ],
+    "properties": {
+      "preset": {
+        "type": "string"
+      },
+      "n_qubits": {
+        "type": "integer"
+      },
+      "live": {
+        "type": "boolean"
+      }
+    },
+    "additionalProperties": false
+  },
+  "forbidden_output_keys": ["twin_id"]
+}

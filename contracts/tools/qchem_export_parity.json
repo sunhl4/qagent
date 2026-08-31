@@ -1,0 +1,26 @@
+{
+  "name": "qchem_export_parity",
+  "description": "Export parity table from a qchem run.",
+  "parameters": {
+    "type": "object",
+    "required": [
+      "asset_id"
+    ],
+    "properties": {
+      "asset_id": {
+        "type": "string"
+      }
+    }
+  },
+  "output": {
+    "type": "object",
+    "required": [
+      "table_id"
+    ],
+    "properties": {
+      "table_id": {
+        "type": "string"
+      }
+    }
+  }
+}

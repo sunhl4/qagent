@@ -1,0 +1,25 @@
+{
+  "id": "E31",
+  "phase": "P2",
+  "status": "implemented",
+  "preset": "lab",
+  "slot": "S-GOV-05",
+  "prompt": "handoff only three handles",
+  "invoke_tool": "qagent_list_engines",
+  "invoke_args": {},
+  "allowed_tools": ["qagent_list_engines"],
+  "assertions": [
+    {
+      "handoff": {
+        "handles": { "circuit_id": "circ_e31" },
+        "ok": true
+      }
+    },
+    {
+      "handoff": {
+        "handles": { "circuit_id": "circ_e31", "foo": "x" },
+        "ok": false
+      }
+    }
+  ]
+}

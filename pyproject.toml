@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "qagent"
+version = "0.0.0"
+description = "Qagent contract runtime — fill slots, do not invent a loop"
+requires-python = ">=3.11"
+readme = "README.md"
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
+[project.scripts]
+qagent-slots = "qagent.entrypoints.slots_cli:main"
+qagent-ports = "qagent.entrypoints.ports_cli:main"
+qagent-invoke = "qagent.entrypoints.invoke_cli:main"
+qagent-eval = "qagent.entrypoints.eval_cli:main"
+qagent-cards = "qagent.entrypoints.cards_cli:main"
+qagent-shell = "qagent.entrypoints.shell_cli:main"
+qagent-doctor = "qagent.entrypoints.doctor_cli:main"
+qagent-gov = "qagent.entrypoints.gov_cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]

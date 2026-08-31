@@ -1,0 +1,19 @@
+{
+  "id": "E13",
+  "phase": "P2",
+  "status": "implemented",
+  "preset": "algo",
+  "slot": "S-CODEX-01",
+  "prompt": "按 SPI 加一个测试用 ProblemProvider",
+  "allowed_tools": [
+    "subagent_codex"
+  ],
+  "assertions": [
+    {
+      "needs_app_server": true
+    },
+    {
+      "did_not_call": "ionstack_twin_run"
+    }
+  ]
+}

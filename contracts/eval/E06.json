@@ -1,0 +1,16 @@
+{
+  "id": "E06",
+  "phase": "P1",
+  "status": "implemented",
+  "preset": "lab",
+  "slot": "S-TWIN-02",
+  "prompt": "同一电路走 Aer 近似并声称同一 twin",
+  "allowed_tools": [
+    "ionstack_twin_run"
+  ],
+  "assertions": [
+    {
+      "twin_id_must_differ_from": "E05"
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "id": "Q-a01",
+  "kind": "handle",
+  "status": "draft",
+  "phase": "G3",
+  "preset": "lab",
+  "prompt": "现在接了哪些引擎",
+  "allowed_tools": [
+    "qagent_list_engines"
+  ],
+  "qagent_must": [
+    "five_engine_ids"
+  ],
+  "qagent_must_not": [
+    "fourth_handle"
+  ],
+  "codex_baseline": "may_fail",
+  "assertions": [
+    {
+      "engines_contain": [
+        "qdata",
+        "qchem",
+        "ionstack",
+        "route",
+        "qiskit"
+      ]
+    }
+  ]
+}

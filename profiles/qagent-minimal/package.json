@@ -1,0 +1,20 @@
+{
+  "name": "@qccd/qagent-minimal-profile",
+  "private": true,
+  "version": "0.0.0",
+  "description": "dsh profile qagent-minimal — rails only, no TwinRun plugin",
+  "dsh": {
+    "profile": {
+      "bundles": [
+        "@deepseek-ai/dsh-base",
+        "@deepseek-ai/dsh-web-app"
+      ]
+    }
+  },
+  "dependencies": {
+    "@qccd/qagent-brand": "file:../../packages/qagent-brand",
+    "@qccd/qagent-docs": "file:../../packages/qagent-docs",
+    "@qccd/qagent-engines": "file:../../packages/qagent-engines",
+    "@qccd/qagent-policy": "file:../../packages/qagent-policy"
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "qagent.handoff/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "source_preset", "target_preset", "handles", "intent", "unresolved"],
+  "properties": {
+    "schema": { "const": "qagent.handoff/v1" },
+    "handoff_id": { "type": "string" },
+    "source_preset": { "enum": ["boot", "lab", "algo", "sign"] },
+    "target_preset": { "enum": ["boot", "lab", "algo", "sign"] },
+    "handles": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "circuit_id": { "type": "string" },
+        "asset_id": { "type": "string" },
+        "twin_id": { "type": "string" }
+      }
+    },
+    "intent": { "type": "string", "maxLength": 240 },
+    "unresolved": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "source_session": { "type": "string", "description": "id only; never a transcript" }
+  }
+}

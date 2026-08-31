@@ -1,0 +1,64 @@
+# Qagent profile overlay. Plugin names are npm specifiers, resolved from
+# this profile's node_modules (see scripts/bootstrap_wp0.sh).
+# New rows must use `insert`. Id-targeted rows only patch an existing bundle entry.
+# tool-cordis is not in the shipped tree; do not insert it.
+# tool-web fetch stays off. Official Codex provider is loaded; product tool stays
+# disabled on shipped presets. Policy hides Codex on lab.
+
+- insert:
+    - id: qagent-policy
+      name: "@qccd/qagent-policy"
+
+    - id: qagent-eln
+      name: "@qccd/qagent-eln"
+
+    - id: qagent-engines
+      name: "@qccd/qagent-engines"
+
+    - id: qagent-qiskit
+      name: "@qccd/qagent-qiskit"
+
+    - id: qagent-route
+      name: "@qccd/qagent-route"
+
+    - id: qagent-qdata
+      name: "@qccd/qagent-qdata"
+
+    - id: qagent-twin
+      name: "@qccd/qagent-twin"
+
+    - id: qagent-qchem
+      name: "@qccd/qagent-qchem"
+
+    - id: qagent-docs
+      name: "@qccd/qagent-docs"
+
+    - id: qagent-cards
+      name: "@qccd/qagent-cards"
+
+    - id: qagent-brand
+      name: "@qccd/qagent-brand"
+
+- id: ui-brand-official
+  disabled: true
+
+- id: subagent-codex
+  name: "@deepseek-ai/dsh-subagent-codex"
+  config:
+    providerName: codex
+    permissionMode: never
+
+- id: tool-web
+  name: "@deepseek-ai/dsh-tool-web"
+  config:
+    fetch: false
+    searchTimeoutMs: 60000
+
+# Stock presets remount dsh-persona and break session.create on this profile.
+# Empty `qagent` preset lives in $DSH_HOME/.agent-presets (synced by start_runtime.sh).
+# Skills: do not remount skill-filesystem here. start_runtime.sh skills sync
+# writes $DSH_HOME/skills from skill-visibility.json (algo never gets twin-run).
+# Do not register TwinRun as a Codex MCP.
+- id: agent-presets
+  config:
+    default: qagent

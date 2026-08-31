@@ -1,0 +1,19 @@
+{
+  "name": "qdata_list_providers",
+  "description": "List problem providers. Short names only.",
+  "parameters": {
+    "type": "object",
+    "properties": {}
+  },
+  "output": {
+    "type": "object",
+    "required": [
+      "providers"
+    ],
+    "properties": {
+      "providers": {
+        "type": "array"
+      }
+    }
+  }
+}

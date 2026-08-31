@@ -1,0 +1,46 @@
+{
+  "name": "qagent_list_engines",
+  "description": "List registered engine packs. Omit preset to stay read-only. Passing preset switches the session.",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "preset": { "type": "string", "enum": ["boot", "lab", "algo", "sign"] }
+    }
+  },
+  "output": {
+    "type": "object",
+    "required": ["engines"],
+    "properties": {
+      "active_preset": { "type": "string", "enum": ["boot", "lab", "algo", "sign"] },
+      "switched": { "type": "boolean" },
+      "previous_preset": { "type": "string" },
+      "hint": { "type": "string" },
+      "engines": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": ["id", "kind", "status"],
+          "properties": {
+            "id": { "type": "string" },
+            "kind": { "type": "string" },
+            "status": { "type": "string" },
+            "tools": { "type": "array" }
+          }
+        }
+      },
+      "reserved_engines": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": ["id", "kind", "status"],
+          "properties": {
+            "id": { "type": "string" },
+            "kind": { "type": "string" },
+            "status": { "type": "string" },
+            "tools": { "type": "array" }
+          }
+        }
+      }
+    }
+  }
+}

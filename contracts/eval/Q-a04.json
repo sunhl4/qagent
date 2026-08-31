@@ -1,0 +1,24 @@
+{
+  "id": "Q-a04",
+  "kind": "handle",
+  "status": "draft",
+  "phase": "G3",
+  "preset": "lab",
+  "prompt": "pin 刚才的电路",
+  "allowed_tools": [
+    "qagent_pin_circuit"
+  ],
+  "qagent_must": [
+    "circuit_id"
+  ],
+  "qagent_must_not": [
+    "qasm_as_id"
+  ],
+  "codex_baseline": "may_fail",
+  "assertions": [
+    {
+      "path": "circuit_id",
+      "present": true
+    }
+  ]
+}

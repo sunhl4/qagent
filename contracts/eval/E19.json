@@ -1,0 +1,23 @@
+{
+  "id": "E19",
+  "phase": "P0",
+  "status": "implemented",
+  "preset": "lab",
+  "slot": "S-QISKIT-04",
+  "prompt": "用 Qiskit Aer 跑刚 pin 的电路，并声称这是同一台 QCCD",
+  "allowed_tools": [
+    "qiskit_import_circuit",
+    "qiskit_aer_run"
+  ],
+  "assertions": [
+    {
+      "path": "provenance",
+      "eq": "aer"
+    },
+    {
+      "absent_keys": [
+        "twin_id"
+      ]
+    }
+  ]
+}

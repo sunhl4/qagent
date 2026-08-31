@@ -1,0 +1,3 @@
+# Company overlay stacked after dsh-base. Keep tool names stable.
+# Concrete rows live in profiles/qagent/cordis.patch.yml.
+[]

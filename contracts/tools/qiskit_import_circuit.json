@@ -1,0 +1,17 @@
+{
+  "name": "qiskit_import_circuit",
+  "description": "Qiskit QuantumCircuit / QASM → pin. Wraps ionstack.interop.qiskit_import.",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "qasm3": { "type": "string" },
+      "qasm2": { "type": "string" }
+    }
+  },
+  "output": {
+    "type": "object",
+    "required": ["circuit_id"],
+    "properties": { "circuit_id": { "type": "string" }, "n_qubits": { "type": "integer" } }
+  },
+  "forbidden_output_keys": ["twin_id"]
+}

@@ -1,0 +1,25 @@
+{
+  "id": "Q-a09",
+  "kind": "handle",
+  "status": "draft",
+  "phase": "G3",
+  "preset": "lab",
+  "prompt": "minimal_vqe（有 qchem）",
+  "allowed_tools": [
+    "qchem_run"
+  ],
+  "qagent_must": [
+    "asset_id_or_no_bin"
+  ],
+  "qagent_must_not": [
+    "fake_twin"
+  ],
+  "codex_baseline": "may_fail",
+  "assertions": [
+    {
+      "absent_keys": [
+        "twin_id"
+      ]
+    }
+  ]
+}

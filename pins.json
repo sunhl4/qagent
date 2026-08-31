@@ -1,0 +1,24 @@
+{
+  "qagent": "0.0.0",
+  "deepseek_harness": {
+    "npm": "@deepseek-ai/dsh",
+    "version": "0.1.0-rc.8",
+    "local_checkout": "/Users/shl/nvidia/harness-review/deepseek-harness",
+    "fill_slot": "S-PIN-01"
+  },
+  "openai_codex": {
+    "npm": "@openai/codex",
+    "version": "0.147.0",
+    "reason": "dsh-subagent-codex production pin",
+    "fill_slot": "S-PIN-02"
+  },
+  "dsh_subagent_codex": {
+    "npm": "@deepseek-ai/dsh-subagent-codex",
+    "version": "0.1.0-rc.8"
+  },
+  "engines": {
+    "qdata": "/Users/shl/nvidia/qdata",
+    "qchem_stack": "/Users/shl/nvidia/qcchem-qml-md",
+    "ionstack": "/Users/shl/Q-software"
+  }
+}

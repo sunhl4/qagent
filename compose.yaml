@@ -1,0 +1,18 @@
+services:
+  qagent-shell:
+    build: .
+    ports:
+      - "3080:3080"
+    environment:
+      QAGENT_SHELL_TOKEN: ${QAGENT_SHELL_TOKEN:-}
+    volumes:
+      - ./.qagent:/app/.qagent
+    command:
+      - python
+      - -m
+      - qagent.entrypoints.shell_cli
+      - --serve
+      - --host
+      - 0.0.0.0
+      - --port
+      - "3080"

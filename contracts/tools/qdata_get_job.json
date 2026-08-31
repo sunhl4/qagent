@@ -1,0 +1,37 @@
+{
+  "name": "qdata_get_job",
+  "description": "Poll job. Never return bitstrings/rows.",
+  "parameters": {
+    "type": "object",
+    "required": [
+      "job_id"
+    ],
+    "properties": {
+      "job_id": {
+        "type": "string"
+      }
+    }
+  },
+  "output": {
+    "type": "object",
+    "required": [
+      "status"
+    ],
+    "properties": {
+      "status": {
+        "type": "string"
+      },
+      "summary": {
+        "type": "object"
+      },
+      "asset_id": {
+        "type": "string"
+      }
+    }
+  },
+  "forbidden_output_keys": [
+    "bitstrings",
+    "rows",
+    "result_full"
+  ]
+}

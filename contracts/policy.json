@@ -1,0 +1,155 @@
+{
+  "fail_closed": true,
+  "shots_ask_threshold": 4096,
+  "recipe_allowlist": [
+    "a1_closed_loop",
+    "a2_spin_shadow",
+    "a2_chem_pes",
+    "a3_sensitivity",
+    "qem_triad"
+  ],
+  "forbidden_tool_names": [
+    "cal_edit",
+    "shuttle_write",
+    "execute_twin_run",
+    "cordis_define",
+    "cordis_run",
+    "qiskit_ibm_run",
+    "pennylane_import_circuit",
+    "pennylane_export_circuit",
+    "pennylane_simulator_run"
+  ],
+  "rules": [
+    {
+      "id": "R-FORBIDDEN-NAME",
+      "tools": ["*"],
+      "presets": ["boot", "lab", "algo", "sign"],
+      "decision": "deny",
+      "when": { "tool_in_ref": "forbidden_tool_names" }
+    },
+    {
+      "id": "R-HIDDEN-PRESET",
+      "tools": ["*"],
+      "presets": ["boot", "lab", "algo", "sign"],
+      "decision": "deny",
+      "when": { "tool_hidden_in_preset": true }
+    },
+    {
+      "id": "R-RECIPE-UNKNOWN",
+      "tools": ["qdata_run_recipe"],
+      "presets": ["boot", "lab", "algo", "sign"],
+      "decision": "deny",
+      "when": { "arg_not_in": { "name": "recipe_allowlist" } }
+    },
+    {
+      "id": "R-SHOTS-ASK",
+      "tools": ["qdata_run_recipe", "ionstack_twin_run", "qdata_submit_job"],
+      "presets": ["lab", "sign"],
+      "decision": "ask",
+      "when": { "arg_gte": { "shots": "shots_ask_threshold" } }
+    },
+    {
+      "id": "R-TWIN-LAB-SIGN",
+      "tools": ["ionstack_twin_run"],
+      "presets": ["lab", "sign"],
+      "decision": "ask"
+    },
+    {
+      "id": "R-TWIN-ALGO",
+      "tools": ["ionstack_twin_run"],
+      "presets": ["algo", "boot"],
+      "decision": "deny"
+    },
+    {
+      "id": "R-CLAIM-WINS",
+      "tools": ["qdata_dequant_gate"],
+      "presets": ["lab", "sign"],
+      "decision": "deny",
+      "when": { "arg_eq": { "force_verdict": "quantum_wins" } }
+    },
+    {
+      "id": "R-AER-NO-TWIN",
+      "tools": ["qiskit_aer_run"],
+      "presets": ["boot", "lab", "algo", "sign"],
+      "decision": "deny",
+      "when": { "arg_eq": { "claim_twin_id": true } }
+    },
+    {
+      "id": "R-CIRQ-NO-TWIN",
+      "tools": ["cirq_simulator_run"],
+      "presets": ["boot", "lab", "algo", "sign"],
+      "decision": "deny",
+      "when": { "arg_eq": { "claim_twin_id": true } }
+    },
+    {
+      "id": "R-PENNYLANE-RESERVED",
+      "tools": [
+        "pennylane_import_circuit",
+        "pennylane_export_circuit",
+        "pennylane_simulator_run"
+      ],
+      "presets": ["boot", "lab", "algo", "sign"],
+      "decision": "deny"
+    },
+    {
+      "id": "R-PENNYLANE-NO-TWIN",
+      "tools": ["pennylane_simulator_run"],
+      "presets": ["boot", "lab", "algo", "sign"],
+      "decision": "deny",
+      "when": { "arg_eq": { "claim_twin_id": true } }
+    },
+    {
+      "id": "R-READONLY-ALLOW",
+      "tools": [
+        "qagent_list_engines",
+        "qdata_list_providers",
+        "qdata_list_assets",
+        "qdata_get_run_record",
+        "qdata_dequant_gate",
+        "qccd_docs_search",
+        "ionstack_twin_identity",
+        "ionstack_compile_estimate",
+        "qiskit_import_circuit",
+        "qiskit_export_circuit",
+        "qiskit_transpile",
+        "cirq_import_circuit",
+        "cirq_export_circuit"
+      ],
+      "presets": ["lab", "algo", "sign"],
+      "decision": "allow"
+    },
+    {
+      "id": "R-BOOT-RAILS",
+      "tools": [
+        "qagent_list_engines",
+        "qagent_pin_circuit",
+        "qccd_docs_search",
+        "ionstack_twin_identity"
+      ],
+      "presets": ["boot"],
+      "decision": "allow"
+    },
+    {
+      "id": "R-RECIPE-LAB",
+      "tools": [
+        "qdata_run_recipe",
+        "qdata_submit_job",
+        "qdata_get_job",
+        "qchem_run",
+        "qchem_export_parity",
+        "qdata_sandbox_exec",
+        "qagent_pin_circuit",
+        "qiskit_aer_run",
+        "cirq_simulator_run"
+      ],
+      "presets": ["lab"],
+      "decision": "allow"
+    },
+    {
+      "id": "R-CODEX-ALGO",
+      "tools": ["subagent_codex", "subagent_codex_attended"],
+      "presets": ["algo"],
+      "decision": "allow"
+    }
+  ]
+}

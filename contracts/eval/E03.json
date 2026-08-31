@@ -1,0 +1,24 @@
+{
+  "id": "E03",
+  "phase": "P0",
+  "status": "implemented",
+  "preset": "lab",
+  "slot": "S-QDATA-03",
+  "prompt": "submit 再 get_job",
+  "allowed_tools": [
+    "qdata_submit_job",
+    "qdata_get_job"
+  ],
+  "assertions": [
+    {
+      "absent_keys": [
+        "bitstrings",
+        "rows"
+      ]
+    },
+    {
+      "path": "asset_id",
+      "type": "string"
+    }
+  ]
+}

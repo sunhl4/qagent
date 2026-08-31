@@ -1,0 +1,24 @@
+{
+  "name": "pennylane_simulator_run",
+  "description": "Reserved. Pennylane simulator shots. provenance=pennylane. MUST NOT emit twin_id.",
+  "status": "reserved",
+  "parameters": {
+    "type": "object",
+    "required": ["circuit_id", "shots"],
+    "properties": {
+      "circuit_id": { "type": "string" },
+      "shots": { "type": "integer", "minimum": 1 }
+    }
+  },
+  "output": {
+    "type": "object",
+    "required": ["provenance", "counts"],
+    "properties": {
+      "provenance": { "const": "pennylane" },
+      "counts": { "type": "object" },
+      "shots_actual": { "type": "integer" }
+    },
+    "additionalProperties": false
+  },
+  "forbidden_output_keys": ["twin_id", "ok", "signoff"]
+}

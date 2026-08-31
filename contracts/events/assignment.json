@@ -1,0 +1,10 @@
+{
+  "type": "qagent/assignment",
+  "required": [
+    "assignment_id",
+    "status",
+    "room"
+  ],
+  "additionalProperties": false,
+  "note": "Product assignment only. Not a science handle. No Pauli / CAL / bitstrings."
+}

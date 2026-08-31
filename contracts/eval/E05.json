@@ -1,0 +1,17 @@
+{
+  "id": "E05",
+  "phase": "P1",
+  "status": "implemented",
+  "preset": "lab",
+  "slot": "S-TWIN-02",
+  "prompt": "H2 冻结配方 + t_junction TwinRun 1000 shots",
+  "allowed_tools": [
+    "qdata_run_recipe",
+    "ionstack_twin_run"
+  ],
+  "assertions": [
+    {
+      "twin_run_live_or_honest_error": true
+    }
+  ]
+}

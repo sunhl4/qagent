@@ -1,0 +1,113 @@
+{
+  "profile": "qagent",
+  "presets": {
+    "boot": {
+      "label": "最小对齐",
+      "visible_tools": [
+        "qagent_list_engines",
+        "qagent_pin_circuit",
+        "qccd_docs_search",
+        "ionstack_twin_identity"
+      ],
+      "hidden_tools": [
+        "ionstack_twin_run",
+        "qdata_run_recipe",
+        "qdata_submit_job",
+        "qdata_get_job",
+        "qdata_sandbox_exec",
+        "qchem_run",
+        "qchem_export_parity",
+        "qiskit_aer_run",
+        "qiskit_ibm_run",
+        "cirq_simulator_run",
+        "subagent_codex",
+        "subagent_codex_attended",
+        "cal_edit",
+        "shuttle_write",
+        "cordis_define",
+        "cordis_run"
+      ]
+    },
+    "lab": {
+      "label": "实验室 vibe",
+      "visible_tools": [
+        "qagent_list_engines",
+        "qagent_pin_circuit",
+        "qiskit_import_circuit",
+        "qiskit_export_circuit",
+        "qiskit_transpile",
+        "qiskit_aer_run",
+        "cirq_import_circuit",
+        "cirq_export_circuit",
+        "cirq_simulator_run",
+        "qdata_list_providers",
+        "qdata_run_recipe",
+        "qdata_submit_job",
+        "qdata_get_job",
+        "qdata_list_assets",
+        "qdata_get_run_record",
+        "qdata_dequant_gate",
+        "qccd_docs_search",
+        "ionstack_twin_identity",
+        "ionstack_compile_estimate",
+        "ionstack_twin_run",
+        "qdata_sandbox_exec",
+        "qchem_run",
+        "qchem_export_parity"
+      ],
+      "hidden_tools": [
+        "subagent_codex",
+        "subagent_codex_attended",
+        "cal_edit",
+        "shuttle_write",
+        "cordis_define",
+        "cordis_run",
+        "qiskit_ibm_run"
+      ]
+    },
+    "algo": {
+      "label": "写算法",
+      "visible_tools": [
+        "qagent_list_engines",
+        "qdata_list_providers",
+        "qccd_docs_search",
+        "subagent_codex",
+        "subagent_codex_attended"
+      ],
+      "hidden_tools": [
+        "ionstack_twin_run",
+        "qdata_run_recipe",
+        "qchem_run",
+        "qiskit_ibm_run",
+        "cirq_import_circuit",
+        "cirq_export_circuit",
+        "cirq_simulator_run",
+        "cordis_define",
+        "cordis_run"
+      ]
+    },
+    "sign": {
+      "label": "签收",
+      "visible_tools": [
+        "qagent_list_engines",
+        "ionstack_twin_identity",
+        "ionstack_twin_run",
+        "qdata_get_run_record",
+        "qdata_dequant_gate"
+      ],
+      "hidden_tools": [
+        "qdata_sandbox_exec",
+        "subagent_codex",
+        "subagent_codex_attended",
+        "qdata_run_recipe",
+        "qiskit_aer_run",
+        "qiskit_ibm_run",
+        "cirq_import_circuit",
+        "cirq_export_circuit",
+        "cirq_simulator_run",
+        "cordis_define",
+        "cordis_run"
+      ]
+    }
+  }
+}

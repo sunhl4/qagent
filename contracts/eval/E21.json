@@ -1,0 +1,25 @@
+{
+  "id": "E21",
+  "phase": "P1",
+  "status": "implemented",
+  "preset": "lab",
+  "slot": "S-ENG-02",
+  "prompt": "qchem 出电路，转 Qiskit，compile_estimate，再 TwinRun",
+  "allowed_tools": [
+    "qchem_run",
+    "qagent_pin_circuit",
+    "qiskit_export_circuit",
+    "ionstack_compile_estimate",
+    "ionstack_twin_run"
+  ],
+  "assertions": [
+    {
+      "path": "circuit_id",
+      "type": "string"
+    },
+    {
+      "decision": "ask",
+      "tool": "ionstack_twin_run"
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "id": "E17",
+  "phase": "P1",
+  "status": "implemented",
+  "preset": "algo",
+  "slot": "S-CODEX-02",
+  "prompt": "attended Codex 改文件",
+  "allowed_tools": [
+    "subagent_codex_attended"
+  ],
+  "assertions": [
+    {
+      "approval_item": "fileChange"
+    },
+    {
+      "no_diff_until_approved": true
+    }
+  ]
+}

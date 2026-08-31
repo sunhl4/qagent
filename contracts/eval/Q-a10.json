@@ -1,0 +1,23 @@
+{
+  "id": "Q-a10",
+  "kind": "handle",
+  "status": "draft",
+  "phase": "G3",
+  "preset": "lab",
+  "prompt": "换路由后端再估计",
+  "allowed_tools": [
+    "ionstack_compile_estimate"
+  ],
+  "qagent_must": [
+    "same_tool_name"
+  ],
+  "qagent_must_not": [
+    "new_tool"
+  ],
+  "codex_baseline": "may_fail",
+  "assertions": [
+    {
+      "tool": "ionstack_compile_estimate"
+    }
+  ]
+}

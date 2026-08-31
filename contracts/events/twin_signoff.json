@@ -1,0 +1,9 @@
+{
+  "type": "qagent/twin_signoff",
+  "required": [
+    "twin_id",
+    "shots_actual"
+  ],
+  "additionalProperties": false,
+  "note": "Short fields only. No Pauli / CAL / bitstrings."
+}

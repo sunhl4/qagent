@@ -1,0 +1,12 @@
+.qagent/
+.dsh-home/
+.dsh-runtime/
+node_modules/
+profiles/qagent/node_modules/
+__pycache__/
+*.pyc
+.pytest_cache/
+.env
+.env.*
+secrets.json
+*.pem

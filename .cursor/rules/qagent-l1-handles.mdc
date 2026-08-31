@@ -1,0 +1,16 @@
+---
+description: Qagent 造包硬轨：三句柄，TwinRun 对 Cursor/Codex 不可见
+alwaysApply: true
+---
+
+# Qagent 造包硬轨
+
+这是**第一层（造包）**。用 Cursor / Codex 写公司软件。不要用 Qagent 改 ionstack / qdata 内核。
+
+- 句柄只有三个：`circuit_id`、`asset_id`、`twin_id`。不要发明第四个。
+- **只有** ionstack TwinRun 能发 `twin_id`。Aer / IBM / 本地卡的 `provenance` 不许是 `qccd-twin`。
+- 造包时 **TwinRun 不可见**：不要调 `ionstack_twin_run`，不要把 Twin 注册给官方 Codex。
+- 官方 Codex：`permissionMode: never`，`inheritsParentContext: false`。algo 调 TwinRun 必须 deny。
+- `qagent/src` 禁止 `import qdata` / `ionstack` / `qchem` / `qiskit`。
+- 不要新增第三套 agent loop。3080 的脑是 `dsh --profile qagent`。
+- CAL / shuttle 永不进工具。

@@ -1,0 +1,18 @@
+{
+  "name": "qiskit_export_circuit",
+  "description": "Pinned logical circuit → QASM3. Wraps ionstack.interop.qiskit_export.",
+  "parameters": {
+    "type": "object",
+    "required": ["circuit_id"],
+      "properties": {
+        "circuit_id": { "type": "string" },
+        "context": { "type": "string", "description": "Alias of circuit_id. No implicit session circuit." }
+      }
+  },
+  "output": {
+    "type": "object",
+    "required": ["circuit_id", "qasm3"],
+    "properties": { "circuit_id": { "type": "string" }, "qasm3": { "type": "string" } }
+  },
+  "forbidden_output_keys": ["twin_id"]
+}

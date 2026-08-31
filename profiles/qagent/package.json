@@ -1,0 +1,30 @@
+{
+  "name": "@qccd/qagent-profile",
+  "private": true,
+  "version": "0.0.0",
+  "description": "dsh profile qagent — company overlay, no third loop",
+  "dsh": {
+    "profile": {
+      "bundles": [
+        "@deepseek-ai/dsh-base",
+        "@deepseek-ai/dsh-web-app",
+        "@deepseek-ai/dsh-subagent-codex"
+      ]
+    }
+  },
+  "dependencies": {
+    "@deepseek-ai/dsh-subagent-codex": "0.1.0-rc.8",
+    "@openai/codex": "0.147.0",
+    "@qccd/qagent-brand": "file:../../packages/qagent-brand",
+    "@qccd/qagent-cards": "file:../../packages/qagent-cards",
+    "@qccd/qagent-docs": "file:../../packages/qagent-docs",
+    "@qccd/qagent-eln": "file:../../packages/qagent-eln",
+    "@qccd/qagent-engines": "file:../../packages/qagent-engines",
+    "@qccd/qagent-policy": "file:../../packages/qagent-policy",
+    "@qccd/qagent-qchem": "file:../../packages/qagent-qchem",
+    "@qccd/qagent-qdata": "file:../../packages/qagent-qdata",
+    "@qccd/qagent-qiskit": "file:../../packages/qagent-qiskit",
+    "@qccd/qagent-route": "file:../../packages/qagent-route",
+    "@qccd/qagent-twin": "file:../../packages/qagent-twin"
+  }
+}

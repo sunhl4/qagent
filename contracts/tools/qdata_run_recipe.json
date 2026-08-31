@@ -1,0 +1,28 @@
+{
+  "name": "qdata_run_recipe",
+  "description": "Run a frozen qdata recipe. Short output only.",
+  "parameters": {
+    "type": "object",
+    "required": ["name"],
+    "properties": {
+      "name": {
+        "type": "string",
+        "enum": ["a1_closed_loop", "a2_spin_shadow", "a2_chem_pes", "a3_sensitivity", "qem_triad"]
+      },
+      "shots": { "type": "integer", "minimum": 1 },
+      "params": { "type": "object" }
+    },
+    "additionalProperties": false
+  },
+  "output": {
+    "type": "object",
+    "required": ["asset_id", "summary"],
+    "properties": {
+      "asset_id": { "type": "string" },
+      "summary": { "type": "object" },
+      "run_record_id": { "type": "string" }
+    },
+    "additionalProperties": false
+  },
+  "forbidden_output_keys": ["bitstrings", "rows", "pauli_terms", "counts_full"]
+}

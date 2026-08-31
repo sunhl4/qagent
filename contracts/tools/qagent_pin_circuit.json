@@ -1,0 +1,31 @@
+{
+  "name": "qagent_pin_circuit",
+  "description": "Pin a circuit handle shared by qchem / qiskit / ionstack / route. Short id only.",
+  "parameters": {
+    "type": "object",
+    "required": ["source"],
+    "properties": {
+      "source": {
+        "type": "string",
+        "enum": ["qchem", "qiskit", "qdata", "logical", "qasm3"]
+      },
+      "qasm3": { "type": "string" },
+      "logical": { "type": "object" },
+      "asset_id": {
+        "type": "string",
+        "description": "Optional for qiskit/qasm3/logical/cirq. Required (or qasm3/logical) for qchem/qdata."
+      }
+    }
+  },
+  "output": {
+    "type": "object",
+    "required": ["circuit_id", "source"],
+    "properties": {
+      "circuit_id": { "type": "string" },
+      "source": { "type": "string" },
+      "n_qubits": { "type": "integer" }
+    },
+    "additionalProperties": false
+  },
+  "forbidden_output_keys": ["qasm3", "body", "twin_id"]
+}

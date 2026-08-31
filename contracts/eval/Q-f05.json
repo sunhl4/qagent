@@ -1,0 +1,25 @@
+{
+  "id": "Q-f05",
+  "kind": "flex",
+  "status": "draft",
+  "phase": "G3",
+  "preset": "lab",
+  "prompt": "扫阴影不要化学",
+  "allowed_tools": [
+    "qdata_run_recipe"
+  ],
+  "qagent_must": [
+    "shadow_recipe"
+  ],
+  "qagent_must_not": [
+    "must_pes"
+  ],
+  "codex_baseline": "may_fail",
+  "assertions": [
+    {
+      "recipe_allowed": [
+        "a2_spin_shadow"
+      ]
+    }
+  ]
+}

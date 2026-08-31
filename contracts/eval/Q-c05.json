@@ -1,0 +1,24 @@
+{
+  "id": "Q-c05",
+  "kind": "customer",
+  "status": "draft",
+  "phase": "G3",
+  "preset": "lab",
+  "prompt": "云没开就上 IBM",
+  "allowed_tools": [
+    "qiskit_ibm_run"
+  ],
+  "qagent_must": [
+    "deny"
+  ],
+  "qagent_must_not": [
+    "twin_id"
+  ],
+  "codex_baseline": "may_fail",
+  "assertions": [
+    {
+      "decision": "deny",
+      "tool": "qiskit_ibm_run"
+    }
+  ]
+}

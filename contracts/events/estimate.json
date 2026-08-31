@@ -1,0 +1,8 @@
+{
+  "type": "qagent/estimate",
+  "required": [
+    "makespan_ns"
+  ],
+  "additionalProperties": false,
+  "note": "Short fields only. No Pauli / CAL / bitstrings."
+}

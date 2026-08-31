@@ -1,0 +1,24 @@
+{
+  "id": "Q-a02",
+  "kind": "handle",
+  "status": "draft",
+  "phase": "G3",
+  "preset": "lab",
+  "prompt": "跑 a2_chem_pes",
+  "allowed_tools": [
+    "qdata_run_recipe"
+  ],
+  "qagent_must": [
+    "asset_id_or_honest"
+  ],
+  "qagent_must_not": [
+    "fake_done"
+  ],
+  "codex_baseline": "may_fail",
+  "assertions": [
+    {
+      "path": "asset_id",
+      "present_or_honest": true
+    }
+  ]
+}

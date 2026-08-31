@@ -1,0 +1,20 @@
+{
+  "id": "E14",
+  "phase": "P2",
+  "status": "implemented",
+  "preset": "lab",
+  "slot": "S-TWIN-03",
+  "prompt": "换路由实现后再跑 E12",
+  "allowed_tools": [
+    "ionstack_compile_estimate"
+  ],
+  "assertions": [
+    {
+      "tool_name": "ionstack_compile_estimate"
+    },
+    {
+      "path": "makespan_ns",
+      "type": "number"
+    }
+  ]
+}

@@ -1,0 +1,115 @@
+{
+  "version": "0.1.0",
+  "note": "Engine pack is the first-class unit. Tools hang off packs. Adding software = add a pack, not a new agent. Five wired packs lead. Cirq is wired in engines[] after them; interop, no twin_id. Pennylane is reserved_engines only; not in engines[].",
+  "cross_engine_handles": ["circuit_id", "asset_id", "twin_id"],
+  "engines": [
+    {
+      "id": "qdata",
+      "kind": "data",
+      "label": "量子数据 SDK",
+      "status": "wired",
+      "home": "/Users/shl/nvidia/qdata",
+      "identity_fields": ["asset_id", "run_record_id", "b3.verdict"],
+      "tools": [
+        "qdata_list_providers",
+        "qdata_run_recipe",
+        "qdata_submit_job",
+        "qdata_get_job",
+        "qdata_list_assets",
+        "qdata_get_run_record",
+        "qdata_dequant_gate",
+        "qdata_sandbox_exec"
+      ],
+      "vibe": "扫 PES / shadow / 闭环 recipe，留下 dataset card"
+    },
+    {
+      "id": "qchem",
+      "kind": "chemistry",
+      "label": "量子计算化学栈",
+      "status": "wired",
+      "home": "/Users/shl/nvidia/qcchem-qml-md",
+      "identity_fields": ["asset_id", "scenario"],
+      "tools": ["qchem_run", "qchem_export_parity"],
+      "vibe": "YAML scenario 跑 VQE / parity，电路交给 pin"
+    },
+    {
+      "id": "ionstack",
+      "kind": "machine",
+      "label": "QCCD 孪生模拟器",
+      "status": "wired",
+      "home": "/Users/shl/Q-software",
+      "identity_fields": ["twin_id"],
+      "tools": [
+        "ionstack_twin_identity",
+        "ionstack_twin_run",
+        "ionstack_compile_estimate"
+      ],
+      "vibe": "逻辑电路上机签收。CAL 永不进工具。"
+    },
+    {
+      "id": "route",
+      "kind": "compile",
+      "label": "线路优化 / 调度",
+      "status": "wired",
+      "home": null,
+      "identity_fields": ["makespan_ns"],
+      "tools": ["ionstack_compile_estimate"],
+      "vibe": "同一工具名，换后端不换 schema。IR 未冻也先用 MapQccd。",
+      "swap": "fill packages/qagent-route — do not rename the tool"
+    },
+    {
+      "id": "qiskit",
+      "kind": "interop",
+      "label": "Qiskit 互通",
+      "status": "wired",
+      "home": "ionstack.interop + qchem extras",
+      "identity_fields": ["circuit_id", "provenance"],
+      "tools": [
+        "qiskit_import_circuit",
+        "qiskit_export_circuit",
+        "qiskit_transpile",
+        "qiskit_aer_run"
+      ],
+      "reserved_tools": ["qiskit_ibm_run"],
+      "vibe": "QASM / QuantumCircuit 进出。Aer 是近似，禁止写 twin_id。",
+      "wraps": [
+        "ionstack.interop.qiskit_import.quantum_circuit_to_native_circuit",
+        "ionstack.interop.qiskit_export.logical_circuit_to_quantum_circuit",
+        "ionstack.interop.qiskit_transpile.transpile_quantum_circuit_with_preset",
+        "ionstack.interop.aer_bridge.native_circuit_to_aer_job"
+      ]
+    },
+    {
+      "id": "cirq",
+      "kind": "interop",
+      "label": "Cirq 互通",
+      "status": "wired",
+      "home": null,
+      "identity_fields": ["circuit_id", "provenance"],
+      "tools": [
+        "cirq_import_circuit",
+        "cirq_export_circuit",
+        "cirq_simulator_run"
+      ],
+      "vibe": "Cirq Circuit 进出。模拟器是近似，禁止第三句柄。电路只经 pin。"
+    }
+  ],
+  "reserved_engines": [
+    {
+      "id": "pennylane",
+      "kind": "interop",
+      "label": "Pennylane 互通",
+      "status": "reserved",
+      "home": null,
+      "identity_fields": ["circuit_id", "provenance"],
+      "tools": [
+        "pennylane_import_circuit",
+        "pennylane_export_circuit",
+        "pennylane_simulator_run"
+      ],
+      "vibe": "Pennylane Circuit 进出。模拟器是近似，禁止第三句柄。电路只经 pin。未接线。"
+    }
+  ],
+  "future_examples": ["pennylane", "uqc-hardware"],
+  "add_pack": "contracts/engines/HOW_TO_ADD.md"
+}

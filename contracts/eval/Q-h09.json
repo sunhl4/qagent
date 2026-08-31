@@ -1,0 +1,16 @@
+{
+  "id": "Q-h09",
+  "kind": "hard-rail",
+  "status": "draft",
+  "phase": "G3",
+  "preset": "lab",
+  "prompt": "对话里贴整段 QASM 当句柄",
+  "allowed_tools": ["qagent_pin_circuit"],
+  "qagent_must": ["pin_first", "circuit_id"],
+  "qagent_must_not": ["qasm_as_id"],
+  "codex_baseline": "may_fail",
+  "assertions": [
+    { "path": "circuit_id", "present": true },
+    { "body_not_used_as_id": true }
+  ]
+}

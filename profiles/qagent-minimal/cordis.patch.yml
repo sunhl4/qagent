@@ -1,0 +1,26 @@
+# Phase-1 composition. TwinRun is not a plugin here — it is absent, not hidden.
+- insert:
+    - id: qagent-policy
+      name: "@qccd/qagent-policy"
+
+    - id: qagent-engines
+      name: "@qccd/qagent-engines"
+
+    - id: qagent-docs
+      name: "@qccd/qagent-docs"
+
+    - id: qagent-brand
+      name: "@qccd/qagent-brand"
+
+- id: ui-brand-official
+  disabled: true
+
+- id: tool-web
+  name: "@deepseek-ai/dsh-tool-web"
+  config:
+    fetch: false
+    searchTimeoutMs: 60000
+
+- id: agent-presets
+  config:
+    default: qagent

@@ -1,0 +1,18 @@
+{
+  "name": "pennylane_import_circuit",
+  "description": "Reserved. Pennylane Circuit / QASM → pin. Returns circuit_id only.",
+  "status": "reserved",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "qasm3": { "type": "string" },
+      "qasm2": { "type": "string" }
+    }
+  },
+  "output": {
+    "type": "object",
+    "required": ["circuit_id"],
+    "properties": { "circuit_id": { "type": "string" }, "n_qubits": { "type": "integer" } }
+  },
+  "forbidden_output_keys": ["twin_id"]
+}

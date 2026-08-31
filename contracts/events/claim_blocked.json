@@ -1,0 +1,8 @@
+{
+  "type": "qagent/claim_blocked",
+  "required": [
+    "reason"
+  ],
+  "additionalProperties": false,
+  "note": "Short fields only. No Pauli / CAL / bitstrings."
+}

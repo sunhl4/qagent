@@ -1,0 +1,23 @@
+{
+  "name": "qiskit_aer_run",
+  "description": "Aer approximate shots. provenance=aer. MUST NOT emit twin_id.",
+  "parameters": {
+    "type": "object",
+    "required": ["circuit_id", "shots"],
+    "properties": {
+      "circuit_id": { "type": "string" },
+      "shots": { "type": "integer", "minimum": 1 }
+    }
+  },
+  "output": {
+    "type": "object",
+    "required": ["provenance", "counts"],
+    "properties": {
+      "provenance": { "const": "aer" },
+      "counts": { "type": "object" },
+      "shots_actual": { "type": "integer" }
+    },
+    "additionalProperties": false
+  },
+  "forbidden_output_keys": ["twin_id", "ok", "signoff"]
+}

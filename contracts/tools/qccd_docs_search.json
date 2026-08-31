@@ -1,0 +1,26 @@
+{
+  "name": "qccd_docs_search",
+  "description": "Search in-stack handbooks only.",
+  "parameters": {
+    "type": "object",
+    "required": [
+      "query"
+    ],
+    "properties": {
+      "query": {
+        "type": "string"
+      }
+    }
+  },
+  "output": {
+    "type": "object",
+    "required": [
+      "hits"
+    ],
+    "properties": {
+      "hits": {
+        "type": "array"
+      }
+    }
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "tools": [
+    {"name": "qagent_list_engines", "slot": "S-ENG-01", "schema": "qagent_list_engines.json"},
+    {"name": "qagent_pin_circuit", "slot": "S-ENG-02", "schema": "qagent_pin_circuit.json"},
+    {"name": "qdata_list_providers", "slot": "S-QDATA-07", "schema": "qdata_list_providers.json"},
+    {"name": "qdata_run_recipe", "slot": "S-QDATA-04", "schema": "qdata_run_recipe.json"},
+    {"name": "qdata_submit_job", "slot": "S-QDATA-08", "schema": "qdata_submit_job.json"},
+    {"name": "qdata_get_job", "slot": "S-QDATA-03", "schema": "qdata_get_job.json"},
+    {"name": "qdata_list_assets", "slot": "S-QDATA-08", "schema": "qdata_list_assets.json"},
+    {"name": "qdata_get_run_record", "slot": "S-QDATA-05", "schema": "qdata_get_run_record.json"},
+    {"name": "qdata_dequant_gate", "slot": "S-QDATA-06", "schema": "qdata_dequant_gate.json"},
+    {"name": "qchem_run", "slot": "S-QCHEM-01", "schema": "qchem_run.json"},
+    {"name": "qchem_export_parity", "slot": "S-QCHEM-02", "schema": "qchem_export_parity.json"},
+    {"name": "ionstack_twin_identity", "slot": "S-TWIN-01", "schema": "ionstack_twin_identity.json"},
+    {"name": "ionstack_twin_run", "slot": "S-TWIN-02", "schema": "ionstack_twin_run.json"},
+    {"name": "ionstack_compile_estimate", "slot": "S-TWIN-03", "schema": "ionstack_compile_estimate.json"},
+    {"name": "qccd_docs_search", "slot": "S-DOCS-01", "schema": "qccd_docs_search.json"},
+    {"name": "qdata_sandbox_exec", "slot": "S-SAND-01", "schema": "qdata_sandbox_exec.json"},
+    {"name": "subagent_codex", "slot": "S-CODEX-01", "schema": "subagent_codex.json"},
+    {"name": "subagent_codex_attended", "slot": "S-CODEX-02", "schema": "subagent_codex_attended.json"},
+    {"name": "qiskit_import_circuit", "slot": "S-QISKIT-01", "schema": "qiskit_import_circuit.json"},
+    {"name": "qiskit_export_circuit", "slot": "S-QISKIT-02", "schema": "qiskit_export_circuit.json"},
+    {"name": "qiskit_transpile", "slot": "S-QISKIT-03", "schema": "qiskit_transpile.json"},
+    {"name": "qiskit_aer_run", "slot": "S-QISKIT-04", "schema": "qiskit_aer_run.json"},
+    {"name": "qiskit_ibm_run", "slot": "S-QISKIT-05", "schema": "qiskit_ibm_run.json"},
+    {"name": "cirq_import_circuit", "slot": "S-CIRQ-01", "schema": "cirq_import_circuit.json"},
+    {"name": "cirq_export_circuit", "slot": "S-CIRQ-02", "schema": "cirq_export_circuit.json"},
+    {"name": "cirq_simulator_run", "slot": "S-CIRQ-03", "schema": "cirq_simulator_run.json"},
+    {"name": "pennylane_import_circuit", "slot": "S-PL-01", "schema": "pennylane_import_circuit.json"},
+    {"name": "pennylane_export_circuit", "slot": "S-PL-02", "schema": "pennylane_export_circuit.json"},
+    {"name": "pennylane_simulator_run", "slot": "S-PL-03", "schema": "pennylane_simulator_run.json"}
+  ]
+}

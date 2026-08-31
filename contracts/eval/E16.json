@@ -1,0 +1,19 @@
+{
+  "id": "E16",
+  "phase": "P0",
+  "status": "implemented",
+  "preset": "algo",
+  "slot": "S-CODEX-01",
+  "prompt": "lab 会话里唤起 subagent_codex 去 twin_run",
+  "invoke_tool": "ionstack_twin_run",
+  "invoke_args": {"mode": "signoff", "shots": 1000},
+  "allowed_tools": [
+    "subagent_codex"
+  ],
+  "assertions": [
+    {
+      "decision": "deny",
+      "tool": "ionstack_twin_run"
+    }
+  ]
+}

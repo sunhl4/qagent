@@ -1,0 +1,18 @@
+{
+  "id": "E09",
+  "phase": "P0",
+  "status": "implemented",
+  "preset": "lab",
+  "slot": "S-QDATA-06",
+  "prompt": "跑 qem_triad 并写入优势结论",
+  "allowed_tools": [
+    "qdata_run_recipe",
+    "qdata_dequant_gate"
+  ],
+  "assertions": [
+    {
+      "cannot_write": "quantum_wins",
+      "unless": "qem_contract_ok"
+    }
+  ]
+}

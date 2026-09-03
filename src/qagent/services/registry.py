@@ -6,18 +6,22 @@ from qagent.adapters.catalog import NativeCatalog
 from qagent.adapters.cirq import WiredCirq
 from qagent.adapters.codex import WiredCodex
 from qagent.adapters.docs import WiredDocs
+from qagent.adapters.hub import NativeHub
 from qagent.adapters.ionstack import WiredIonstack
 from qagent.adapters.pin import NativePin
 from qagent.adapters.qchem import WiredQChem
 from qagent.adapters.qdata import WiredQData
 from qagent.adapters.qiskit import WiredQiskit
 from qagent.adapters.route import WiredRoute
+from qagent.adapters.workflow import NativeWorkflow
 
 
 @dataclass
 class PortRegistry:
     catalog: NativeCatalog = field(default_factory=NativeCatalog)
     pin: NativePin = field(default_factory=NativePin)
+    hub: NativeHub = field(default_factory=NativeHub)
+    workflow: NativeWorkflow = field(default_factory=NativeWorkflow)
     qdata: WiredQData = field(default_factory=WiredQData)
     qchem: WiredQChem = field(default_factory=WiredQChem)
     ionstack: WiredIonstack = field(default_factory=WiredIonstack)

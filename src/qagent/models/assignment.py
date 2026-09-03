@@ -51,6 +51,11 @@ LANE_ORDER = ("prepare", "compile", "approximate", "signoff", "b3")
 LANE_FOR_TOOL = {
     "qdata_run_recipe": "prepare",
     "qagent_pin_circuit": "prepare",
+    "qagent_hub_list": "prepare",
+    "qagent_hub_choose": "prepare",
+    "qagent_hub_validate": "prepare",
+    "qagent_hub_translate": "prepare",
+    "qagent_circuit_job": "prepare",
     "ionstack_compile_estimate": "compile",
     "qiskit_aer_run": "approximate",
     "ionstack_twin_run": "signoff",
@@ -364,6 +369,10 @@ class Assignment:
         foreign = face_aer_provenance(self.columns.get("aer_provenance"))
         if foreign is not None:
             payload["aer_provenance"] = foreign
+        if self.columns.get("workflow") == "circuit":
+            stage = str(self.columns.get("stage") or "")
+            if stage:
+                payload["stage"] = stage
         if self.status == STATUS_SIGNED:
             shots = face_shots_actual(self.columns.get("shots_actual"))
             if shots is not None:

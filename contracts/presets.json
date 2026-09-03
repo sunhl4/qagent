@@ -6,6 +6,9 @@
       "visible_tools": [
         "qagent_list_engines",
         "qagent_pin_circuit",
+        "qagent_hub_list",
+        "qagent_hub_describe",
+        "qagent_hub_choose",
         "qccd_docs_search",
         "ionstack_twin_identity"
       ],
@@ -33,6 +36,12 @@
       "visible_tools": [
         "qagent_list_engines",
         "qagent_pin_circuit",
+        "qagent_hub_list",
+        "qagent_hub_describe",
+        "qagent_hub_choose",
+        "qagent_hub_validate",
+        "qagent_hub_translate",
+        "qagent_circuit_job",
         "qiskit_import_circuit",
         "qiskit_export_circuit",
         "qiskit_transpile",
@@ -69,6 +78,11 @@
       "label": "写算法",
       "visible_tools": [
         "qagent_list_engines",
+        "qagent_hub_list",
+        "qagent_hub_describe",
+        "qagent_hub_choose",
+        "qagent_hub_validate",
+        "qagent_hub_translate",
         "qdata_list_providers",
         "qccd_docs_search",
         "subagent_codex",

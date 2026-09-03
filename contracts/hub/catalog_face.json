@@ -1,0 +1,102 @@
+{
+  "api_version": "hub/v1",
+  "note": "Bundled face of algo-hub cards. Live catalog may replace this when QAGENT_ALGO_HUB_HOME is set. No twin_id. No circuit body.",
+  "choose": {
+    "has_molecule": "org.chem.vqe",
+    "no_molecule": "org.algo.vqe.hea"
+  },
+  "assets": [
+    {
+      "id": "org.chem.vqe",
+      "kind": "algorithm",
+      "title": "Q-chem VQE",
+      "maturity": "production",
+      "native_format": "qchem-stack.scenario",
+      "summary": "Use when the input is a molecule, not a raw Pauli Hamiltonian.",
+      "choose_when": ["molecule / basis / active space"],
+      "do_not_choose_when": ["already have SparsePauliOp only"]
+    },
+    {
+      "id": "org.chem.adapt",
+      "kind": "algorithm",
+      "title": "ADAPT-VQE",
+      "maturity": "production",
+      "native_format": "qchem-stack.scenario",
+      "summary": "Adaptive VQE inside qchem-stack."
+    },
+    {
+      "id": "org.chem.iqeb",
+      "kind": "algorithm",
+      "title": "IQEB-VQE",
+      "maturity": "production",
+      "native_format": "qchem-stack.scenario",
+      "summary": "IQEB variant inside qchem-stack."
+    },
+    {
+      "id": "org.chem.gqe",
+      "kind": "algorithm",
+      "title": "GQE family",
+      "maturity": "research",
+      "native_format": "qchem-stack.scenario",
+      "summary": "Generative quantum eigensolver family."
+    },
+    {
+      "id": "org.algo.vqe.hea",
+      "kind": "algorithm",
+      "title": "UQC HEA-VQE",
+      "maturity": "internal",
+      "native_format": "uqc-algorithm.json",
+      "summary": "Ion-trap HEA VQE from a Pauli Hamiltonian.",
+      "choose_when": ["SparsePauliOp / Pauli strings"],
+      "do_not_choose_when": ["input is a molecule"]
+    },
+    {
+      "id": "org.algo.qaoa.maxcut",
+      "kind": "algorithm",
+      "title": "QAOA MaxCut",
+      "maturity": "internal",
+      "native_format": "uqc-algorithm.json",
+      "summary": "Combinatorial MaxCut on the ion-trap algorithm pack."
+    },
+    {
+      "id": "org.algo.qrc.mnist",
+      "kind": "algorithm",
+      "title": "QRC MNIST",
+      "maturity": "research",
+      "native_format": "uqc-algorithm.json",
+      "summary": "Quantum reservoir classification demo."
+    },
+    {
+      "id": "org.algo.trotter.first_order",
+      "kind": "algorithm",
+      "title": "First-order Trotter",
+      "maturity": "internal",
+      "native_format": "uqc-algorithm.json",
+      "summary": "Trotter circuit helper, not a standalone problem solver."
+    },
+    {
+      "id": "org.compiler.h2",
+      "kind": "compiler",
+      "title": "H2 ion-trap compiler",
+      "maturity": "internal",
+      "native_format": null,
+      "summary": "QASM to ion-trap schedule. Swap compile_estimate backend; not an algorithm."
+    },
+    {
+      "id": "org.workflow.qccd",
+      "kind": "workflow",
+      "title": "QCCD_workflow",
+      "maturity": "internal",
+      "native_format": null,
+      "summary": "QV / GHZ / RCS benchmark pipeline."
+    },
+    {
+      "id": "org.demo.uqcdemo",
+      "kind": "sdk-demo",
+      "title": "uqcdemo",
+      "maturity": "demo",
+      "native_format": null,
+      "summary": "Teaching sample for the cloud SDK. Do not wrap as run(algorithm_id)."
+    }
+  ]
+}

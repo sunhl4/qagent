@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from qagent.adapters.contracts import load_eval_cases, load_tool_catalog
-from qagent.models.gov import GOV_EVAL_IDS
+from qagent.models.gov import GOV_EVAL_IDS, HUB_EVAL_IDS
 from qagent.models.handles import HANDLE_TWIN, PROVENANCE_QCCD_TWIN
 from qagent.models.invoke import STATUS_ERROR, STATUS_OK, InvokeResult
 from qagent.models.types import EvalCase
@@ -15,7 +15,7 @@ from qagent.services.invoke import invoke
 from qagent.services.policy import decide
 
 _MISSING = object()
-DEFAULT_EVAL_IDS = tuple([*(f"E{i:02d}" for i in range(1, 22)), *GOV_EVAL_IDS])
+DEFAULT_EVAL_IDS = tuple([*(f"E{i:02d}" for i in range(1, 22)), *GOV_EVAL_IDS, *HUB_EVAL_IDS])
 
 DEFAULT_CIRCUIT = {
     "n_qubits": 2,

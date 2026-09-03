@@ -41,6 +41,10 @@ from qagent.services.eval_run import run_evals
 from qagent.services.health import science_health
 from qagent.services.invoke import invoke
 from qagent.adapters.pin import circuit_face, circuit_program, pin_from_qasm
+from qagent.services.circuit_job import public_job, start_job
+from qagent.services.ingest_store import save_ingest
+from qagent.services.translate import translate_config
+from qagent.services.uploads import KIND_CIRCUIT, KIND_CONFIG, classify_upload, parse_config_text
 from qagent.services.vibe_path import run_vibe_path
 
 _SHELL = ROOT / "apps" / "customer-shell"
@@ -150,9 +154,15 @@ def dispatch(
         return 200, {"sessions": rows}
     if method == "POST" and path == "/api/chat":
         return _chat_http(body, headers)
+    upload = _upload_http(method, path, body, headers)
+    if upload is not None:
+        return upload
     circuit = _circuit_http(method, path, body)
     if circuit is not None:
         return circuit
+    job = _circuit_job_http(method, path, body, headers)
+    if job is not None:
+        return job
     if method == "POST" and path == "/api/invoke":
         return _invoke_http(body, headers)
     if method == "POST" and path == "/api/vibe":
@@ -236,8 +246,16 @@ def _chat_http(body: dict[str, Any], headers: Mapping[str, str] | None) -> tuple
     attached = str(body.get("circuit_id") or "").strip()
     if attached and not attached.startswith("circ_"):
         attached = ""
+    algorithm_id = str(body.get("algorithm_id") or "").strip()
+    if algorithm_id and not algorithm_id.startswith("org."):
+        algorithm_id = ""
     return 200, _chat_http_face(
-        turn(message=message, tenant_id=_caller_tenant(headers), circuit_id=attached)
+        turn(
+            message=message,
+            tenant_id=_caller_tenant(headers),
+            circuit_id=attached,
+            algorithm_id=algorithm_id,
+        )
     )
 
 
@@ -345,6 +363,7 @@ def _chat_http_face(payload: Mapping[str, Any]) -> dict[str, Any]:
     face = dict(payload)
     face.pop("session_id", None)
     face.pop("used_tools", None)
+    face.pop("algorithm_id", None)
     if isinstance(face.get("reply"), str):
         face["reply"] = redact_customer_text(face["reply"])
     circuit = face.get("circuit")
@@ -394,6 +413,120 @@ def _circuit_http(method: str, path: str, body: dict[str, Any] | None = None) ->
         if not row:
             return 404, {"error": "circuit not pinned"}
         return 200, row
+    return None
+
+
+def _upload_http(
+    method: str,
+    path: str,
+    body: dict[str, Any],
+    headers: Mapping[str, str] | None,
+) -> tuple[int, object] | None:
+    if method != "POST" or path != "/api/uploads":
+        return None
+    filename = str(body.get("filename") or "")
+    text = str(body.get("text") or body.get("qasm3") or body.get("qasm") or "")
+    kind = classify_upload(filename, text)
+    if kind == KIND_CIRCUIT:
+        try:
+            pinned = pin_from_qasm(text)
+        except ValueError as exc:
+            return 400, {"error": str(exc), "kind": KIND_CIRCUIT}
+        circuit_id = str(pinned.get(HANDLE_CIRCUIT) or "")
+        face = circuit_face(circuit_id) or {HANDLE_CIRCUIT: circuit_id, "n_qubits": pinned.get("n_qubits")}
+        try:
+            row = start_job(circuit_id=circuit_id, tenant_id=_caller_tenant(headers, body))
+            job = public_job(row)
+        except (ValueError, AssignmentError) as exc:
+            return 200, {"kind": KIND_CIRCUIT, "circuit": face, "error": str(exc)}
+        return 200, {"kind": KIND_CIRCUIT, "circuit": face, "job": job}
+    if kind == KIND_CONFIG:
+        try:
+            config = parse_config_text(text)
+        except (ValueError, json.JSONDecodeError) as exc:
+            return 400, {"error": str(exc), "kind": KIND_CONFIG}
+        tenant_id = _caller_tenant(headers, body)
+        face = translate_config(config)
+        circuit_meta: dict[str, Any] | None = None
+        job: dict[str, Any] | None = None
+        qasm = str(face.get("qasm") or "").strip()
+        if qasm:
+            try:
+                pinned = pin_from_qasm(qasm)
+            except ValueError as exc:
+                return 400, {"error": str(exc), "kind": KIND_CONFIG}
+            circuit_id = str(pinned.get(HANDLE_CIRCUIT) or "")
+            circuit_meta = circuit_face(circuit_id) or {
+                HANDLE_CIRCUIT: circuit_id,
+                "n_qubits": pinned.get("n_qubits"),
+            }
+            try:
+                job = public_job(start_job(circuit_id=circuit_id, tenant_id=tenant_id))
+            except (ValueError, AssignmentError) as exc:
+                job = {"error": str(exc)}
+        if face.get("ok") and (face.get("algorithm_id") or circuit_meta):
+            save_ingest(
+                tenant_id,
+                {
+                    "algorithm_id": face.get("algorithm_id") or "",
+                    "origin": face.get("origin") or "",
+                    "from_kind": face.get("from_kind") or "",
+                    "brief": face.get("brief") or "",
+                    "circuit_id": (circuit_meta or {}).get(HANDLE_CIRCUIT) or "",
+                    "config": face.get("config") if isinstance(face.get("config"), dict) else {},
+                },
+            )
+        out: dict[str, Any] = {
+            "kind": KIND_CONFIG,
+            "ok": bool(face.get("ok")),
+            "origin": str(face.get("origin") or ""),
+            "from_kind": str(face.get("from_kind") or ""),
+            "errors": list(face.get("errors") or []),
+        }
+        if face.get("algorithm_id"):
+            out["algorithm_id"] = face["algorithm_id"]
+        if circuit_meta:
+            out["circuit"] = circuit_meta
+        if job:
+            out["job"] = job
+        return 200, out
+    name = filename.lower()
+    if name.endswith((".py", ".ipynb")):
+        return 400, {"error": "请导出 OpenQASM 或 JSON，不要上传可执行脚本。"}
+    if name.endswith(".qpy"):
+        return 400, {"error": "请导出 OpenQASM 或 JSON，不要上传二进制线路包。"}
+    return 400, {"error": "发 OpenQASM，或一份能读懂的 YAML/JSON（公司流程或外部算法包均可）。"}
+
+
+def _circuit_job_http(
+    method: str,
+    path: str,
+    body: dict[str, Any],
+    headers: Mapping[str, str] | None,
+) -> tuple[int, object] | None:
+    parts = [part for part in path.split("/") if part]
+    if len(parts) < 2 or parts[0] != "api" or parts[1] != "circuit-jobs":
+        return None
+    tenant_id = _caller_tenant(headers, body)
+    if method == "POST" and len(parts) == 2:
+        circuit_id = str(body.get("circuit_id") or "").strip()
+        if not circuit_id:
+            return 400, {"error": "circuit_id is required"}
+        try:
+            row = start_job(
+                circuit_id=circuit_id,
+                shots=int(body.get("shots") or 1000),
+                backend=str(body.get("backend") or "twin"),
+                tenant_id=tenant_id,
+            )
+        except (ValueError, AssignmentError) as exc:
+            return 400, {"error": str(exc)}
+        return 200, public_job(row)
+    if method == "GET" and len(parts) == 3:
+        try:
+            return 200, public_job(get_assignment(parts[2], tenant_id=tenant_id))
+        except AssignmentError as exc:
+            return 404, {"error": str(exc)}
     return None
 
 

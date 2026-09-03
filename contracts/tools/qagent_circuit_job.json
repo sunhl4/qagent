@@ -1,0 +1,35 @@
+{
+  "name": "qagent_circuit_job",
+  "description": "Circuit workflow: pin already done. parse → validate → estimate → ask → execute → receipt. Twin still asks.",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "action": { "type": "string", "enum": ["start", "status"] },
+      "circuit_id": { "type": "string" },
+      "assignment_id": { "type": "string" },
+      "shots": { "type": "integer" },
+      "backend": { "type": "string", "enum": ["twin", "aer"] },
+      "approved": { "type": "boolean" }
+    }
+  },
+  "output": {
+    "type": "object",
+    "required": ["assignment_id", "workflow", "stage", "status"],
+    "properties": {
+      "assignment_id": { "type": "string" },
+      "workflow": { "type": "string" },
+      "stage": { "type": "string" },
+      "status": { "type": "string" },
+      "backend": { "type": "string" },
+      "circuit_id": { "type": "string" },
+      "n_qubits": { "type": "integer" },
+      "n_instructions": { "type": "integer" },
+      "makespan_ns": { "type": "number" },
+      "ask_tool": { "type": "string" },
+      "aer_provenance": { "type": "string" },
+      "error": { "type": "string" }
+    },
+    "additionalProperties": false
+  },
+  "forbidden_output_keys": ["qasm3", "body", "token", "twin_id"]
+}

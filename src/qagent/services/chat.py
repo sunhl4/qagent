@@ -13,6 +13,7 @@ from qagent.adapters.dsh_session_store import (
 )
 from qagent.models.customer_voice import CUSTOMER_VOICE_HINT  # C-01x lock; I-02 keeps prompt raw
 from qagent.services.gate import classify
+from qagent.services.ingest_store import clear_ingest, load_ingest
 from qagent.services.workplace import apply_env, load_workplace
 
 __all__ = ["classify", "list_sessions", "reset_chat", "status", "turn"]
@@ -27,6 +28,7 @@ def turn(
     client: DshSessionClient | None = None,
     tenant_id: str = "",
     circuit_id: str = "",
+    algorithm_id: str = "",
 ) -> dict[str, Any]:
     """Product chat. Talks to dsh session.* . Never calls services.agent._loop."""
     apply_env()
@@ -40,11 +42,24 @@ def turn(
             tenant_id=tenant_id,
         )
     text = (message or "").strip()
+    ingested = load_ingest(tenant_id)
     attached = str(circuit_id or "").strip()
+    if not attached.startswith("circ_"):
+        attached = str(ingested.get("circuit_id") or "").strip()
     if attached.startswith("circ_") and action not in {"approve", "reject"}:
         text = (
             f"{text}\n\n（客户已附上线路 {attached}。"
             "后续工具用这个 circuit_id，不要把句柄念给客户听。）"
+        )
+    chosen = str(algorithm_id or "").strip()
+    if not chosen.startswith("org."):
+        chosen = str(ingested.get("algorithm_id") or "").strip()
+    if chosen.startswith("org.") and action not in {"approve", "reject"}:
+        extra = _ingest_hint(ingested)
+        text = (
+            f"{text}\n\n（客户已附上配置，algorithm_id={chosen}。"
+            f"{extra}"
+            "用 qagent_hub_validate 核对后走对应工具，不要把内部 id 念给客户听。）"
         )
     try:
         worker = client or DshSessionClient()
@@ -147,6 +162,10 @@ def reset_chat(tenant_id: str = "") -> None:
     except OSError:
         pass
     clear_session_id(tenant_id=tenant_id)
+    try:
+        clear_ingest(tenant_id)
+    except OSError:
+        pass
 
 
 def list_sessions(tenant_id: str = "") -> dict[str, Any]:
@@ -164,6 +183,36 @@ def list_sessions(tenant_id: str = "") -> dict[str, Any]:
         )
     rows.sort(key=lambda row: str(row.get("updated_at") or ""), reverse=True)
     return {"sessions": rows[:8]}
+
+
+def _ingest_hint(ingested: dict[str, Any]) -> str:
+    origin = str(ingested.get("origin") or "")
+    if origin == "translated":
+        lead = "这份是外部文件，已转到公司流程配置。"
+    elif origin == "company":
+        lead = "这份是公司算法包输入，已套上公司流程信封。"
+    else:
+        lead = ""
+    bits: list[str] = []
+    brief = str(ingested.get("brief") or "").strip()
+    if brief:
+        bits.append(brief)
+    config = ingested.get("config") if isinstance(ingested.get("config"), dict) else {}
+    algo = config.get("algorithm") if isinstance(config.get("algorithm"), dict) else {}
+    molecule = str(algo.get("molecule") or config.get("molecule") or "").strip()
+    basis = str(algo.get("basis") or config.get("basis") or "").strip()
+    if molecule:
+        bits.append(f"分子 {molecule}")
+    if basis:
+        bits.append(f"基组 {basis}")
+    detail = "，".join(bits)
+    if lead and detail:
+        return f"{lead}{detail}。"
+    if lead:
+        return lead
+    if detail:
+        return f"{detail}。"
+    return ""
 
 
 def _session_title(text: str) -> str:

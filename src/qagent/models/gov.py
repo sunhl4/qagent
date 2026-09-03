@@ -30,6 +30,7 @@ LEAK_KEYS = frozenset(
 POOLS = ("policy", "provenance", "b3", "handles", "short_output")
 # E23 is reserved empty by L1-03-pl. Governance five-pool is E28–E32.
 GOV_EVAL_IDS = ("E28", "E29", "E30", "E31", "E32")
+HUB_EVAL_IDS = ("E33", "E34", "E35")
 BOOT_TOOLS = (
     "qagent_list_engines",
     "qagent_pin_circuit",

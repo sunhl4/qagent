@@ -58,6 +58,12 @@
     {"id": "S-GOV-08", "phase": "P2", "status": "implemented", "title": "ask notify file webhook", "fill": "src/qagent/services/notify.py"},
     {"id": "S-GOV-09", "phase": "P2", "status": "implemented", "title": "usage jsonl no payload", "fill": "src/qagent/services/usage.py"},
     {"id": "S-GOV-10", "phase": "P2", "status": "implemented", "title": "five-pool eval E28-E32", "fill": "contracts/eval/E28.json"},
-    {"id": "S-UX-01", "phase": "P2", "status": "implemented", "title": "error catalog and health lamps", "fill": "contracts/errors.json"}
+    {"id": "S-UX-01", "phase": "P2", "status": "implemented", "title": "error catalog and health lamps", "fill": "contracts/errors.json"},
+    {"id": "S-HUB-01", "phase": "P3", "status": "implemented", "title": "qagent_hub_list algo-hub face", "fill": "src/qagent/adapters/hub.py"},
+    {"id": "S-HUB-02", "phase": "P3", "status": "implemented", "title": "qagent_hub_describe one card", "fill": "src/qagent/adapters/hub.py"},
+    {"id": "S-HUB-03", "phase": "P3", "status": "implemented", "title": "qagent_hub_choose two VQE tracks", "fill": "src/qagent/adapters/hub.py"},
+    {"id": "S-HUB-04", "phase": "P3", "status": "implemented", "title": "qagent_hub_validate hub/v1 envelope", "fill": "src/qagent/adapters/hub.py"},
+    {"id": "S-HUB-05", "phase": "P3", "status": "implemented", "title": "qagent_hub_translate onto hub/v1", "fill": "src/qagent/services/translate.py"},
+    {"id": "S-CIRC-01", "phase": "P3", "status": "implemented", "title": "circuit job FSM on assignments", "fill": "src/qagent/services/circuit_job.py"}
   ]
 }

@@ -102,6 +102,11 @@
       "id": "R-READONLY-ALLOW",
       "tools": [
         "qagent_list_engines",
+        "qagent_hub_list",
+        "qagent_hub_describe",
+        "qagent_hub_choose",
+        "qagent_hub_validate",
+        "qagent_hub_translate",
         "qdata_list_providers",
         "qdata_list_assets",
         "qdata_get_run_record",
@@ -123,6 +128,9 @@
       "tools": [
         "qagent_list_engines",
         "qagent_pin_circuit",
+        "qagent_hub_list",
+        "qagent_hub_describe",
+        "qagent_hub_choose",
         "qccd_docs_search",
         "ionstack_twin_identity"
       ],
@@ -139,6 +147,9 @@
         "qchem_export_parity",
         "qdata_sandbox_exec",
         "qagent_pin_circuit",
+        "qagent_hub_validate",
+        "qagent_hub_translate",
+        "qagent_circuit_job",
         "qiskit_aer_run",
         "cirq_simulator_run"
       ],

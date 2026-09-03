@@ -41,6 +41,28 @@
       ]
     },
     {
+      "id": "hub",
+      "engine": null,
+      "status": "native",
+      "note": "Qagent-owned algo-hub face. list/describe/choose/validate/translate only. Never run. Never emit twin_id.",
+      "methods": [
+        {"name": "list_assets", "tool": "qagent_hub_list", "slot": "S-HUB-01"},
+        {"name": "describe", "tool": "qagent_hub_describe", "slot": "S-HUB-02"},
+        {"name": "choose", "tool": "qagent_hub_choose", "slot": "S-HUB-03"},
+        {"name": "validate", "tool": "qagent_hub_validate", "slot": "S-HUB-04"},
+        {"name": "translate", "tool": "qagent_hub_translate", "slot": "S-HUB-05"}
+      ]
+    },
+    {
+      "id": "workflow",
+      "engine": null,
+      "status": "native",
+      "note": "Circuit job FSM. Estimate/aer/twin still go through invoke(). Tool face never carries twin_id.",
+      "methods": [
+        {"name": "circuit_job", "tool": "qagent_circuit_job", "slot": "S-CIRC-01"}
+      ]
+    },
+    {
       "id": "qdata",
       "engine": "qdata",
       "status": "wired",

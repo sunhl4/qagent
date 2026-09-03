@@ -111,6 +111,10 @@ def run(assignment_id: str, *, approved: bool = False, attended: bool = False, t
         return _finish(row, _run_algo(row, approved=approved, attended=attended))
     if row.room == ROOM_SIGN:
         return _finish(row, _run_sign(row, approved=approved))
+    if row.columns.get("workflow") == "circuit" or row.recipe == "circuit_job":
+        from qagent.services.circuit_job import advance
+
+        return _finish(row, advance(row, approved=approved))
     return _finish(row, _run_lab(row, approved=approved))
 
 
@@ -120,6 +124,10 @@ def approve(assignment_id: str, tenant_id: str = "") -> Assignment:
         row.status = STATUS_RUNNING
         row.error = None
         row = _persist(row)
+        if row.columns.get("workflow") == "circuit" or row.recipe == "circuit_job":
+            from qagent.services.circuit_job import advance
+
+            return _finish(row, advance(row, approved=True))
         return _finish(row, _resume(row))
     return run(assignment_id, approved=True)
 

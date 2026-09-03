@@ -2,6 +2,12 @@
   "tools": [
     {"name": "qagent_list_engines", "slot": "S-ENG-01", "schema": "qagent_list_engines.json"},
     {"name": "qagent_pin_circuit", "slot": "S-ENG-02", "schema": "qagent_pin_circuit.json"},
+    {"name": "qagent_hub_list", "slot": "S-HUB-01", "schema": "qagent_hub_list.json"},
+    {"name": "qagent_hub_describe", "slot": "S-HUB-02", "schema": "qagent_hub_describe.json"},
+    {"name": "qagent_hub_choose", "slot": "S-HUB-03", "schema": "qagent_hub_choose.json"},
+    {"name": "qagent_hub_validate", "slot": "S-HUB-04", "schema": "qagent_hub_validate.json"},
+    {"name": "qagent_hub_translate", "slot": "S-HUB-05", "schema": "qagent_hub_translate.json"},
+    {"name": "qagent_circuit_job", "slot": "S-CIRC-01", "schema": "qagent_circuit_job.json"},
     {"name": "qdata_list_providers", "slot": "S-QDATA-07", "schema": "qdata_list_providers.json"},
     {"name": "qdata_run_recipe", "slot": "S-QDATA-04", "schema": "qdata_run_recipe.json"},
     {"name": "qdata_submit_job", "slot": "S-QDATA-08", "schema": "qdata_submit_job.json"},

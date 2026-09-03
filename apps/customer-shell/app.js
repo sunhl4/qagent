@@ -13,7 +13,7 @@ const FIELDS = [
   "ionstack_home",
 ];
 
-const state = { busy: false, ready: false, inboxKey: "", receiptKey: "", elnKey: "", currentCircuitId: "", currentCircuitScore: 0, govLamps: {}, hasAsk: false, inspector: "task" };
+const state = { busy: false, ready: false, inboxKey: "", receiptKey: "", elnKey: "", currentCircuitId: "", currentCircuitScore: 0, currentAlgorithmId: "", govLamps: {}, hasAsk: false, hasReceipt: false, receiptFresh: false, railOpen: false, railUser: null, inspector: "task", chatGen: 0 };
 
 const $ = (id) => document.getElementById(id);
 
@@ -90,11 +90,56 @@ function applyCustomerRole() {
   });
 }
 
+function applyRail() {
+  const app = document.querySelector(".app");
+  if (app) app.classList.toggle("rail-off", !state.railOpen);
+  const btn = $("btn-rail");
+  if (btn) {
+    btn.setAttribute("aria-pressed", state.railOpen ? "true" : "false");
+    btn.dataset.ask = state.hasAsk ? "true" : "false";
+    btn.title = state.hasAsk ? "本任务 · 有待批准" : "本任务";
+  }
+  const live = $("rail-live");
+  if (live) {
+    if (state.hasAsk) live.textContent = "有待批准的上机";
+    else if (state.receiptFresh) live.textContent = "有新回执";
+    else live.textContent = "证据与纪要跟这一次作业走";
+  }
+}
+
+function openRail(reason) {
+  if (reason === "user" || reason === "inspect" || reason === "approve") {
+    state.railUser = "on";
+  }
+  state.railOpen = true;
+  applyRail();
+}
+
+function closeRail(reason) {
+  if (reason === "user") state.railUser = "off";
+  state.railOpen = false;
+  applyRail();
+}
+
+function toggleRail() {
+  if (state.railOpen) closeRail("user");
+  else openRail("user");
+}
+
+function syncRailFromWork() {
+  state.railOpen = Boolean(
+    state.hasAsk ||
+    state.railUser === "on" ||
+    (state.receiptFresh && state.railUser !== "off")
+  );
+  applyRail();
+}
+
 function showInspector(tab) {
   const name = String(tab || "task");
   state.inspector = name;
   document.querySelectorAll("[data-pane]").forEach((pane) => {
-    pane.hidden = pane.getAttribute("data-pane") !== name;
+    pane.hidden = false;
   });
   document.querySelectorAll("[data-tab]").forEach((btn) => {
     const on = btn.getAttribute("data-tab") === name;
@@ -104,6 +149,9 @@ function showInspector(tab) {
     const nav = btn.getAttribute("data-nav");
     btn.classList.toggle("on", nav === name);
   });
+  if (name === "task" || name === "machine" || name === "record") {
+    openRail("inspect");
+  }
 }
 
 function showSettingsPage(page) {
@@ -581,7 +629,12 @@ function paintReceipts(rows) {
   const recent = signed.concat(other).slice(0, 8);
   const current = newestAssignment(shown) || newestAssignment(recent);
   const painted = current ? [current] : [];
+  state.hasReceipt = painted.length > 0;
   const key = receiptKey(painted);
+  if (state.receiptKey && key && key !== state.receiptKey) {
+    state.receiptFresh = true;
+    if (state.railUser === "off") state.railUser = null;
+  }
   if (key === state.receiptKey && list.childElementCount === painted.length) return;
   state.receiptKey = key;
   list.textContent = "";
@@ -795,6 +848,7 @@ async function refreshInbox() {
       $("session-empty").hidden = false;
     }
   }
+  syncRailFromWork();
 }
 
 function faceGovLamps(face) {
@@ -950,7 +1004,7 @@ function drawCircuitSvg(svg, data) {
   };
   for (let q = 0; q < n; q += 1) {
     const y = top + q * rowH;
-    const label = el("text", { x: 4, y: y + 4, fill: "#8ea0b0", "font-size": "10" });
+    const label = el("text", { x: 4, y: y + 4, fill: "#64748b", "font-size": "10", "font-weight": "500" });
     label.textContent = `q${q}`;
     svg.appendChild(label);
     svg.appendChild(el("line", {
@@ -958,7 +1012,7 @@ function drawCircuitSvg(svg, data) {
       y1: y,
       x2: width - 8,
       y2: y,
-      stroke: "#2a3846",
+      stroke: "#cbd5e1",
       "stroke-width": "1",
     }));
   }
@@ -970,20 +1024,20 @@ function drawCircuitSvg(svg, data) {
       const c = top + qs[0] * rowH;
       const t = top + qs[1] * rowH;
       svg.appendChild(el("line", {
-        x1: x, y1: c, x2: x, y2: t, stroke: "#6ba3c7", "stroke-width": "1.4",
+        x1: x, y1: c, x2: x, y2: t, stroke: "#0284c7", "stroke-width": "1.4",
       }));
-      svg.appendChild(el("circle", { cx: x, cy: c, r: 3.2, fill: "#6ba3c7" }));
+      svg.appendChild(el("circle", { cx: x, cy: c, r: 3.2, fill: "#0284c7" }));
       if (name === "CZ") {
-        svg.appendChild(el("circle", { cx: x, cy: t, r: 3.2, fill: "#6ba3c7" }));
+        svg.appendChild(el("circle", { cx: x, cy: t, r: 3.2, fill: "#0284c7" }));
       } else {
         svg.appendChild(el("circle", {
-          cx: x, cy: t, r: 6, fill: "none", stroke: "#6ba3c7", "stroke-width": "1.4",
+          cx: x, cy: t, r: 6, fill: "#ffffff", stroke: "#0284c7", "stroke-width": "1.4",
         }));
         svg.appendChild(el("line", {
-          x1: x - 4, y1: t, x2: x + 4, y2: t, stroke: "#6ba3c7", "stroke-width": "1.4",
+          x1: x - 4, y1: t, x2: x + 4, y2: t, stroke: "#0284c7", "stroke-width": "1.4",
         }));
         svg.appendChild(el("line", {
-          x1: x, y1: t - 4, x2: x, y2: t + 4, stroke: "#6ba3c7", "stroke-width": "1.4",
+          x1: x, y1: t - 4, x2: x, y2: t + 4, stroke: "#0284c7", "stroke-width": "1.4",
         }));
       }
       return;
@@ -997,15 +1051,17 @@ function drawCircuitSvg(svg, data) {
         y: y - h / 2,
         width: w,
         height: h,
-        rx: 2,
-        fill: "#16202b",
-        stroke: name === "X" ? "#c9a227" : "#6ba3c7",
+        rx: 3,
+        fill: "#ffffff",
+        stroke: name === "X" ? "#b45309" : "#0284c7",
+        "stroke-width": "1.2",
       }));
       const text = el("text", {
         x,
         y: y + 3.5,
-        fill: "#e8eef4",
+        fill: name === "X" ? "#b45309" : "#0f172a",
         "font-size": name.length > 3 ? "7" : "9",
+        "font-weight": "600",
         "text-anchor": "middle",
       });
       text.textContent = name.length > 4 ? name.slice(0, 4) : name;
@@ -1394,27 +1450,74 @@ function addMessage(role, text, extras) {
   return article;
 }
 
+function attachUploadFile(file) {
+  if (!file || state.busy) return;
+  ingestUpload(file);
+}
+
+function attachConfigFile(file) {
+  if (!file || state.busy) return;
+  ingestUpload(file);
+}
+
 function attachCircuitFile(file) {
   if (!file || state.busy) return;
+  ingestUpload(file);
+}
+
+function configReceiptCopy(data) {
+  const origin = String((data && data.origin) || "");
+  if (origin === "translated") return "这份不是公司流程信封，我已按内容转到对应作业。";
+  if (origin === "company") return "已认出这是公司算法包的输入，已套上公司流程。";
+  return "已收下你的配置，校验通过。";
+}
+
+function ingestUpload(file) {
   const reader = new FileReader();
   reader.onload = () => {
     setBusy(true);
-    fetch("/api/circuits", {
+    fetch("/api/uploads", {
       method: "POST",
       headers: headers(),
-      body: JSON.stringify({ qasm3: String(reader.result || "") }),
+      body: JSON.stringify({ filename: file.name, text: String(reader.result || "") }),
     })
       .then((res) => res.json().then((data) => ({ ok: res.ok, data })))
       .then(({ ok, data }) => {
-        if (!ok || !data || !data.circuit_id) {
-          addMessage("assistant", (data && data.error) || "这份线路没收下。请用 OpenQASM。");
+        if (!ok || !data) {
+          addMessage("assistant", (data && data.error) || "这份文件没收下。请用 OpenQASM，或 YAML / JSON。");
           return;
         }
-        rememberCircuit(data, true);
-        addMessage("assistant", "已收下你的线路。可以下载核对，或接着让我估计、上机。", { circuit: data });
+        if (data.kind === "circuit") {
+          if (!data.circuit || !data.circuit.circuit_id) {
+            addMessage("assistant", data.error || "这份线路没收下。请用 OpenQASM。");
+            return;
+          }
+          rememberCircuit(data.circuit, true);
+          if (data.job && data.job.status === "needs_ask") {
+            addMessage("assistant", "已收下你的线路，并做了时间估计。上机前会问你。", { circuit: data.circuit });
+            return;
+          }
+          addMessage("assistant", "已收下你的线路。可以下载核对，或接着让我估计、上机。", { circuit: data.circuit });
+          return;
+        }
+        if (data.kind !== "config") {
+          addMessage("assistant", data.error || "这份文件没收下。请用 OpenQASM，或 YAML / JSON。");
+          return;
+        }
+        if (data.circuit) rememberCircuit(data.circuit, true);
+        if (data.ok && data.algorithm_id) state.currentAlgorithmId = String(data.algorithm_id);
+        if (data.ok && (data.algorithm_id || data.circuit)) {
+          let msg = `${configReceiptCopy(data)}可以说要仿真还是先估计。`;
+          if (data.job && data.job.status === "needs_ask") {
+            msg = `${configReceiptCopy(data)}已做时间估计。上机前会问你。`;
+          }
+          addMessage("assistant", msg, data.circuit ? { circuit: data.circuit } : undefined);
+          return;
+        }
+        addMessage("assistant", (data.errors && data.errors[0]) || data.error || "这份配置没有通过校验。");
       })
       .catch(() => {
-        addMessage("assistant", "这份线路这次没附上。");
+        addMessage("assistant", "这份文件这次没附上。");
       })
       .finally(() => setBusy(false));
   };
@@ -1429,17 +1532,29 @@ function paintWelcome(status) {
   const body = ready
     ? "用平常话交办就行。模型会自己选公司工具，没有写死的配方。上机前会问你。"
     : "用平常话写下要算什么。本机还没接模型时，我不会假装已经在算。";
-  root.innerHTML = `<h2>${title}</h2><p>${body}</p><ul class="starters"></ul><ul class="packs"></ul>`;
+  root.innerHTML = `<p class="welcome-kicker">幺正 · 控制台</p><h2>${title}</h2><p>${body}</p><ul class="welcome-brief"><li><strong>平常话</strong><span>自然语言交办，不必报内部名</span></li><li><strong>配置</strong><span>YAML / JSON 收下后转到公司流程</span></li><li><strong>线路</strong><span>OpenQASM 钉住，先估计再上机</span></li></ul><ul class="starters"></ul><ul class="packs"></ul>`;
   const starters = root.querySelector(".starters");
   [
-    { label: "先看看接了哪些软件", text: "我们接了哪些软件？先别上机。" },
-    { label: "先估计，先不上机", text: "先做时间估计，先不上机。" },
+    { label: "先看看接了哪些软件", text: "我们接了哪些软件？先别上机。", note: "只盘点已接线的公司软件，不上机、不改配置。" },
+    { label: "先估计，先不上机", text: "先做时间估计，先不上机。", note: "先看时间与预检。真机要你在许可单上拍板。" },
   ].forEach((row) => {
     const item = document.createElement("li");
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = "ghost";
-    btn.textContent = row.label;
+    const mark = document.createElement("span");
+    mark.className = "starter-mark";
+    mark.setAttribute("aria-hidden", "true");
+    const copy = document.createElement("span");
+    copy.className = "starter-copy";
+    const name = document.createElement("span");
+    name.className = "starter-title";
+    name.textContent = row.label;
+    const note = document.createElement("span");
+    note.className = "starter-note";
+    note.textContent = row.note;
+    copy.append(name, note);
+    btn.append(mark, copy);
     btn.addEventListener("click", () => send(row.text));
     item.appendChild(btn);
     starters.appendChild(item);
@@ -1492,6 +1607,7 @@ function setBusy(busy) {
   $("stage").setAttribute("aria-busy", busy ? "true" : "false");
   $("composer").setAttribute("aria-busy", busy ? "true" : "false");
   $("send").setAttribute("aria-busy", busy ? "true" : "false");
+  if ($("btn-new")) $("btn-new").setAttribute("aria-busy", busy ? "true" : "false");
   $("inbox-list").querySelectorAll("button").forEach((btn) => {
     btn.disabled = busy;
   });
@@ -1518,18 +1634,21 @@ async function send(text) {
   const message = (text || $("prompt").value || "").trim();
   if (!message || state.busy) return;
   if (!text) $("prompt").value = "";
+  const gen = state.chatGen;
   addMessage("user", message);
   const pending = addMessage("assistant busy", "在办…");
   setBusy(true);
   try {
     const payload = { message };
     if (state.currentCircuitId) payload.circuit_id = state.currentCircuitId;
+    if (state.currentAlgorithmId) payload.algorithm_id = state.currentAlgorithmId;
     const res = await fetch("/api/chat", {
       method: "POST",
       headers: headers(),
       body: JSON.stringify(payload),
     });
     const data = await readJson(res);
+    if (gen !== state.chatGen) return;
     pending.remove();
     if (!res.ok || data.error) {
       addMessage("assistant fault", humanChatFault(res.status, data));
@@ -1554,28 +1673,34 @@ async function send(text) {
       await pollStatus(shown);
     }
   } catch (_err) {
+    if (gen !== state.chatGen) return;
     pending.remove();
     const shown = addMessage("assistant busy", "连线晃了一下。我继续看这一轮。");
     try {
       await pollStatus(shown);
     } catch (_poll) {
-      addMessage("assistant fault", "这次没连上。再发一句即可。");
+      if (gen === state.chatGen) addMessage("assistant fault", "这次没连上。再发一句即可。");
     }
   } finally {
-    setBusy(false);
-    refreshInbox();
-    const active = document.activeElement;
-    if (!active || active === document.body || active === $("send") || active === $("prompt")) {
-      $("prompt").focus();
+    if (gen === state.chatGen) {
+      setBusy(false);
+      refreshInbox();
+      const active = document.activeElement;
+      if (!active || active === document.body || active === $("send") || active === $("prompt")) {
+        $("prompt").focus();
+      }
     }
   }
 }
 
 async function pollStatus(article) {
+  const gen = state.chatGen;
   refreshInbox();
   let misses = 0;
   for (let i = 0; i < 180; i += 1) {
+    if (gen !== state.chatGen) break;
     await new Promise((resolve) => setTimeout(resolve, 1000));
+    if (gen !== state.chatGen) break;
     try {
       const data = await readJson(await fetch("/api/chat/status", { headers: headers() }));
       if (data.error || typeof data.ready !== "boolean") {
@@ -1617,7 +1742,7 @@ async function pollStatus(article) {
       if (misses >= 8) break;
     }
   }
-  if (article && article.querySelector(".msg-body")) {
+  if (gen === state.chatGen && article && article.querySelector(".msg-body")) {
     const body = article.querySelector(".msg-body");
     const text = String(body.textContent || "").trim();
     if (!text || text.indexOf("连线晃了一下") >= 0 || text === "在办…" || text.indexOf("还在办") === 0) {
@@ -1667,7 +1792,9 @@ async function saveSettings() {
 }
 
 function newChat() {
-  if (state.busy) return;
+  state.chatGen = (state.chatGen || 0) + 1;
+  const dialog = $("settings");
+  if (dialog && dialog.open) dialog.close();
   setBusy(true);
   const reset = token()
     ? fetch("/api/agent/reset", { method: "POST", headers: headers() })
@@ -1677,6 +1804,9 @@ function newChat() {
     .then(({ ok }) => {
       state.currentCircuitId = "";
       state.currentCircuitScore = 0;
+      state.currentAlgorithmId = "";
+      state.railUser = null;
+      state.receiptFresh = false;
       $("thread").textContent = "";
       return fetch("/api/workplace", { headers: headers() })
         .then((res) => res.json())
@@ -1690,6 +1820,8 @@ function newChat() {
       refreshInbox();
       if (!ok) {
         addMessage("assistant", "这一页已清空。要断开运行时会话，请用组内地址打开。");
+      } else {
+        addMessage("assistant", "这一页已清空。");
       }
       $("prompt").focus();
     })
@@ -1723,6 +1855,13 @@ async function boot() {
   if ($("btn-new")) {
     $("btn-new").addEventListener("click", () => newChat());
   }
+  if ($("btn-rail")) {
+    $("btn-rail").addEventListener("click", () => toggleRail());
+  }
+  if ($("btn-rail-close")) {
+    $("btn-rail-close").addEventListener("click", () => closeRail("user"));
+  }
+  applyRail();
   $("btn-settings").addEventListener("click", () => {
     applyCustomerRole();
     revealStaffPackIfNeeded();
@@ -1756,7 +1895,7 @@ async function boot() {
     $("circuit-file").addEventListener("change", (ev) => {
       const file = ev.target.files && ev.target.files[0];
       ev.target.value = "";
-      attachCircuitFile(file);
+      attachUploadFile(file);
     });
   }
   $("settings-form").addEventListener("submit", (ev) => {

@@ -1,0 +1,18 @@
+{
+  "id": "E35",
+  "phase": "P3",
+  "status": "implemented",
+  "preset": "lab",
+  "slot": "S-HUB-05",
+  "prompt": "外部分子 JSON，转到哪条公司作业？",
+  "invoke_tool": "qagent_hub_translate",
+  "invoke_args": { "config": { "molecule": "H2", "basis": "sto-3g" } },
+  "allowed_tools": ["qagent_hub_translate"],
+  "assertions": [
+    { "ok": true },
+    { "path": "algorithm_id", "eq": "org.chem.vqe" },
+    { "path": "origin", "eq": "translated" },
+    { "path": "from_kind", "eq": "molecule" },
+    { "absent_keys": ["twin_id", "qasm3", "body"] }
+  ]
+}

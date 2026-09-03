@@ -9,6 +9,10 @@
 | `decide()` | 政策：allow / ask / deny |
 | `invoke("qagent_list_engines")` | 五包打头且 `wired`；Cirq 在其后，`kind=interop`，`provenance=cirq`，不发 `twin_id`。Pennylane 在 `reserved_engines`，不在 ids。不算接线 |
 | `invoke("qagent_pin_circuit")` | 只回 `circuit_id` |
+| `qagent_hub_*` | algo-hub 只读目录、选型、转写。有分子走 Q-chem VQE，已有 Pauli 走 uqc HEA。公司包或外部 JSON 先套上 hub/v1。不 run、不发第三句柄 |
+| `qagent_circuit_job` | 线路作业：校验 → 估价 → ask → TwinRun 或 Aer。工具回包无第三句柄 |
+| `POST /api/uploads` | OpenQASM 钉线路并开作业；YAML/JSON 读懂后转到公司流程，带线路则先估计再问上机 |
+| `POST /api/circuit-jobs` | 已钉线路后启动六阶段状态机，状态进 assignments |
 | `qdata_*` | 有 CLI 则 `qdata run`（`source=qdata-cli`）；否则本地卡 `qagent-local-card`。设了 `QAGENT_QDATA_URL` 的 job 走 HTTP，不通就失败 |
 | 交办 | `.qagent/assignments.jsonl`；`status=signed` 当且仅当活 `twin_id` + `qccd-twin` |
 | 对话 | `POST /api/chat` 转发人话到 dsh `session.prompt`；`GET /api/chat/status` 短轮询同一 session 的气泡/工具卡。已设租户各一条 session。无模型先诚实。**不**走 `services.agent._loop`。上机仍要 `QAGENT_SHELL_TOKEN` |

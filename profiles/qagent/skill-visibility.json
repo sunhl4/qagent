@@ -24,6 +24,10 @@
       "visible": ["lab", "sign"]
     },
     {
+      "id": "circuit-job",
+      "visible": ["lab", "sign"]
+    },
+    {
       "id": "write-provider",
       "visible": ["algo"]
     },

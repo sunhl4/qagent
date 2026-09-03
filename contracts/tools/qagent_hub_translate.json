@@ -1,0 +1,24 @@
+{
+  "name": "qagent_hub_translate",
+  "description": "Map a company-pack or foreign JSON/YAML onto a hub/v1 config. Does not run. Does not emit qasm3.",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "config": { "type": "object" },
+      "text": { "type": "string" }
+    }
+  },
+  "output": {
+    "type": "object",
+    "required": ["ok", "origin", "from_kind", "errors"],
+    "properties": {
+      "ok": { "type": "boolean" },
+      "origin": { "type": "string" },
+      "from_kind": { "type": "string" },
+      "errors": { "type": "array" },
+      "algorithm_id": { "type": "string" }
+    },
+    "additionalProperties": false
+  },
+  "forbidden_output_keys": ["qasm3", "body", "twin_id", "token"]
+}

@@ -1,0 +1,15 @@
+{
+  "id": "E34",
+  "phase": "P3",
+  "status": "implemented",
+  "preset": "lab",
+  "slot": "S-HUB-03",
+  "prompt": "已经是 Pauli，选哪条 VQE？",
+  "invoke_tool": "qagent_hub_choose",
+  "invoke_args": { "has_molecule": false },
+  "allowed_tools": ["qagent_hub_choose"],
+  "assertions": [
+    { "path": "algorithm_id", "eq": "org.algo.vqe.hea" },
+    { "absent_keys": ["twin_id", "qasm3", "body"] }
+  ]
+}

@@ -21,6 +21,10 @@ _PUBLIC_KEYS = (
     "qdata_home",
     "qchem_home",
     "ionstack_home",
+    "qdata_url",
+    "qchem_url",
+    "twin_url",
+    "hub_url",
 )
 SECRET_KEYS = ("llm_api_key", "hpc_secret", "quantum_secret")
 _SECRET_KEYS = SECRET_KEYS
@@ -29,6 +33,10 @@ _DSH_HOME_ENV = (
     ("qchem_home", "QAGENT_QCHEM_HOME"),
     ("ionstack_home", "QAGENT_IONSTACK_HOME"),
     ("knowledge_path", "QAGENT_KNOWLEDGE_PATH"),
+    ("qdata_url", "QAGENT_QDATA_URL"),
+    ("qchem_url", "QAGENT_QCHEM_URL"),
+    ("twin_url", "QAGENT_TWIN_URL"),
+    ("hub_url", "QAGENT_ALGO_HUB_URL"),
 )
 _DSH_FORBIDDEN_KEYS = frozenset({"QAGENT_CLOUD_URL", "hpc_secret", "quantum_secret"})
 
@@ -144,6 +152,10 @@ class WorkplaceStore:
             qchem_home=str(merged.get("qchem_home") or ""),
             ionstack_home=str(merged.get("ionstack_home") or ""),
             knowledge_path=str(merged.get("knowledge_path") or ""),
+            qdata_url=str(merged.get("qdata_url") or ""),
+            qchem_url=str(merged.get("qchem_url") or ""),
+            twin_url=str(merged.get("twin_url") or ""),
+            hub_url=str(merged.get("hub_url") or ""),
         )
         return self.load()[0]
 
@@ -157,6 +169,10 @@ class WorkplaceStore:
         qchem_home: str = "",
         ionstack_home: str = "",
         knowledge_path: str = "",
+        qdata_url: str = "",
+        qchem_url: str = "",
+        twin_url: str = "",
+        hub_url: str = "",
     ) -> None:
         path = dsh_env_path()
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -169,6 +185,10 @@ class WorkplaceStore:
             "qchem_home": qchem_home,
             "ionstack_home": ionstack_home,
             "knowledge_path": knowledge_path,
+            "qdata_url": qdata_url,
+            "qchem_url": qchem_url,
+            "twin_url": twin_url,
+            "hub_url": hub_url,
         }
         lines = []
         if base_url:

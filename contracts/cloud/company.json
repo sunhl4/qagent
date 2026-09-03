@@ -1,0 +1,7 @@
+{
+  "note": "幺正托管的科学核 HTTP。空字符串表示尚未对公网发布。不要写密钥，不要写内网 IP。加载顺序：环境变量 > workplace 设置 > 本文件。空不是 localhost。",
+  "qdata_url": "",
+  "qchem_url": "",
+  "twin_url": "",
+  "hub_url": ""
+}

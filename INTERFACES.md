@@ -9,16 +9,18 @@
 | `decide()` | 政策：allow / ask / deny |
 | `invoke("qagent_list_engines")` | 五包打头且 `wired`；Cirq 在其后，`kind=interop`，`provenance=cirq`，不发 `twin_id`。Pennylane 在 `reserved_engines`，不在 ids。不算接线 |
 | `invoke("qagent_pin_circuit")` | 只回 `circuit_id` |
-| `qagent_hub_*` | algo-hub 只读目录、选型、转写。有分子走 Q-chem VQE，已有 Pauli 走 uqc HEA。公司包或外部 JSON 先套上 hub/v1。不 run、不发第三句柄 |
+| `qagent_hub_*` | 仓内 24 张公司卡片（`contracts/hub/catalog_face.json`），克隆即可 list/describe/choose/validate/translate。有分子走 Q-chem VQE，已有 Pauli 走 uqc HEA。公司包或外部 JSON 先套上 hub/v1。不 run、不发第三句柄、不要求本机 algo-hub |
 | `qagent_circuit_job` | 线路作业：校验 → 估价 → ask → TwinRun 或 Aer。工具回包无第三句柄 |
 | `POST /api/uploads` | OpenQASM 钉线路并开作业；YAML/JSON 读懂后转到公司流程，带线路则先估计再问上机 |
 | `POST /api/circuit-jobs` | 已钉线路后启动六阶段状态机，状态进 assignments |
-| `qdata_*` | 有 CLI 则 `qdata run`（`source=qdata-cli`）；否则本地卡 `qagent-local-card`。设了 `QAGENT_QDATA_URL` 的 job 走 HTTP，不通就失败 |
+| `qdata_*` | 有 `QAGENT_QDATA_URL` 走 HTTP；有 CLI 则 `qdata run`（`source=qdata-cli`）；否则本地卡。无 URL 且无 HOME 不探 `:8787` |
+| `qchem_*` | 有 `QAGENT_QCHEM_URL` 走 `POST /v1/run`（短 summary，禁止 Pauli/QASM 全文）；否则 CLI；再否则本地卡 |
 | 交办 | `.qagent/assignments.jsonl`；`status=signed` 当且仅当活 `twin_id` + `qccd-twin` |
 | 对话 | `POST /api/chat` 转发人话到 dsh `session.prompt`；`GET /api/chat/status` 短轮询同一 session 的气泡/工具卡。已设租户各一条 session。无模型先诚实。**不**走 `services.agent._loop`。上机仍要 `QAGENT_SHELL_TOKEN` |
 | mux peek | 历史在等批准但没有 mux `rpcId`（含 `pending_approval is None`）时，`snapshot` 短读 mux。`GET` 426 则 WebSocket。无帧则 pending 仍是 `None`，不铸 id。作答仍 `POST /api/respond`。`QAGENT_DSH_MUX=0` 跳过 |
-| 工作设置 | `GET|PUT /api/workplace`：本地模型、超算/量子计算机账户、知识库、软件包目录。密钥不回显 |
-| `QAGENT_CLOUD_URL` | 设置里的 `cloud_url`；空则未配置、从进程 unset。不进 `dsh.env`。`qiskit_ibm_run` 仍 deny |
+| 工作设置 | `GET|PUT /api/workplace`：本地模型、超算/量子计算机账户、知识库、软件包 **URL 优先**（`qdata_url` / `qchem_url` / `twin_url` / `hub_url`），本机目录仅组内调试。密钥不回显 |
+| 公司云 | `contracts/cloud/company.json`。加载顺序：环境变量 > workplace > 该文件。空 = 未发布，不探 localhost。`QAGENT_CLOUD_URL` 仍是可选 IBM/外云，不进 `dsh.env`。`qiskit_ibm_run` 仍 deny |
+| `qccd_docs_search` | 默认搜 `handbooks/` 与仓内 `knowledge/`；设置路径是追加 |
 | 回执 | `GET /api/assignments/{id}/receipt` → `qagent.receipt/v1` + `sha256:`；`POST /api/receipts/verify`；独立核验 `python3 scripts/verify_receipt.py receipt.json` |
 | `ionstack_twin_identity` | 只回 `preset` / `n_qubits` / `live`，不发 `twin_id` |
 | `ionstack_twin_run` | lab/sign 先 ask；`approved=True` 后只有活 Twin REST 发 `twin_id`，失败不本地伪造 |

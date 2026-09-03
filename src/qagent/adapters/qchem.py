@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import subprocess
+import urllib.error
 from typing import Any, Mapping
 
 from qagent.adapters.contracts import ROOT
@@ -11,11 +12,24 @@ from qagent.adapters.homes import (
     qchem_parity_bin,
     qchem_parity_bin_requested,
     qchem_python,
+    qchem_url,
 )
 from qagent.adapters.pin import NativePin
 from qagent.adapters.qdata import WiredQData, _db, _persist
-from qagent.adapters.support import new_id
+from qagent.adapters.support import http_json_url, new_id
 from qagent.models.handles import HANDLE_ASSET, HANDLE_CIRCUIT, HANDLE_TWIN
+
+_SOURCE_HTTP = "qchem-http"
+_HTTP_STRIP = frozenset(
+    {
+        "pauli_terms",
+        HANDLE_TWIN,
+        "qasm",
+        "qasm3",
+        "circuit",
+        "circuit_body",
+    }
+)
 
 _STRIP_FROM_SUMMARY = frozenset(
     {
@@ -160,11 +174,47 @@ def _pin_uccsd(args: Mapping[str, Any], live: Mapping[str, Any], scenario: str) 
     return payload
 
 
+def _qchem_http(path: str, body: Mapping[str, Any]) -> dict[str, Any]:
+    base = qchem_url()
+    if not base:
+        raise RuntimeError("qchem URL is not configured")
+    url = f"{base}{path}"
+    try:
+        live = http_json_url(url, "POST", dict(body), timeout=8)
+    except (OSError, TimeoutError, ValueError, urllib.error.URLError) as exc:
+        raise RuntimeError(f"qchem HTTP is not reachable ({url})") from exc
+    if not isinstance(live, dict):
+        raise RuntimeError(f"qchem HTTP must return an object ({url})")
+    return {key: value for key, value in live.items() if key not in _HTTP_STRIP}
+
+
+def _payload_from_http(args: Mapping[str, Any], live: Mapping[str, Any], scenario: str) -> dict[str, Any]:
+    logical = live.get("logical")
+    if isinstance(logical, dict) and isinstance((logical.get("body") or {}).get("instructions"), list):
+        return _pin_uccsd(args, live, scenario)
+    summary = {
+        key: live[key]
+        for key in live
+        if key not in _STRIP_FROM_SUMMARY and key != "logical"
+    }
+    summary["source"] = _SOURCE_HTTP
+    summary.setdefault("scenario", scenario)
+    asset_id = str(live.get("experiment_id") or live.get(HANDLE_ASSET) or new_id("asset"))
+    payload: dict[str, Any] = {HANDLE_ASSET: asset_id, "summary": summary}
+    circuit_id = str(live.get(HANDLE_CIRCUIT) or "").strip()
+    if circuit_id.startswith("circ_"):
+        payload[HANDLE_CIRCUIT] = circuit_id
+    _persist_live_card(args, payload, scenario)
+    return payload
+
+
 class WiredQChem:
-    """Wraps `qchem-run` / `qchem-export-parity` when present; honest local wrap if not."""
+    """HTTP first when QAGENT_QCHEM_URL is set; else CLI; honest local wrap last."""
 
     def run(self, args: Mapping[str, Any]) -> dict[str, Any]:
         scenario = str(args.get("scenario") or "minimal_vqe")
+        if qchem_url():
+            return _payload_from_http(args, _qchem_http("/v1/run", {"scenario": scenario}), scenario)
         if scenario in _UCCSD_SCENARIOS:
             return _pin_uccsd(args, _export_uccsd_logical(), scenario)
         exe = qchem_bin()
@@ -189,6 +239,12 @@ class WiredQChem:
         asset_id = str(args.get("asset_id") or "")
         if not asset_id:
             raise ValueError("asset_id is required")
+        if qchem_url():
+            live = _qchem_http("/v1/parity", {HANDLE_ASSET: asset_id})
+            table_id = live.get("table_id")
+            if not table_id:
+                raise RuntimeError("qchem HTTP did not return table_id")
+            return {"table_id": str(table_id)}
         exe = qchem_parity_bin()
         requested = qchem_parity_bin_requested()
         if requested and not exe:

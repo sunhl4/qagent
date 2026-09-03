@@ -10,4 +10,4 @@
 
 检索走 `qccd_docs_search`。workplace 设置里的「公司知识库路径」写入 `QAGENT_KNOWLEDGE_PATH`。本目录可以是其中一根。
 
-手册条目：`twinrun_fields.md`（TwinRun 字段）、`list_engines.md`（哪些包 / 五包）、`route_estimate.md`（估计 / makespan_ns）、`receipt.md`（回执 / verify_receipt）、`eln.md`（ELN / recipe_pin）、`tenant.md`（租户 / 隔离）。
+手册条目：`twinrun_fields.md`（TwinRun 字段）、`list_engines.md`（哪些包 / 五包）、`algo_catalog.md`（公司算法 / 软件目录）、`route_estimate.md`（估计 / makespan_ns）、`receipt.md`（回执 / verify_receipt）、`eln.md`（ELN / recipe_pin）、`tenant.md`（租户 / 隔离）。

@@ -22,12 +22,12 @@ unset _preset_file
 if [[ "${QAGENT_H01H_HEAL_ONLY:-}" == "1" ]]; then
   exit 0
 fi
-# H-03g: 空 HOME 从 workplace.json 补 export。环境里已有非空值不覆盖。
-# 只认四个字段。永不读 secrets.json。永不 export QAGENT_CLOUD_URL / 密钥。
+# H-03g: 空 HOME / 包 URL 从 workplace.json 补 export。环境里已有非空值不覆盖。
+# 永不读 secrets.json。永不 export QAGENT_CLOUD_URL / 密钥。空 URL 不是 localhost。
 _workplace_file="${QAGENT_WORKPLACE_FILE:-${QAGENT_ROOT}/.qagent/workplace.json}"
 while IFS= read -r _home_line || [[ -n "${_home_line}" ]]; do
   case "${_home_line}" in
-    QAGENT_QDATA_HOME=*|QAGENT_QCHEM_HOME=*|QAGENT_IONSTACK_HOME=*|QAGENT_KNOWLEDGE_PATH=*)
+    QAGENT_QDATA_HOME=*|QAGENT_QCHEM_HOME=*|QAGENT_IONSTACK_HOME=*|QAGENT_KNOWLEDGE_PATH=*|QAGENT_QDATA_URL=*|QAGENT_QCHEM_URL=*|QAGENT_TWIN_URL=*|QAGENT_ALGO_HUB_URL=*)
       export "${_home_line%%=*}=${_home_line#*=}"
       ;;
   esac
@@ -43,6 +43,10 @@ _MAP = (
     ("qchem_home", "QAGENT_QCHEM_HOME"),
     ("ionstack_home", "QAGENT_IONSTACK_HOME"),
     ("knowledge_path", "QAGENT_KNOWLEDGE_PATH"),
+    ("qdata_url", "QAGENT_QDATA_URL"),
+    ("qchem_url", "QAGENT_QCHEM_URL"),
+    ("twin_url", "QAGENT_TWIN_URL"),
+    ("hub_url", "QAGENT_ALGO_HUB_URL"),
 )
 
 path = Path(sys.argv[1])

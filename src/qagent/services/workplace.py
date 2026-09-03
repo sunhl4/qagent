@@ -5,6 +5,7 @@ import urllib.error
 import urllib.request
 from typing import Any
 
+from qagent.adapters.cloud import apply_cloud_env
 from qagent.adapters.support import json_headers
 from qagent.adapters.workplace_store import SECRET_KEYS, WorkplaceStore
 from qagent.models.workplace import Workplace, resolve_llm_endpoint
@@ -14,6 +15,12 @@ _HOME_ENV = {
     "qdata_home": "QAGENT_QDATA_HOME",
     "qchem_home": "QAGENT_QCHEM_HOME",
     "ionstack_home": "QAGENT_IONSTACK_HOME",
+}
+_URL_ENV = {
+    "qdata_url": "QAGENT_QDATA_URL",
+    "qchem_url": "QAGENT_QCHEM_URL",
+    "twin_url": "QAGENT_TWIN_URL",
+    "hub_url": "QAGENT_ALGO_HUB_URL",
 }
 _CLOUD_ENV = "QAGENT_CLOUD_URL"
 _SECRET_FIELDS = frozenset(SECRET_KEYS)
@@ -56,6 +63,11 @@ def apply_env(row: Workplace | None = None) -> None:
             os.environ[env_name] = value
     if current.knowledge_path:
         os.environ["QAGENT_KNOWLEDGE_PATH"] = current.knowledge_path
+    for field, env_name in _URL_ENV.items():
+        value = str(getattr(current, field, "") or "").strip()
+        if value:
+            os.environ[env_name] = value
+    apply_cloud_env()
     url = cloud_url(current)
     if url:
         os.environ[_CLOUD_ENV] = url

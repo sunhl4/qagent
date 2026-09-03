@@ -133,13 +133,13 @@
       <div id="set-page-workspace" class="settings-page" data-settings-page="workspace" role="tabpanel" aria-labelledby="set-tab-workspace">
         <section>
           <h3>知识库与云</h3>
-          <p class="hint">给控制台一份可查阅的公司材料。云地址可选，填了也不改工具名。</p>
+          <p class="hint">仓内手册默认可查。额外路径是追加。IBM / 外云地址可选，填了也不改工具名。</p>
           <label>公司知识库路径<input id="knowledge_path" placeholder="/path/to/knowledge" /></label>
           <label>云平台（可选）<input id="cloud_url" placeholder="https://…" /></label>
           <p class="hint">未填则不上 IBM / 云作业；填了也不改工具名，IBM 仍默认拒绝。</p>
         </section>
         <details class="staff-pack">
-          <summary>组内：模型与软件包目录</summary>
+          <summary>组内：模型与软件包</summary>
           <section>
             <h3>本地大模型</h3>
             <p class="hint">组内填写。客户对话不从这里选模型。</p>
@@ -149,11 +149,15 @@
             <label>模型池（每行 name | base_url | model）<textarea id="llm_pool" rows="3" placeholder="unitqc-qc | http://127.0.0.1:8001/v1 | unitqc-qc"></textarea></label>
           </section>
           <section>
-            <h3>公司软件包目录</h3>
-            <p class="hint">只填本机路径。控制台按合同接线，不会新写一套循环。</p>
-            <label>量子数据 qdata<input id="qdata_home" /></label>
-            <label>量子化学 qchem<input id="qchem_home" /></label>
-            <label>IonStack / 模拟器<input id="ionstack_home" /></label>
+            <h3>公司软件包（远程优先）</h3>
+            <p class="hint">别人部署时只填幺正托管的 HTTP。本机目录仅组内调试。空地址不是本机端口。</p>
+            <label>量子数据 URL<input id="qdata_url" placeholder="https://…" /></label>
+            <label>量子化学 URL<input id="qchem_url" placeholder="https://…" /></label>
+            <label>孪生 / Twin URL<input id="twin_url" placeholder="https://…" /></label>
+            <label>算法目录 URL<input id="hub_url" placeholder="https://…" /></label>
+            <label>量子数据 qdata 本机目录<input id="qdata_home" /></label>
+            <label>量子化学 qchem 本机目录<input id="qchem_home" /></label>
+            <label>IonStack / 模拟器本机目录<input id="ionstack_home" /></label>
           </section>
         </details>
       </div>

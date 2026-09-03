@@ -34,12 +34,32 @@ def qdata_bin() -> str | None:
 
 
 def qdata_url() -> str | None:
-    raw = os.environ.get("QAGENT_QDATA_URL")
-    return raw.rstrip("/") if raw else None
+    from qagent.adapters.cloud import qdata_url as _qdata_url
+
+    return _qdata_url()
 
 
-def qdata_probe_url() -> str:
-    return qdata_url() or "http://127.0.0.1:8787"
+def qdata_probe_url() -> str | None:
+    """Configured qdata HTTP only. Empty means unpublished, not :8787."""
+    return qdata_url()
+
+
+def qchem_url() -> str | None:
+    from qagent.adapters.cloud import qchem_url as _qchem_url
+
+    return _qchem_url()
+
+
+def twin_url() -> str | None:
+    from qagent.adapters.cloud import twin_url as _twin_url
+
+    return _twin_url()
+
+
+def hub_url() -> str | None:
+    from qagent.adapters.cloud import hub_url as _hub_url
+
+    return _hub_url()
 
 
 def qchem_python() -> str | None:

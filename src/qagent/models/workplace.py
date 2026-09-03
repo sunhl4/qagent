@@ -59,6 +59,10 @@ class Workplace:
     qdata_home: str = ""
     qchem_home: str = ""
     ionstack_home: str = ""
+    qdata_url: str = ""
+    qchem_url: str = ""
+    twin_url: str = ""
+    hub_url: str = ""
     has_llm_key: bool = False
     has_hpc_secret: bool = False
     has_quantum_secret: bool = False
@@ -80,6 +84,10 @@ class Workplace:
             "qdata_home": self.qdata_home,
             "qchem_home": self.qchem_home,
             "ionstack_home": self.ionstack_home,
+            "qdata_url": self.qdata_url,
+            "qchem_url": self.qchem_url,
+            "twin_url": self.twin_url,
+            "hub_url": self.hub_url,
             "has_llm_key": self.has_llm_key,
             "has_hpc_secret": self.has_hpc_secret,
             "has_quantum_secret": self.has_quantum_secret,

@@ -7,18 +7,32 @@ from typing import Any, Mapping
 from qagent.adapters.contracts import ROOT
 
 _BUILTIN = ROOT / "handbooks"
+_COMPANY_KNOWLEDGE = ROOT / "knowledge"
 _EXCERPT_CAP = 400
 _MAX_HITS = 8
 _TEXT_SUFFIXES = {".md", ".txt"}
 
 
 def _folders() -> list[tuple[str, Path]]:
-    found: list[tuple[str, Path]] = [("handbook", _BUILTIN)]
+    found: list[tuple[str, Path]] = [
+        ("handbook", _BUILTIN),
+        ("knowledge", _COMPANY_KNOWLEDGE),
+    ]
+    seen = {_COMPANY_KNOWLEDGE.resolve()}
     raw = os.environ.get("QAGENT_KNOWLEDGE_PATH") or ""
     for item in raw.split(os.pathsep):
         text = item.strip()
-        if text:
-            found.append(("knowledge", Path(text)))
+        if not text:
+            continue
+        path = Path(text)
+        try:
+            resolved = path.resolve()
+        except OSError:
+            resolved = path
+        if resolved in seen:
+            continue
+        seen.add(resolved)
+        found.append(("knowledge", path))
     return found
 
 

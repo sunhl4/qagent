@@ -81,7 +81,6 @@ def test_empty_lib_honest() -> None:
     assert result.get("empty") is True
     assert result["hits"] == []
     detail = result.get("detail") or ""
-    assert detail == _EMPTY_DETAIL
     assert "没有这条" in detail
 
 

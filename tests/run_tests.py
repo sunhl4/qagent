@@ -4042,6 +4042,25 @@ def test_h04() -> None:
     test_max_hits()
 
 
+def test_cloud_remote() -> None:
+    tests_dir = str(Path(__file__).resolve().parent)
+    if tests_dir not in sys.path:
+        sys.path.insert(0, tests_dir)
+    from test_cloud_remote import (
+        test_company_file_then_env_wins,
+        test_docs_default_company_knowledge,
+        test_empty_url_is_not_localhost,
+        test_hub_remote_index,
+        test_qchem_http_fixture,
+    )
+
+    test_empty_url_is_not_localhost()
+    test_company_file_then_env_wins()
+    test_docs_default_company_knowledge()
+    test_qchem_http_fixture()
+    test_hub_remote_index()
+
+
 def test_h04d() -> None:
     tests_dir = str(Path(__file__).resolve().parent)
     if tests_dir not in sys.path:
@@ -4496,6 +4515,7 @@ def main() -> int:
         ("h03i", test_h03i),
         ("h03j", test_h03j),
         ("h04", test_h04),
+        ("cloud_remote", test_cloud_remote),
         ("h04d", test_h04d),
         ("h04e", test_h04e),
         ("h04f", test_h04f),

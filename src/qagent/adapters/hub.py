@@ -5,7 +5,9 @@ import os
 from pathlib import Path
 from typing import Any, Mapping
 
+from qagent.adapters.cloud import hub_url
 from qagent.adapters.contracts import CONTRACTS
+from qagent.adapters.support import try_http_json_url
 
 _FACE = CONTRACTS / "hub" / "catalog_face.json"
 _FORBIDDEN_OUT = frozenset({"qasm3", "body", "twin_id", "token", "secret", "password"})
@@ -36,12 +38,45 @@ def _public_asset(row: Mapping[str, Any]) -> dict[str, Any]:
 
 
 def load_hub_face() -> dict[str, Any]:
-    """Bundled face, optionally replaced by a live algo-hub index."""
+    """Clone-shipped face. Overlay only if remote URL or staff HOME is set."""
     bundled = json.loads(_FACE.read_text(encoding="utf-8"))
+    remote = _try_remote_index()
+    if remote:
+        return remote
     live = _try_live_index()
     if live:
         return live
     return bundled
+
+
+def _face_from_raw(raw: Mapping[str, Any], source: str) -> dict[str, Any] | None:
+    assets = []
+    for row in raw.get("assets") or []:
+        if isinstance(row, dict) and row.get("id"):
+            assets.append(_public_asset(row))
+    if not assets:
+        return None
+    bundled = json.loads(_FACE.read_text(encoding="utf-8"))
+    choose = raw.get("choose") if isinstance(raw.get("choose"), dict) else None
+    return {
+        "api_version": "hub/v1",
+        "source": source,
+        "choose": choose or bundled.get("choose") or {},
+        "assets": assets,
+    }
+
+
+def _try_remote_index() -> dict[str, Any] | None:
+    base = hub_url()
+    if not base:
+        return None
+    for candidate in (f"{base}/v1/index", base):
+        live = try_http_json_url(candidate)
+        if isinstance(live, dict):
+            face = _face_from_raw(live, "remote")
+            if face:
+                return face
+    return None
 
 
 def _try_live_index() -> dict[str, Any] | None:
@@ -58,19 +93,7 @@ def _try_live_index() -> dict[str, Any] | None:
     raw = yaml.safe_load(index.read_text(encoding="utf-8"))
     if not isinstance(raw, dict):
         return None
-    assets = []
-    for row in raw.get("assets") or []:
-        if isinstance(row, dict) and row.get("id"):
-            assets.append(_public_asset(row))
-    if not assets:
-        return None
-    bundled = json.loads(_FACE.read_text(encoding="utf-8"))
-    return {
-        "api_version": "hub/v1",
-        "source": "live",
-        "choose": bundled.get("choose") or {},
-        "assets": assets,
-    }
+    return _face_from_raw(raw, "live")
 
 
 class NativeHub:

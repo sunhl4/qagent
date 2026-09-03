@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import sys
 import tempfile
 import traceback
@@ -12,6 +13,7 @@ from unittest.mock import patch
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
+from qagent.adapters.docs import WiredDocs
 from qagent.adapters.hub import NativeHub
 from qagent.adapters.pin import pin_from_qasm
 from qagent.entrypoints.shell_http import dispatch
@@ -50,6 +52,77 @@ def test_parse_config_yaml_subset() -> None:
     assert data["api_version"] == "hub/v1"
     assert data["algorithm_id"] == "org.chem.vqe"
     assert data["algorithm"]["native_format"] == "qchem-stack.scenario"
+
+
+_COMPANY_IDS = {
+    "org.algo.qaoa.maxcut",
+    "org.algo.qrc.mnist",
+    "org.algo.trotter.first_order",
+    "org.algo.vqe.hea",
+    "org.chem.adapt",
+    "org.chem.embed.dmet",
+    "org.chem.excited.qse",
+    "org.chem.excited.sceom",
+    "org.chem.excited.vqd",
+    "org.chem.gqe",
+    "org.chem.iqeb",
+    "org.chem.qpe",
+    "org.chem.sa_vqe",
+    "org.chem.sqd",
+    "org.chem.tetris_adapt",
+    "org.chem.vqe",
+    "org.compiler.h2",
+    "org.demo.uqcdemo",
+    "org.runtime.iontrap-noise",
+    "org.runtime.qiskit-uqc-sim",
+    "org.runtime.uqc-cloud",
+    "org.software.qchem-stack",
+    "org.software.uqc-algorithm",
+    "org.workflow.qccd",
+}
+
+_HUB_ENV = ("QAGENT_ALGO_HUB_HOME", "QAGENT_ALGO_HUB_URL")
+
+
+def test_bundled_catalog_ships_company_face() -> None:
+    previous = {key: os.environ.pop(key, None) for key in _HUB_ENV}
+    try:
+        text = (ROOT / "contracts" / "hub" / "catalog_face.json").read_text(encoding="utf-8")
+        assert "192.168" not in text
+        assert "gitlab" not in text.lower()
+        assert "gitee" not in text.lower()
+        listed = NativeHub().list_assets({})
+        assert listed["source"] == "bundled"
+        ids = {row["id"] for row in listed["assets"]}
+        assert ids == _COMPANY_IDS
+        assert listed["count"] == 24
+        algorithms = NativeHub().list_assets({"kind": "algorithm"})
+        assert algorithms["count"] == 12
+        described = NativeHub().describe({"id": "org.chem.sqd"})
+        assert described["id"] == "org.chem.sqd"
+        assert described["selectable"] is True
+        assert HANDLE_TWIN not in json.dumps(listed)
+    finally:
+        for key, value in previous.items():
+            if value is None:
+                os.environ.pop(key, None)
+            else:
+                os.environ[key] = value
+
+
+def test_catalog_docs_hit_without_local_hub() -> None:
+    previous = os.environ.pop("QAGENT_KNOWLEDGE_PATH", None)
+    os.environ.pop("QAGENT_ALGO_HUB_HOME", None)
+    try:
+        hits = WiredDocs().search({"query": "公司算法目录"})
+        paths = {item["path"].replace("\\", "/") for item in hits.get("hits") or []}
+        assert "manuals/algo_catalog.md" in paths
+        assert hits.get("empty") is False
+    finally:
+        if previous is None:
+            os.environ.pop("QAGENT_KNOWLEDGE_PATH", None)
+        else:
+            os.environ["QAGENT_KNOWLEDGE_PATH"] = previous
 
 
 def test_hub_choose_does_not_merge_vqe() -> None:
@@ -271,6 +344,8 @@ def main() -> int:
     for name, fn in (
         ("classify_three_modalities", test_classify_three_modalities),
         ("parse_config_yaml_subset", test_parse_config_yaml_subset),
+        ("bundled_catalog_ships_company_face", test_bundled_catalog_ships_company_face),
+        ("catalog_docs_hit_without_local_hub", test_catalog_docs_hit_without_local_hub),
         ("hub_choose_does_not_merge_vqe", test_hub_choose_does_not_merge_vqe),
         ("hub_validate_envelope", test_hub_validate_envelope),
         ("hub_tools_are_allowed_on_lab", test_hub_tools_are_allowed_on_lab),

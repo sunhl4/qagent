@@ -102,7 +102,11 @@ def http_json(
     *,
     timeout: float = 1.5,
 ) -> dict[str, Any]:
-    base = os.environ.get("QAGENT_TWIN_URL", "http://127.0.0.1:8765").rstrip("/")
+    from qagent.adapters.cloud import twin_url
+
+    base = twin_url()
+    if not base:
+        raise OSError("twin URL is not configured")
     target = f"{base}{path}"
     req = urllib.request.Request(
         target,

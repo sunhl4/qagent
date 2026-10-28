@@ -1,0 +1,20 @@
+\documentclass[11pt]{article}
+\usepackage[backend=biber,style=authoryear]{biblatex}
+\usepackage[hidelinks]{hyperref}
+\usepackage[a4paper,margin=25mm]{geometry}
+
+\addbibresource{refs.bib}
+
+\begin{document}
+\title{Golden Baseline: Bibliography with Biber}
+\author{Company Agent LaTeX Toolchain Lab}
+\date{2026-10-26}
+\maketitle
+
+\section{Overview}
+The biblatex run uses the biber backend. Citations \cite{knuth1984} and
+\cite{lamport1994} must settle without undefined references after the
+automatic reruns.
+
+\printbibliography
+\end{document}

@@ -1,8 +1,0 @@
-{
-  "type": "qagent/b3",
-  "required": [
-    "verdict"
-  ],
-  "additionalProperties": false,
-  "note": "Short fields only. No Pauli / CAL / bitstrings."
-}

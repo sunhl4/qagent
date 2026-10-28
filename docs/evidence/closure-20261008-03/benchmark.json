@@ -1,0 +1,16 @@
+{
+  "command": [
+    "/tmp/company-agent-dev/bin/python",
+    "/mnt/d/Yaozheng/sunhl4-qagent/scripts/benchmark_company_agent.py",
+    "--repeats",
+    "10"
+  ],
+  "cwd": "/mnt/d/Yaozheng/sunhl4-qagent",
+  "elapsed_ms": 13565,
+  "ended_at": "2026-10-08T14:22:16.707309+00:00",
+  "exit_code": 0,
+  "gate": "benchmark",
+  "log_sha256": "sha256:8d756e8d17d045c62d74445fa154b5e70691f81231af4cb75bd72c9464f06f42",
+  "started_at": "2026-10-08T14:22:03.142510+00:00",
+  "status": "passed"
+}

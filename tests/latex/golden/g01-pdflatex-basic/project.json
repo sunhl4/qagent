@@ -1,0 +1,11 @@
+{
+  "id": "g01-pdflatex-basic",
+  "compiler": "pdflatex",
+  "main": "main.tex",
+  "backend": null,
+  "packages": [],
+  "contains": ["Golden Matrix Baseline (pdfLaTeX)", "golden-basic-pdflatex"],
+  "pages_min": 1,
+  "purpose": "engine-baseline",
+  "description": "pdfLaTeX baseline with sections, cross references, an equation and a booktabs table."
+}

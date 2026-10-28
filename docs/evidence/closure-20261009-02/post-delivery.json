@@ -1,0 +1,66 @@
+{
+  "changes_since_previous_closure": {
+    "agent": {
+      "added": [
+        "scripts/acceptance_pytest.py",
+        "tests/test_acceptance_evidence.py"
+      ],
+      "modified": [
+        "README.md",
+        "scripts/record_closure.py",
+        "scripts/release_manifest.py",
+        "scripts/verify_acceptance.py",
+        "tests/test_acceptance.py",
+        "tests/test_bridge_behavior.py",
+        "tests/test_closure_recorder.py",
+        "tests/test_dsh_lifecycle.py",
+        "tests/test_release_manifest.py"
+      ],
+      "removed": []
+    },
+    "platform": {
+      "added": [],
+      "modified": [],
+      "removed": []
+    }
+  },
+  "commands": [
+    {
+      "command": [
+        "/tmp/company-agent-dev-20261009/bin/python",
+        "/mnt/d/Yaozheng/sunhl4-qagent/scripts/check_static.py"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "/tmp/company-agent-dev-20261009/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "--tb=short",
+        "tests/test_no_legacy.py"
+      ],
+      "exit_code": 0
+    }
+  ],
+  "documents_sha256": {
+    "/home/sunhl/.cursor/projects/mnt-d-Yaozheng-sunhl4-qagent/canvases/Q-agent-review-2026-09-28.canvas.tsx": "sha256:effdf96f2477711829245004ab680b7ee1293a7600d84e7c31a93e95c80a9316",
+    "/home/sunhl/projects/company-quantum-platform/docs/BACKLOG.md": "sha256:375c64383ff1aeb1bdda1b984654b20a6e1f41fbfc470d5ad56bc415b5486247",
+    "/home/sunhl/projects/company-quantum-platform/docs/PROGRESS.md": "sha256:7075534222ca7d6da0b9266474f6feb9beaac49c235c77769ef78d4557df04c3",
+    "/home/sunhl/projects/company-quantum-platform/docs/SOURCE_INVENTORY.md": "sha256:18b42c581d158250627a4266c657213ee01d5281ec40f081ca39095e050ce32f",
+    "/home/sunhl/projects/company-quantum-platform/docs/STATUS.md": "sha256:42e57bff7d50684dbf03198e1981b89f6d1149a68e795abb63d8a8473cea0ec7",
+    "/mnt/d/Yaozheng/sunhl4-qagent/README.md": "sha256:9375b15328ca613030cdbb35ddedfda4670b5110cb2195a41ca1ee1bd559faea",
+    "/mnt/d/Yaozheng/sunhl4-qagent/docs/deployment-and-evidence.zh-CN.md": "sha256:265c5c8e09b5b2e2752a9726fbd37fc638ef9efe2c1cf5b07023ee2198e438d4",
+    "/mnt/d/Yaozheng/sunhl4-qagent/docs/implementation-2026-10-08.zh-CN.md": "sha256:38fc67d8edc874455fb8dd2e6d3ecfe58e9e5f29394e3bb44351ca00ee2db9fb",
+    "/mnt/d/Yaozheng/sunhl4-qagent/docs/implementation-2026-10-09.zh-CN.md": "sha256:0a66b9bf2961a0d10eb5e623c3093b890ae23c1bee039eda2d0f5c3eccaf9176"
+  },
+  "ended_at": "2026-10-09T02:58:18.678838+00:00",
+  "external_acceptance": "blocked",
+  "format": "company-agent-post-delivery-check/1",
+  "inputs_still_match_final_run": true,
+  "production_authorized": false,
+  "release_accepted": false,
+  "scope": "evidence_identity_samples_links_static_and_document_architecture",
+  "status": "passed"
+}

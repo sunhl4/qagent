@@ -1,0 +1,20 @@
+{
+  "command": [
+    "/tmp/company-agent-dev-20261009/bin/python",
+    "/mnt/d/Yaozheng/sunhl4-qagent/scripts/verify_acceptance.py"
+  ],
+  "counts": {
+    "deselected": 1,
+    "failed": 0,
+    "passed": 616,
+    "skipped": 0
+  },
+  "cwd": "/mnt/d/Yaozheng/sunhl4-qagent",
+  "elapsed_ms": 272227,
+  "ended_at": "2026-10-09T02:43:35.975323+00:00",
+  "exit_code": 0,
+  "gate": "agent_local",
+  "log_sha256": "sha256:21756628343888ec7de3cc1936f58aeeb0c31855b94b41fa310c5ee2ec43cbbf",
+  "started_at": "2026-10-09T02:38:58.771501+00:00",
+  "status": "passed"
+}

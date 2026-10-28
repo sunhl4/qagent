@@ -1,0 +1,40 @@
+- insert:
+    - id: company-agent-policy
+      name: "@unitqc/company-agent-policy"
+    - id: company-agent-core
+      name: "@unitqc/company-agent-core"
+    - id: company-agent-quantum
+      name: "@unitqc/company-agent-quantum"
+    - id: company-agent-hpc
+      name: "@unitqc/company-agent-hpc"
+    - id: company-agent-latex
+      name: "@unitqc/company-agent-latex"
+    - id: company-agent-office
+      name: "@unitqc/company-agent-office"
+    - id: company-agent-plan
+      name: "@unitqc/company-agent-plan"
+
+- id: tool-web
+  name: "@deepseek-ai/dsh-tool-web"
+  config:
+    fetch: false
+
+- id: skill-filesystem
+  disabled: false
+  config:
+    includeDefaultRoots: false
+    customSkillDirs:
+      - !!js process.env.COMPANY_AGENT_SKILL_ROOT
+    watch: false
+
+- id: tool-skill
+  disabled: false
+
+- id: agent-presets
+  config:
+    default: company-agent
+    roots:
+      - path: !!js process.env.COMPANY_AGENT_PRESET_ROOT
+        trust: system
+    includeShippedRoot: false
+    includeUserRoot: false

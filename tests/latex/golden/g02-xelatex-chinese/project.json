@@ -1,0 +1,11 @@
+{
+  "id": "g02-xelatex-chinese",
+  "compiler": "xelatex",
+  "main": "main.tex",
+  "backend": null,
+  "packages": ["fontspec", "ctex"],
+  "contains": ["中文排版", "黄金基线"],
+  "pages_min": 1,
+  "purpose": "cjk-xelatex",
+  "description": "XeLaTeX Chinese baseline through ctex and Fandol fonts with an inline equation."
+}

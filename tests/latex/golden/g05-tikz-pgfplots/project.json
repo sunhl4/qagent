@@ -1,0 +1,11 @@
+{
+  "id": "g05-tikz-pgfplots",
+  "compiler": "pdflatex",
+  "main": "main.tex",
+  "backend": null,
+  "packages": ["tikz", "pgfplots"],
+  "contains": ["PGFPlots"],
+  "pages_min": 1,
+  "purpose": "graphics-tikz",
+  "description": "TikZ and PGFPlots baseline: an inline diagram plus an axis plot, no external images."
+}

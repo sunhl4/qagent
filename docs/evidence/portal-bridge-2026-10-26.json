@@ -1,0 +1,72 @@
+{
+ "base": "http://127.0.0.1:3084",
+ "at": "2026-10-26T14:34:21+08:00",
+ "probes": {
+  "/company-workspace/cloud/status": {
+   "code": "404",
+   "type": "",
+   "bytes": 0,
+   "set_cookie": ""
+  },
+  "/company-workspace/cloud/overview": {
+   "code": "404",
+   "type": "",
+   "bytes": 0,
+   "set_cookie": ""
+  },
+  "/company-workspace/hpc/status": {
+   "code": "404",
+   "type": "",
+   "bytes": 0,
+   "set_cookie": ""
+  },
+  "/company-workspace/hpc/overview": {
+   "code": "404",
+   "type": "",
+   "bytes": 0,
+   "set_cookie": ""
+  },
+  "/company-workspace/portal/cloud/": {
+   "code": "200",
+   "type": "text/html; charset=utf-8",
+   "bytes": 7594,
+   "set_cookie": "set-cookie: UQC_PORTAL_CLOUD_SESSIONID=FAAAAFm8P91N3RzIj/EnOhZNz9aI+I+GOeT2+icXqvI=&FAAAAImOzxifPP47WGIAQA==&HUAWEI &langfrombrows=&copyright=2014-2022; Path=/"
+  },
+  "/company-workspace/portal/hpc/": {
+   "code": "200",
+   "type": "text/html; charset=utf-8",
+   "bytes": 83063,
+   "set_cookie": ""
+  },
+  "/company-workspace/portal/hpc/manifest.json": {
+   "code": "200",
+   "type": "application/json; charset=UTF-8",
+   "bytes": 493,
+   "set_cookie": ""
+  },
+  "/company-workspace/portal/hpc/api/icon?type=favicon": {
+   "code": "200",
+   "type": "image/vnd.microsoft.icon",
+   "bytes": 1891,
+   "set_cookie": ""
+  },
+  "/company-workspace/portal/hpc/_next/static/css/654e4db575a35128.css": {
+   "code": "200",
+   "type": "text/css; charset=UTF-8",
+   "bytes": 3771,
+   "set_cookie": ""
+  },
+  "/company-workspace/portal/cloud/UI_component/css/xtheme-black.css": {
+   "code": "404",
+   "type": "text/html; charset=utf-8",
+   "bytes": 52,
+   "set_cookie": ""
+  },
+  "/company-workspace/portal/cloud/UI_component/commonDefine/UI_const.js": {
+   "code": "404",
+   "type": "text/html; charset=utf-8",
+   "bytes": 52,
+   "set_cookie": ""
+  }
+ }
+}

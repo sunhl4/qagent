@@ -1,0 +1,3 @@
+- insert:
+    - id: company-agent-policy
+      name: "@unitqc/company-agent-policy"

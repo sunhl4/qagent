@@ -1,0 +1,10 @@
+# Direct development, build and lock-generator inputs. Regenerate with scripts/lock_python.sh.
+pytest>=9,<10
+ruff>=0.9,<1
+build>=1.2,<2
+hypothesis>=6,<7
+setuptools>=77,<83
+wheel>=0.45,<1
+pip-tools==7.5.3
+# Included on all supported Python versions so Python 3.11 builds stay reproducible.
+tomli>=2,<3

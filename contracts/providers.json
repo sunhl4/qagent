@@ -1,0 +1,11 @@
+{
+  "protocol":"company-agent-provider/1.0",
+  "providers":[
+    {"id":"uniqon","kind":"platform","env":"COMPANY_QUANTUM_PLATFORM_INVOKE_URL","token_env":"COMPANY_QUANTUM_PLATFORM_TOKEN","operations":["algorithm.catalog","algorithm.run","asset.list","asset.get","asset.metrics","circuit.export"]},
+    {"id":"independent-simulator","kind":"simulator","env":"COMPANY_AGENT_SIMULATOR_INVOKE_URL","token_env":"COMPANY_AGENT_SIMULATOR_TOKEN","operations":["circuit.simulate"]},
+    {"id":"independent-compiler","kind":"compiler","env":"COMPANY_AGENT_COMPILER_INVOKE_URL","token_env":"COMPANY_AGENT_COMPILER_TOKEN","operations":["circuit.compile-estimate"]},
+    {"id":"ionstack-twinrun","kind":"device","env":"COMPANY_AGENT_DEVICE_INVOKE_URL","token_env":"COMPANY_AGENT_DEVICE_TOKEN","operations":["device.identity","device.run"]},
+    {"id":"uqc-cloud","kind":"cloud","env":"COMPANY_AGENT_CLOUD_INVOKE_URL","token_env":"COMPANY_AGENT_CLOUD_TOKEN","operations":["cloud.devices","cloud.submit","cloud.status","cloud.result"]},
+    {"id":"hpc-slurm-ssh","kind":"compute","env":"COMPANY_AGENT_HPC_INVOKE_URL","token_env":"COMPANY_AGENT_HPC_TOKEN","operations":["hpc.queue","hpc.submit","hpc.job-status","hpc.script-exists","hpc.resources","hpc.file-list","hpc.file-fetch","hpc.stage-file","hpc.job-cancel","hpc.dir-create","hpc.file-remove"]}
+  ]
+}

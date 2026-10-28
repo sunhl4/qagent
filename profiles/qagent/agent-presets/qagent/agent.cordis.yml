@@ -1,4 +1,0 @@
-# Empty on purpose. Host already has persona + qagent plugins.
-# Stock presets remount @deepseek-ai/dsh-persona and fail session.create.
-# Skills are listed via $DSH_HOME/skills (skills sync in start_runtime.sh), not here.
-[]

@@ -1,0 +1,98 @@
+{
+  "version": "1.0.0",
+  "policy": {
+    "forbidden_spdx": [
+      "AGPL-1.0-only",
+      "AGPL-1.0-or-later",
+      "AGPL-3.0-only",
+      "AGPL-3.0-or-later",
+      "SSPL-1.0",
+      "Elastic-License-2.0"
+    ],
+    "note": "逐项登记，不整仓默认采用（H55 从简口径：按引入范围登记，禁止许可证黑名单命中）；传递依赖树扫描由打包工具自查放行，后续批次引入逐包锁定。"
+  },
+  "components": [
+    {
+      "name": "deepseek_harness",
+      "version": "0.1.5-rc.2",
+      "license": "proprietary (company registry terms)",
+      "source": "company pnpm registry",
+      "scope": "production_runtime",
+      "notes": "DSH 唯一 Agent Runtime；品牌与再分发限制按公司内部条款遵守。"
+    },
+    {
+      "name": "dsh_subagent_codex",
+      "version": "0.1.5-rc.2",
+      "license": "proprietary (company registry terms)",
+      "source": "company pnpm registry",
+      "scope": "production_runtime",
+      "notes": "官方 Codex 子代理包装；permissionMode: never 边界由信任面保证。"
+    },
+    {
+      "name": "openai_codex",
+      "version": "0.153.4",
+      "license": "Apache-2.0 (declared upstream)",
+      "source": "upstream release",
+      "scope": "production_runtime",
+      "notes": "仅在 DSH 包装内运行；品牌限制遵守上游条款。"
+    },
+    {
+      "name": "dsh_node",
+      "version": "22.22.0",
+      "license": "MIT",
+      "source": "nodejs.org pinned build",
+      "scope": "production_runtime"
+    },
+    {
+      "name": "pnpm",
+      "version": "12.5.1",
+      "license": "MIT",
+      "source": "packageManager pin",
+      "scope": "toolchain"
+    },
+    {
+      "name": "provider_protocol",
+      "version": "company-agent-provider/1.0",
+      "license": "internal (company doc)",
+      "source": "pins.json",
+      "scope": "contract",
+      "notes": "协议字符串钉，不是软件包；登记以供覆盖核验闭合。"
+    },
+    {
+      "name": "jsdom",
+      "version": "tests/ui direct devDependency",
+      "license": "MIT",
+      "source": "npm (dev toolchain)",
+      "scope": "toolchain"
+    },
+    {
+      "name": "pytest",
+      "version": ">=9,<10",
+      "license": "MIT",
+      "source": "pyproject optional dependency",
+      "scope": "toolchain"
+    },
+    {
+      "name": "ruff",
+      "version": ">=0.9,<1",
+      "license": "MIT",
+      "source": "pyproject optional dependency",
+      "scope": "toolchain"
+    },
+    {
+      "name": "build",
+      "version": ">=1.2,<2",
+      "license": "MIT",
+      "source": "pyproject optional dependency",
+      "scope": "toolchain"
+    },
+    {
+      "name": "hypothesis",
+      "version": ">=6,<7",
+      "license": "MPL-2.0",
+      "source": "pyproject optional dependency",
+      "scope": "toolchain",
+      "notes": "测试生成器；不进入生产运行时。"
+    }
+  ]
+}

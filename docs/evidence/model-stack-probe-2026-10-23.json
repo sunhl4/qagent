@@ -1,0 +1,42 @@
+{
+  "checks": [
+    {
+      "check": "tool_call_shape",
+      "detail": "transport: <urlopen error [Errno 111] Connection refused>",
+      "ok": false
+    },
+    {
+      "check": "streaming",
+      "detail": "transport: <urlopen error [Errno 111] Connection refused>",
+      "ok": false
+    },
+    {
+      "check": "cancellation",
+      "detail": "generation finished before the client timeout; cancellation not exercised",
+      "ok": false
+    },
+    {
+      "check": "context_metadata",
+      "detail": "models listing failed: <urlopen error [Errno 111] Connection refused>",
+      "ok": false
+    },
+    {
+      "check": "structured_output",
+      "detail": "HTTP 0",
+      "ok": false
+    },
+    {
+      "check": "concurrency",
+      "detail": "statuses=[0, 0, 0, 0]",
+      "ok": false
+    }
+  ],
+  "endpoint_scheme": "http",
+  "evidence": "company-model-stack-probe/1.0",
+  "executed": true,
+  "model": "deepseek-chat",
+  "note": "模型费用仍以公司平台结算为准；本证据只绑定协议六项与服务报告的上下文容量，不包含提示词、答复正文或任何密钥。",
+  "ok": false,
+  "provider": "company-local",
+  "usage_tokens_recorded": 0
+}

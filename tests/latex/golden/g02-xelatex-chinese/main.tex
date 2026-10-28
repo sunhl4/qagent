@@ -1,0 +1,22 @@
+\documentclass[UTF8]{ctexart}
+\usepackage[a4paper,margin=25mm]{geometry}
+\usepackage[hidelinks]{hyperref}
+
+\begin{document}
+\title{黄金基线：中文排版}
+\author{公司 Agent 排版工具链实验室}
+\date{2026年10月26日}
+\maketitle
+
+\section{目标}
+本基线验证 XeLaTeX 与中文字体链路：ctex 负责章节标题、首行缩进与字段命名，
+Fandol 字体覆盖常规汉字。黄金矩阵会记录页数，并在提供 Overleaf 参考 PDF 时
+比较分页与文本是否一致。
+
+\section{公式}
+中文与公式可以混合排版：
+\begin{equation}
+  \omega_{\mathrm{qubit}} = 2\pi f
+\end{equation}
+式中符号 $\omega$ 表示角频率。该页面在固定 TeX Live 环境中必须保持稳定。
+\end{document}

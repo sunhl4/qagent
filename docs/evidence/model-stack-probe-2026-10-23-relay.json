@@ -1,0 +1,45 @@
+{
+  "checks": [
+    {
+      "check": "tool_call_shape",
+      "detail": "tool_calls present",
+      "ok": true
+    },
+    {
+      "check": "streaming",
+      "detail": "chunks=8 content_chunks=7 finish=stop done=1 usage_chunk=0 unparseable=0",
+      "ok": true
+    },
+    {
+      "check": "cancellation",
+      "detail": "client timeout cut the connection at 1.5s",
+      "ok": true
+    },
+    {
+      "check": "context_metadata",
+      "detail": "model listed",
+      "ok": true,
+      "reported": {
+        "owned_by": "openai"
+      }
+    },
+    {
+      "check": "structured_output",
+      "detail": "structured JSON parsed",
+      "ok": true
+    },
+    {
+      "check": "concurrency",
+      "detail": "{\"initial\": [200, 200, 200, 200], \"recovered\": \"not_needed\"}",
+      "ok": true
+    }
+  ],
+  "endpoint_scheme": "http",
+  "evidence": "company-model-stack-probe/1.0",
+  "executed": true,
+  "model": "gpt-6-luna",
+  "note": "模型费用仍以公司平台结算为准；本证据只绑定协议六项与服务报告的上下文容量，不包含提示词、答复正文或任何密钥。",
+  "ok": true,
+  "provider": "company-relay",
+  "usage_tokens_recorded": 31
+}

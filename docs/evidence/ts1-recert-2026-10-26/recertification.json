@@ -1,0 +1,26 @@
+{
+  "report": "ts1-recertification/1.0",
+  "date": "2026-10-26T16:40:00+08:00",
+  "task_set": "ts1-narrow-chain",
+  "task_set_frozen_at": "2026-10-26T11:30:00+08:00",
+  "purpose": "G2 narrow-chain recertification after P0/P1/P2/P3 batches (subject binding, tenants, web fetch, budgets, table profiler, workspace references, portal batch) before any P4 platform adaptation continues",
+  "platform_adapter_source": "/home/sunhl/projects/company-quantum-platform",
+  "gates": [
+    {"task": "T1-T4 + C3/C4/C6", "gate": "tests/test_platform_compatibility.py -m platform_compatibility", "command_env": {"COMPANY_AGENT_PLATFORM_SOURCE": "/home/sunhl/projects/company-quantum-platform"}, "result": "1 passed", "notes": "real platform adapter; catalog paging, run handle chain, asset/metrics, summary template, drift/cross-tenant/token counterexamples"},
+    {"task": "T5 (renamed-gate equivalent)", "gate": "tests/test_invoke.py::test_arguments_are_validated_before_provider, tests/test_invoke.py::test_argument_upper_bounds_are_enforced, tests/test_providers.py", "result": "62 passed", "notes": "shots bounds enforced before provider; simulator cannot mint or hide twin_id is covered by the C1 rows"},
+    {"task": "T6", "gate": "tests/test_hpc.py", "result": "101 passed", "notes": "same count as the frozen day; slurm_number/job_name business_ref binding intact"},
+    {"task": "T7 / C7", "gate": "tests/test_receipts.py -k business_ref", "result": "3 passed", "notes": "business_ref binds only on ok+completed; reconcile exposes it"},
+    {"task": "C5", "gate": "tests/test_receipts.py::test_unconfirmed_dispatch_only_is_flagged_as_unknown", "result": "1 passed"},
+    {"task": "C1", "gate": "tests/test_providers.py::test_simulator_cannot_mint_twin_id + test_simulator_cannot_hide_nested_twin_id", "result": "2 passed"},
+    {"task": "C2", "gate": "scripts/compliance_gate.py", "result": "22/22 ok", "notes": "updated evidence at docs/evidence/compliance-local.json; boot-deny and unknown-tool scenarios green in the current registry"}
+  ],
+  "summary": {"ok": 7, "total": 7},
+  "conclusion": "the P0 narrow chain survived every P1/P2/P3 change without a gate regression; platform adaptation may proceed only along owner-provided seams",
+  "owner_pending": [
+    "real event cursor and duplicate-event deduplication semantics from the platform feed",
+    "platform-side circuit-id asset registration for uploaded QASM programs (kernel already hashes and bounds content at submit time)",
+    "cloud cancel semantics beyond the DSH-side abort unknown path",
+    "HPC result asset promotion beyond slurm_number/job_name binding",
+    "supervised QPU window for quantum_device_run against a real provider"
+  ]
+}

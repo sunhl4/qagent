@@ -1,0 +1,17 @@
+{
+  "version": "1.0.0",
+  "fail_closed": true,
+  "turn_env": "COMPANY_AGENT_TURN_ID",
+  "ledger": {
+    "dir_name": "budgets",
+    "max_file_bytes": 262144,
+    "max_turn_key_bytes": 512
+  },
+  "limits": {
+    "invocations": 128,
+    "wall_ms": 1800000,
+    "approval_waits": 16,
+    "device_runs": 4,
+    "submissions": 16
+  }
+}

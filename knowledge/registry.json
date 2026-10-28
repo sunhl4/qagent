@@ -1,0 +1,7 @@
+{
+  "version": "1.0.0",
+  "entries": [
+    {"file": "README.md", "sha256": "baf050677ff89ab8a5b1ac3b353d74d7b5862e6ebabdd880b94c367220d663f8", "audience": "public", "approved": true, "revoked": false, "expires_epoch": null},
+    {"file": "quantum-capability.md", "sha256": "7e7bee41c28579a66431c86de6dc6a0d0f2acf3da2c70b5cadd9bb8b0605ce2d", "audience": "internal", "approved": true, "revoked": false, "expires_epoch": null}
+  ]
+}

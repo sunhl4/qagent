@@ -1,13 +1,23 @@
-.qagent/
-.qvibe/
+build/
+dist/
+.gate-tmp/
+*.egg-info/
+.credentials.yaml
+.company-agent/
+.profile-start*
 .dsh-home/
 .dsh-runtime/
 node_modules/
-profiles/qagent/node_modules/
+profiles/*/node_modules/
 __pycache__/
 *.pyc
 .pytest_cache/
+.ruff_cache/
+.hypothesis/
 .env
 .env.*
 secrets.json
 *.pem
+# LaTeX golden matrix: user-supplied Overleaf reference artifacts stay out of the repository.
+/tests/latex/references/
+!/tests/latex/references/README.zh-CN.md

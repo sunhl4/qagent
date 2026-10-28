@@ -1,0 +1,923 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; frame-src http://127.0.0.1:3081; base-uri 'none'; object-src 'none'; form-action 'none'">
+  <meta name="color-scheme" content="light">
+  <title>幺正量子 · Company Agent 公司级工作平台设计</title>
+  <style>
+    :root{--bg:#f5f6f8;--paper:#fff;--ink:#182a39;--muted:#60717f;--line:#dbe2e7;--soft:#edf1f4;--accent:#087e82;--accent-bg:#e9f5f4;--amber:#906011;--amber-bg:#fff5e4;--navy:#162c3d;--radius:12px}
+    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.7 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif}button,a,select{touch-action:manipulation}button,select{font:inherit}button{cursor:pointer;color:inherit}button:disabled{cursor:default}button:focus-visible,a:focus-visible,select:focus-visible,summary:focus-visible{outline:3px solid var(--accent);outline-offset:4px}a{color:var(--accent);text-underline-offset:3px}h1,h2,h3,h4,p{margin:0}h1{font-size:32px;line-height:1.35;letter-spacing:-.6px}h2{font-size:23px;line-height:1.4}h3{font-size:16px;line-height:1.5}h4{font-size:14px}code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:.9em;overflow-wrap:anywhere}ul,ol{margin:10px 0;padding-left:20px}li+li{margin-top:7px}[hidden]{display:none!important}.shell{max-width:1490px;margin:auto;padding:0 34px}.masthead{background:var(--paper);border-bottom:1px solid var(--line)}.mast-inner{display:flex;align-items:center;justify-content:space-between;min-height:72px;gap:20px}.brand{display:flex;align-items:center;gap:12px;font-weight:700;letter-spacing:.4px}.logo{display:grid;place-items:center;width:34px;height:34px;background:var(--navy);color:#fff;border-radius:8px;font-size:21px}.brand small{font-size:11px;font-weight:500;color:var(--muted);display:block;letter-spacing:1.4px}.mast-meta{display:flex;gap:14px;align-items:center;font-size:12px;color:var(--muted)}.button{border:1px solid var(--line);background:var(--paper);padding:8px 14px;border-radius:7px;font-size:13px;line-height:1.5}.button:hover{border-color:var(--accent);color:var(--accent)}.button.primary{background:var(--accent);color:white;border-color:var(--accent)}.hero{padding:36px 0 24px;display:flex;justify-content:space-between;align-items:flex-start;gap:32px}.eyebrow{font-size:11px;letter-spacing:1.8px;color:var(--accent);font-weight:750;margin-bottom:9px}.lead{color:var(--muted);font-size:15px;max-width:850px;margin-top:12px}.hero-aside{flex:0 0 238px;border-left:2px solid var(--line);padding-left:20px;margin-top:6px;font-size:12px;color:var(--muted)}.hero-aside strong{color:var(--ink);display:block;margin-bottom:4px;font-size:14px}.tag{display:inline-flex;align-items:center;gap:5px;padding:3px 8px;border-radius:5px;background:var(--soft);color:var(--muted);font-size:11px;line-height:1.5;font-weight:600}.tag.live{background:var(--accent-bg);color:var(--accent)}.tag.warn{background:var(--amber-bg);color:var(--amber)}.tag.target{background:transparent;border:1px dashed #aab7c0}.tabs{display:flex;gap:6px;padding:0 0 12px;flex-wrap:wrap;border-bottom:1px solid var(--line);margin-bottom:26px}.tab{border:0;background:transparent;border-radius:7px;padding:10px 17px;font-size:14px;color:var(--muted)}.tab[aria-selected=true]{background:var(--navy);color:white}.tab .num{font-size:10px;opacity:.65;margin-right:7px}.panel{padding-bottom:32px}.section-head{display:flex;justify-content:space-between;align-items:flex-start;gap:24px;margin-bottom:20px}.section-head p{color:var(--muted);margin-top:6px}.section-head .tag{flex-shrink:0}.principles{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:0;border:1px solid var(--line);background:var(--paper);border-radius:var(--radius);margin-bottom:26px}.principle{padding:19px 23px}.principle+.principle{border-left:1px solid var(--line)}.principle small{color:var(--accent);font-size:11px;letter-spacing:.8px}.principle h3{margin:5px 0}.principle p{color:var(--muted);font-size:12px}.legend{display:flex;flex-wrap:wrap;gap:16px;color:var(--muted);font-size:12px;align-items:center}.legend-sample{width:17px;height:12px;display:inline-block;vertical-align:-1px;border:1px solid #aac1c6;background:var(--accent-bg);margin-right:6px}.legend-sample.future{background:var(--paper);border:1px dashed #9cabb7}.arch-layout{display:grid;grid-template-columns:minmax(0,1fr) 294px;gap:18px;align-items:start}.architecture{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);padding:22px 20px}.diagram-caption{font-size:12px;color:var(--muted);margin-bottom:16px}.lane{display:grid;grid-template-columns:92px 1fr;gap:14px;align-items:stretch}.lane-label{padding-top:12px;font-size:12px;font-weight:700}.lane-label span{display:block;font-size:10px;font-weight:400;color:var(--muted);margin-top:3px}.lane-items{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}.lane-items.four{grid-template-columns:repeat(4,minmax(0,1fr))}.node{display:flex;flex-direction:column;text-align:left;border:1px dashed #aebbc5;background:#fcfdfe;border-radius:8px;padding:12px;min-height:99px;position:relative;line-height:1.5}.node.existing{border-style:solid;border-color:#b5cfce;background:#f3f9f8}.node strong{font-size:13px;font-weight:650}.node small{color:var(--muted);font-size:11px;margin-top:5px}.node em{font-style:normal;font-size:9px;color:var(--accent);margin-top:auto;padding-top:8px;letter-spacing:.4px}.node[aria-pressed=true]{outline:2px solid var(--accent);outline-offset:2px}.node:hover{background:var(--accent-bg)}.connector{margin:7px 0 7px 106px;min-height:20px;display:flex;align-items:center;justify-content:center;gap:12px;font-size:10px;color:var(--muted)}.connector:before,.connector:after{content:"";height:1px;background:var(--line);flex:1}.connector b{color:var(--accent);font-size:15px;font-weight:500}.loopbar{margin-top:17px;padding:14px 15px;border-top:1px solid var(--line);background:var(--soft);border-radius:7px;font-size:12px}.loopbar strong{color:var(--accent)}.loopbar small{display:block;color:var(--muted);margin-top:4px}.detail{background:var(--navy);color:#edf2f5;border-radius:var(--radius);padding:23px;position:sticky;top:16px}.detail .eyebrow{color:#8ccecb}.detail h3{font-size:19px;margin-bottom:12px}.detail p{font-size:13px;color:#c8d5df}.detail dl{font-size:12px;margin:20px 0 0}.detail dt{color:#8ccecb;font-size:10px;letter-spacing:1px;margin:16px 0 4px}.detail dd{margin:0;color:#e2eaf0}.detail .detail-note{font-size:11px;border-top:1px solid #3b4d5a;padding-top:15px;margin-top:20px;color:#b3c4cf}.boundary-row{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:24px}.boundary{border-top:2px solid var(--line);padding-top:14px}.boundary h3{font-size:14px;margin-bottom:6px}.boundary p{font-size:12px;color:var(--muted)}.notice{border-left:3px solid var(--accent);background:var(--accent-bg);padding:12px 16px;font-size:12px;margin:18px 0;color:#275a5c}.notice.warning{border-color:var(--amber);background:var(--amber-bg);color:#775721}.subsection{margin-top:30px}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:26px}.muted{color:var(--muted)}.fine{font-size:12px}.open-list{padding:0;list-style:none}.open-list li{border-bottom:1px solid var(--line);padding:13px 0;margin:0}.open-list strong{font-size:13px}.open-list p{font-size:12px;color:var(--muted);margin-top:4px}.account-switch{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.segmented{display:flex;padding:3px;background:var(--soft);border-radius:7px;gap:2px}.segmented button{border:0;background:transparent;padding:6px 12px;border-radius:5px;font-size:12px;color:var(--muted)}.segmented button[aria-pressed=true]{background:var(--paper);color:var(--accent);font-weight:650}.workspace{border:1px solid #cbd6de;border-radius:var(--radius);overflow:hidden;background:var(--paper)}.workspace-bar{height:43px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;background:var(--navy);color:#d9e4ed;font-size:11px;gap:16px}.workspace-bar b{color:#fff}.workspace-grid{display:grid;grid-template-columns:182px minmax(0,1fr) 326px;min-height:560px}.workspace-nav{background:#f3f5f7;border-right:1px solid var(--line);padding:16px 10px;display:flex;flex-direction:column}.nav-label{font-size:10px;color:var(--muted);padding:8px 11px;letter-spacing:1px}.work-nav-btn{display:flex;align-items:center;gap:10px;border:0;background:transparent;width:100%;text-align:left;padding:9px 11px;border-radius:6px;font-size:12px;margin:2px 0}.work-nav-btn[aria-current=page]{background:#dfeeed;color:#075f63;font-weight:650}.nav-symbol{width:17px;text-align:center;color:var(--muted);font-size:13px}.nav-foot{margin-top:auto;padding:18px 11px 0;font-size:10px;color:var(--muted);border-top:1px solid var(--line)}.workspace-center{min-width:0}.editor-tab{padding:10px 20px;border-bottom:1px solid var(--line);font-size:11px;display:flex;justify-content:space-between;gap:10px}.editor-tab span:last-child{color:var(--muted)}.center-content{padding:23px 22px}.center-content h3{font-size:20px}.center-intro{font-size:11px;color:var(--muted);margin:4px 0 17px}.stats{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--line);border-radius:8px;margin:20px 0}.stat{padding:12px 8px;text-align:center}.stat+.stat{border-left:1px solid var(--line)}.stat b{font-size:23px;display:block;font-weight:600;line-height:1.3}.stat span{font-size:10px;color:var(--muted)}.filter-row{display:flex;gap:6px;margin:14px 0;flex-wrap:wrap}.filter{border:1px solid var(--line);background:transparent;border-radius:5px;font-size:11px;padding:4px 9px}.filter[aria-pressed=true]{background:var(--accent-bg);border-color:#87b9b6;color:var(--accent)}.task-list{display:grid;gap:0}.task-row{display:grid;grid-template-columns:1fr auto;gap:10px;border-bottom:1px solid var(--line);padding:14px 0;align-items:center}.task-name{font-weight:600;font-size:12px}.task-meta{font-size:10px;color:var(--muted);margin-top:3px}.task-action{display:flex;gap:10px;align-items:center}.text-button{border:0;background:transparent;color:var(--accent);font-size:11px;padding:3px 0;text-decoration:underline;text-underline-offset:4px}.chat{border-left:1px solid var(--line);display:flex;flex-direction:column;min-width:0;background:#fbfcfd}.file-preview{border:1px solid var(--line);border-radius:8px;margin-top:16px;overflow:hidden}.file-preview header{background:var(--soft);padding:10px 14px;font-size:11px}.file-lines{padding:16px;font:12px/2 ui-monospace,SFMono-Regular,Consolas,monospace;color:#3d596b}.file-lines span{display:block}.file-lines .comment{color:#7c8b96}.metadata-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px 22px;margin:18px 0;font-size:12px}.metadata-grid dt{font-size:10px;color:var(--muted)}.metadata-grid dd{margin:2px 0 0}.chart{display:block;width:100%;height:auto;background:#fafcfd;border:1px solid var(--line);border-radius:8px;margin:17px 0 9px}.report-note{font-size:11px;color:var(--muted)}.kb-entry{border-bottom:1px solid var(--line);padding:14px 0}.kb-entry strong{font-size:13px}.kb-entry p{font-size:11px;color:var(--muted);margin-top:5px}.stage-list{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px;margin:22px 0}.stage-btn{position:relative;text-align:left;border:1px solid var(--line);border-radius:8px;background:var(--paper);padding:14px 11px;min-height:128px}.stage-btn:not(:last-child):after{content:"→";position:absolute;right:-8px;top:47px;z-index:1;color:var(--muted);background:var(--bg);font-size:12px}.stage-btn[aria-pressed=true]{border-color:var(--accent);background:var(--accent-bg)}.stage-btn .stage-num{display:block;font-size:10px;color:var(--accent);margin-bottom:13px}.stage-btn strong{display:block;font-size:13px}.stage-btn small{font-size:10px;color:var(--muted);display:block;margin-top:5px}.stage-detail{display:grid;grid-template-columns:1fr 1fr;gap:30px;border:1px solid var(--line);border-radius:var(--radius);background:var(--paper);padding:24px}.stage-detail h3{font-size:19px;margin-bottom:8px}.stage-detail p{font-size:13px;color:var(--muted)}.stage-detail ul{font-size:12px;margin:0}.pipeline{display:flex;align-items:stretch;gap:10px;margin:19px 0}.pipeline-part{flex:1;border-top:2px solid var(--accent);padding:15px 12px 10px 0}.pipeline-part strong{font-size:13px}.pipeline-part p{font-size:12px;color:var(--muted);margin-top:7px}.pipeline-arrow{color:#90a1ad;align-self:center}.state-path{background:var(--navy);color:#d9e4ed;padding:18px 20px;border-radius:8px;font-size:12px;line-height:2.1}.state-path strong{color:#8fd1cb}.state-path small{display:block;color:#a9bfcd;margin-top:8px}.exception-list{list-style:none;padding:0;margin:0}.exception-list li{padding:13px 0;border-bottom:1px solid var(--line);font-size:12px}.exception-list b{color:var(--amber)}.auth-equation{padding:22px;background:var(--navy);color:white;border-radius:var(--radius);display:flex;gap:20px;align-items:center;justify-content:space-between;margin-bottom:24px}.auth-equation strong{font-size:17px}.auth-equation p{color:#bfd0db;font-size:12px;margin-top:5px}.auth-factors{display:flex;flex-wrap:wrap;gap:7px;max-width:560px;justify-content:flex-end}.auth-factors span{border:1px solid #4a6474;border-radius:5px;padding:5px 8px;font-size:11px}.permission-table{width:100%;border-collapse:collapse;background:var(--paper);font-size:12px}.table-scroll{overflow:auto;border:1px solid var(--line);border-radius:9px}.permission-table th{background:var(--soft);text-align:left;font-size:11px;padding:13px 16px;color:var(--muted);font-weight:600}.permission-table td{padding:14px 16px;border-top:1px solid var(--line);vertical-align:top}.permission-table th:first-child{width:19%}.permission-table small{color:var(--muted);display:block;margin-top:4px}.permission-table .yes{color:var(--accent)}.permission-table .conditional{color:var(--amber)}.governance{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:25px}.governance-block{padding:20px 0;border-top:2px solid var(--line)}.governance-block ul{font-size:12px;color:var(--muted)}.governance-block strong{color:var(--ink)}.roadmap{display:grid;grid-template-columns:110px 1fr;gap:0;margin-top:16px}.phase-marker{border-right:2px solid var(--line);padding:22px 18px 22px 0;position:relative}.phase-marker:after{content:"";width:10px;height:10px;position:absolute;top:28px;right:-6px;background:var(--accent);border-radius:50%}.phase-marker strong{font-size:16px;display:block}.phase-marker span{font-size:10px;color:var(--muted)}.phase-content{padding:20px 0 24px 28px;border-bottom:1px solid var(--line);display:grid;grid-template-columns:1fr 1fr;gap:28px}.phase-content h3{margin-bottom:5px}.phase-content p{font-size:12px;color:var(--muted)}.phase-gate{font-size:12px;padding-left:16px;border-left:2px solid #aecbc9}.phase-gate b{display:block;font-size:10px;color:var(--accent);margin-bottom:5px;letter-spacing:1px}.status-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:24px}.status-box{background:var(--paper);border:1px solid var(--line);border-radius:9px;padding:22px}.status-box ul{font-size:12px;color:var(--muted)}.decisions{margin-top:27px}.decisions details{border-bottom:1px solid var(--line);padding:16px 0}.decisions summary{cursor:pointer;font-size:14px;font-weight:600}.decisions details p{font-size:13px;color:var(--muted);padding:12px 0 0 17px;max-width:1050px}.footer{border-top:1px solid var(--line);padding:20px 0 28px;color:var(--muted);font-size:11px;display:flex;gap:25px;justify-content:space-between}.footer p{max-width:930px}.footer a{white-space:nowrap}dialog{border:1px solid var(--line);border-radius:12px;padding:28px;max-width:570px;width:calc(100% - 32px);color:var(--ink);background:var(--paper)}dialog::backdrop{background:rgba(15,31,45,.55)}dialog h3{font-size:20px}dialog p{font-size:13px;margin-top:10px;color:var(--muted)}dialog .dialog-actions{display:flex;justify-content:flex-end;margin-top:23px}.internal-only{display:none!important}body[data-audience=internal] .internal-only{display:block!important}body[data-audience=internal] button.internal-only{display:flex!important}
+    @media(min-width:1500px){.workspace-grid{grid-template-columns:190px minmax(0,1fr) 360px}.node{min-height:104px}}
+    @media(max-width:1150px){.shell{padding:0 23px}.arch-layout{grid-template-columns:1fr}.detail{position:static;display:grid;grid-template-columns:1fr 1.5fr;gap:0 25px}.detail dl{margin:0;display:grid;grid-template-columns:1fr 1fr;gap:8px 20px}.detail dt{margin:0 0 4px}.detail .detail-note{grid-column:1/-1}.workspace-grid{grid-template-columns:155px minmax(0,1fr) 290px}.center-content{padding:20px 16px}.task-action{flex-direction:column;gap:4px;align-items:flex-end}.stage-list{grid-template-columns:repeat(4,1fr)}.stage-btn:nth-child(4):after{display:none}.hero-aside{flex-basis:210px}.lane-items.four .node strong{font-size:12px}}
+    @media(max-width:850px){.hero{display:block}.hero-aside{margin-top:20px}.principles{grid-template-columns:1fr}.principle+.principle{border-left:0;border-top:1px solid var(--line)}.workspace-grid{grid-template-columns:145px minmax(0,1fr)}.chat{grid-column:1/-1;border-left:0;border-top:1px solid var(--line)}.two-col,.governance,.status-grid{grid-template-columns:1fr}.boundary-row{gap:16px}.auth-equation{display:block}.auth-factors{justify-content:flex-start;margin-top:15px}.pipeline{flex-wrap:wrap}.pipeline-part{min-width:40%}.pipeline-arrow{display:none}.phase-content{grid-template-columns:1fr;gap:16px}.section-head{flex-wrap:wrap}.mast-meta>span{display:none}.lane{grid-template-columns:73px 1fr}.connector{margin-left:87px}.lane-items.four{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    @media(max-width:580px){.shell{padding:0 16px}h1{font-size:26px}.hero{padding-top:25px}.hero-aside{display:none}.tabs{gap:3px}.tab{font-size:12px;padding:8px 10px}.tab .num{display:none}.architecture{padding:16px 12px}.lane{display:block}.lane-label{padding:0 0 8px}.lane-label span{display:inline;margin-left:8px}.lane-items,.lane-items.four{grid-template-columns:1fr 1fr}.node{min-height:101px}.connector{margin-left:0}.detail{display:block}.detail dl{margin-top:15px}.detail dt{margin-top:12px}.boundary-row{grid-template-columns:1fr}.workspace-grid{grid-template-columns:1fr}.workspace-nav{border-right:0;border-bottom:1px solid var(--line);flex-direction:row;flex-wrap:wrap;padding:8px}.workspace-nav .nav-label,.workspace-nav .nav-foot{display:none}.work-nav-btn{width:auto;font-size:11px;padding:6px 9px}.nav-symbol{display:none}.workspace-bar{height:auto;min-height:43px;flex-wrap:wrap;padding:10px 13px;gap:4px}.editor-tab{padding:9px 16px}.stage-list{grid-template-columns:repeat(2,1fr)}.stage-btn:nth-child(2n):after{display:none}.stage-btn:nth-child(4):after{display:none}.stage-detail{grid-template-columns:1fr;gap:20px;padding:20px}.phase-content{padding-left:18px}.roadmap{grid-template-columns:70px 1fr}.phase-marker{padding-right:10px}.phase-marker strong{font-size:14px}.footer{display:block}.footer>span{display:block;margin-top:12px}.permission-table{min-width:650px}.section-head h2{font-size:21px}.lead{font-size:14px}.task-action .tag{font-size:10px}.pipeline-part{min-width:100%}}
+    @media print{@page{size:A4 landscape;margin:12mm}body{background:white;font-size:11px;color:#111}.shell{max-width:none;padding:0}.masthead{border:0}.hero{padding:15px 0}.hero h1{font-size:24px}.mast-meta .button,.tabs,.account-switch,.dialog-actions,.filter-row,.text-button{display:none!important}.panel[hidden]{display:block!important}.panel{break-before:page;padding:16px 0}#panel-overview{break-before:auto}.section-head{margin-bottom:12px}.arch-layout{grid-template-columns:1fr}.detail{display:block;position:static;background:#eef2f4;color:#111;padding:15px;break-inside:avoid}.detail p,.detail dd,.detail .detail-note{color:#333}.detail .eyebrow,.detail dt{color:#176461}.detail dl{display:grid;grid-template-columns:repeat(4,1fr);gap:15px}.detail dt{margin-top:0}.architecture{break-inside:auto}.lane,.workspace,.phase-content,.governance-block,.status-box,.stage-detail{break-inside:avoid}.node{min-height:90px}.workspace-grid{grid-template-columns:145px minmax(0,1fr) 260px;min-height:520px}.chat{grid-column:auto;border-left:1px solid var(--line)}.stage-list{grid-template-columns:repeat(7,1fr)}.stage-btn{min-height:110px}.two-col,.governance,.status-grid{grid-template-columns:1fr 1fr}.roadmap{grid-template-columns:90px 1fr}.phase-content{grid-template-columns:1fr 1fr}.notice{margin:12px 0}.footer{font-size:10px}.hero-aside{display:block}.principles{grid-template-columns:1.2fr 1fr 1fr}.principle+.principle{border-left:1px solid var(--line);border-top:0}.boundary-row{grid-template-columns:repeat(3,1fr)}button{color:inherit}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}dialog{display:none!important}}
+    .review-verdict{display:grid;grid-template-columns:1.35fr 1fr;gap:30px;padding:25px;background:var(--navy);color:#edf2f5;border-radius:12px;margin:18px 0 25px}.review-verdict h3{font-size:21px}.review-verdict p{color:#c1d1dc;font-size:13px;margin-top:10px}.review-verdict ol{font-size:12px;margin:0}.review-verdict li+li{margin-top:10px}.review-flow{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin:20px 0}.flow-column{border-top:3px solid var(--accent);padding-top:12px}.flow-column>p{font-size:12px;color:var(--muted);margin:8px 0}.flow-step{padding:9px 12px;background:var(--paper);border:1px solid var(--line);border-radius:6px;font-size:12px}.flow-arrow{text-align:center;color:var(--muted);font-size:11px;padding:4px}.review-toolbar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:22px 0 10px}.review-toolbar .filter-row{margin:0}.review-findings{border-top:1px solid var(--line)}.finding{border-bottom:1px solid var(--line);padding:18px 0}.finding summary{display:flex;gap:12px;align-items:flex-start;cursor:pointer;list-style:none}.finding summary::-webkit-details-marker{display:none}.finding summary:after{content:'展开 +';font-size:11px;color:var(--accent);margin-left:auto;white-space:nowrap}.finding[open] summary:after{content:'收起 −'}.finding summary strong{font-size:15px}.finding summary small{display:block;font-size:11px;color:var(--muted);font-weight:400;margin-top:4px}.finding-content{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin:17px 0 3px;padding-left:58px}.finding-content p{font-size:12px;color:var(--muted);margin:6px 0 12px}.finding-content h4{color:var(--ink);font-size:12px}.finding-content .acceptance{grid-column:1/-1;background:var(--accent-bg);padding:12px;border-radius:6px;font-size:12px;color:#275a5c}.scenario-control{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:17px 0}.scenario-control select{max-width:100%;border:1px solid var(--line);border-radius:6px;background:var(--paper);padding:8px 12px;font-size:12px;color:var(--ink)}.state-demo{border:1px solid var(--line);border-radius:10px;background:var(--paper);padding:20px}.state-columns{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.state-column{border-right:1px solid var(--line);padding:0 10px 0 0}.state-column:last-child{border:0}.state-column small{display:block;color:var(--muted);font-size:10px}.state-column strong{display:block;margin-top:4px;font-size:14px}.state-demo p{font-size:12px;color:var(--muted);margin-top:15px}.research-links{display:grid;grid-template-columns:1fr 1fr;gap:0 25px;margin-top:18px}.research-source{border-bottom:1px solid var(--line);padding:15px 0}.research-source strong{font-size:13px}.research-source p{font-size:12px;color:var(--muted);margin-top:6px}.source-id{font:11px ui-monospace,Consolas,monospace;color:var(--accent);margin-right:7px}.review-evidence{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin:22px 0}.review-evidence>div{border-top:2px solid var(--line);padding-top:12px}.review-evidence p{font-size:12px;color:var(--muted);margin-top:6px}.test-gates{display:grid;grid-template-columns:1fr 1fr;gap:0 25px;list-style:none;padding:0;counter-reset:gate}.test-gates li{counter-increment:gate;border-bottom:1px solid var(--line);padding:13px 0;margin:0;font-size:12px}.test-gates li:before{content:counter(gate,decimal-leading-zero);font:11px ui-monospace,Consolas,monospace;color:var(--accent);margin-right:9px}.review-footer-note{font-size:11px;color:var(--muted);margin-top:15px}.source-jump{font-size:11px;margin-left:5px}.domain-chain{display:flex;flex-wrap:wrap;align-items:center;gap:10px;font-size:12px;background:var(--soft);padding:18px;border-radius:8px;margin:16px 0}.domain-chain strong{padding:5px 8px;background:var(--paper);border:1px solid var(--line);border-radius:5px}.review-callout{display:flex;gap:14px;align-items:center;padding:13px 16px;border:1px solid #b5cfce;background:var(--accent-bg);border-radius:8px;margin-bottom:20px;font-size:12px}.review-callout>span{flex:1}.review-callout button{flex-shrink:0}
+    @media(max-width:850px){.review-verdict{grid-template-columns:1fr;gap:20px}.review-flow{grid-template-columns:1fr}.finding-content{padding-left:0}.research-links,.test-gates{grid-template-columns:1fr}.review-evidence{grid-template-columns:1fr}.review-callout{flex-wrap:wrap}}
+    @media(max-width:580px){.finding-content{grid-template-columns:1fr;gap:6px}.finding summary strong{font-size:13px}.finding summary:after{font-size:10px}.state-columns{grid-template-columns:1fr 1fr;gap:16px}.state-column:nth-child(2){border:0}.review-verdict{padding:20px}.review-verdict h3{font-size:18px}}
+    /* v0.3 product shell: directory navigation and account actions, not a second chat UI. */
+    .workspace-grid{grid-template-columns:220px minmax(0,1fr) 330px;height:740px;min-height:690px}
+    .workspace-nav{padding:0;min-width:0;min-height:0;overflow:hidden}.resource-tree{padding:12px 9px;flex:1;min-height:0;overflow-y:auto}.tree-group{border-bottom:1px solid var(--line);padding:5px 0}.tree-group summary{cursor:pointer;padding:8px 6px;font-size:12px;font-weight:650;list-style:none;display:flex;align-items:center;gap:7px}.tree-group summary::-webkit-details-marker{display:none}.tree-group summary:before{content:'›';width:10px;color:var(--muted)}.tree-group[open]>summary:before{content:'⌄'}.tree-group summary small{font-size:9px;color:var(--muted);font-weight:400;margin-left:auto}.tree-children{padding:0 0 7px 12px}.tree-children .work-nav-btn{font-size:11px;padding:7px 8px;overflow-wrap:anywhere}.tree-caption{font-size:10px;color:var(--muted);padding:4px 8px}.project-folder{padding:3px 0}.project-folder summary{font-size:11px;font-weight:500}.project-folder[open]>summary:before{content:'⌄'}.project-folder .tree-children{border-left:1px solid var(--line);margin-left:10px;padding-left:5px}.session-button[aria-current=true]{background:var(--accent-bg);color:var(--accent)}
+    .account-dock{margin-top:auto;border-top:1px solid var(--line);padding:11px 9px;display:flex;align-items:center;gap:6px;background:#edf1f4}.account-button{display:flex;align-items:center;gap:9px;flex:1;min-width:0;text-align:left;border:0;background:transparent;padding:5px;border-radius:6px;font-size:12px}.account-button small{display:block;font-size:9px;color:var(--muted);margin-top:2px}.avatar{width:28px;height:28px;border:1px solid #b5c2cc;border-radius:50%;display:grid;place-items:center;font-size:12px;color:var(--muted)}.gear-note{font-size:10px;color:var(--muted);max-width:120px;line-height:1.5}
+    .editor-tabs{display:flex;gap:0;overflow-x:auto;border-bottom:1px solid var(--line);background:#f7f9fa;min-height:40px}.editor-item{display:flex;align-items:center;border-right:1px solid var(--line);flex-shrink:0}.editor-item.active{background:var(--paper);border-top:2px solid var(--accent)}.editor-item>button{background:none;border:0;font-size:10px;padding:11px 10px;white-space:nowrap}.editor-item .close-tab{padding:9px 8px;color:var(--muted)}.editor-tab{padding:8px 16px;font-size:10px}.workspace-center{display:flex;flex-direction:column;min-height:0}.editor-tabs,.editor-tab{flex-shrink:0}.center-content{padding:22px 20px;flex:1;min-height:0;overflow-y:auto}.start-links{display:flex;flex-wrap:wrap;gap:8px;margin:20px 0}.viewer-origin{font-size:10px;color:var(--accent);margin-bottom:10px;overflow-wrap:anywhere}.file-body{font:12px/1.9 ui-monospace,Consolas,monospace;white-space:pre-wrap;overflow-wrap:anywhere;background:var(--soft);border:1px solid var(--line);border-radius:6px;padding:16px;margin-top:17px}.portal-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:-10px 0 10px;font-size:11px;color:var(--muted)}.portal-toolbar .button{font-size:11px;padding:5px 9px}.portal-frame{display:block;width:100%;height:calc(100vh - 170px);min-height:520px;border:1px solid var(--line);border-radius:6px;background:var(--paper)}.portal-frame[hidden]{display:none}.portal-frame+div{margin-top:12px}
+    .chat{min-height:0;position:relative;overflow:hidden}
+    #dsh-native-frame{display:block;width:100%;height:100%;flex:1;min-width:0;min-height:0;border:0;background:transparent}
+    .settings-tabs{display:flex;gap:5px;flex-wrap:wrap;margin:16px 0 20px}.settings-tabs button{font-size:11px;border:1px solid var(--line);background:var(--paper);border-radius:5px;padding:6px 9px}.settings-tabs button[aria-pressed=true]{color:var(--accent);background:var(--accent-bg);border-color:#a5c8c5}.settings-form{display:grid;gap:14px}.settings-form label,.auth-fields label{display:grid;gap:5px;font-size:11px;color:var(--muted)}.settings-form input,.settings-form select,.auth-fields input{width:100%;min-width:0;border:1px solid #bcc9d2;border-radius:5px;background:var(--paper);color:var(--ink);font:inherit;font-size:12px;padding:8px 10px}.settings-form input:focus-visible,.settings-form select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}.settings-form input:disabled,.auth-fields input:disabled{background:var(--soft);color:var(--muted)}.settings-form .field-pair{display:grid;grid-template-columns:1fr 1fr;gap:12px}.form-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:2px}.form-feedback{font-size:12px;color:var(--accent);min-height:20px}.settings-form small{font-size:10px;color:var(--muted)}.auth-fields{display:grid;gap:14px;margin:18px 0}.auth-modes{margin-top:17px}.auth-submit:disabled{opacity:.55}.canvas-layout{margin-top:20px;border-top:2px solid var(--accent);padding-top:16px}.canvas-layout section{padding:13px 0;border-bottom:1px solid var(--line)}.canvas-layout section p{font-size:12px;color:var(--muted);margin-top:5px}.prototype-badge{font-size:10px;color:var(--muted)}
+    @media(max-width:1150px){.workspace-grid{grid-template-columns:195px minmax(0,1fr) 275px}.center-content{padding:20px 15px}}
+    @media(max-width:850px){.workspace-grid{grid-template-columns:200px minmax(0,1fr);height:auto;grid-template-rows:740px auto}.workspace-grid>.chat{grid-column:1/-1}.settings-form .field-pair{grid-template-columns:1fr}}
+    @media(max-width:580px){.workspace-grid{grid-template-columns:minmax(0,1fr);grid-template-rows:580px minmax(460px,auto) auto}.workspace-center{max-height:740px}.workspace-nav{flex-direction:column;padding:0}.resource-tree{width:100%}.tree-children .work-nav-btn{width:100%;display:flex}.account-dock{width:100%}.workspace-grid>.chat{grid-column:auto}.editor-tab{flex-wrap:wrap}.workspace-bar{font-size:10px}}
+    @media print{.workspace-grid{grid-template-columns:185px minmax(0,1fr) 255px;height:auto;grid-template-rows:auto}.resource-tree,.center-content,.chat{overflow:visible}.workspace-center{max-height:none}.workspace-nav{flex-direction:column}.account-dock{display:flex}.workspace-grid>.chat{grid-column:auto}.editor-tabs{overflow:visible;flex-wrap:wrap}}
+    /* v0.4 company-wide work and knowledge design, with no runtime side effects. */
+    .scenario-tabs{display:flex;flex-wrap:wrap;gap:8px;margin:20px 0}.scenario-tabs button{border:1px solid var(--line);background:var(--paper);border-radius:6px;padding:10px 16px;font-size:13px}.scenario-tabs button[aria-pressed=true]{border-color:var(--accent);background:var(--accent-bg);color:var(--accent)}.scenario-layout{display:grid;grid-template-columns:1.2fr 1fr;gap:28px;padding:24px;border:1px solid var(--line);border-radius:10px;background:var(--paper)}.scenario-layout p{color:var(--muted);font-size:13px;margin-top:9px}.scenario-layout ol{font-size:13px;margin:0}.enterprise-summary{font-size:16px;max-width:1000px;line-height:1.9}.knowledge-steps{display:flex;flex-wrap:wrap;gap:6px;margin:18px 0}.knowledge-steps button{font-size:11px;border:1px solid var(--line);background:var(--paper);border-radius:5px;padding:6px 8px}.knowledge-steps button[aria-pressed=true]{background:var(--accent-bg);border-color:var(--accent);color:var(--accent)}.knowledge-detail{border-top:2px solid var(--accent);padding:17px 0}.knowledge-detail p{font-size:12px;color:var(--muted);margin:9px 0}.knowledge-detail ul{font-size:12px}.knowledge-scope{font-size:12px;display:grid;grid-template-columns:1fr 1fr;gap:0 20px}.knowledge-scope>div{border-bottom:1px solid var(--line);padding:12px 0}.knowledge-scope p{font-size:11px;color:var(--muted);margin-top:4px}.knowledge-scope strong{font-size:12px}.native-note{margin-top:14px;border-top:1px solid var(--line);padding-top:12px;font-size:11px;color:var(--muted)}
+    @media(max-width:850px){.scenario-layout{grid-template-columns:1fr}.knowledge-scope{grid-template-columns:1fr}}
+    @media print{.scenario-layout{grid-template-columns:1.2fr 1fr}.knowledge-scope{grid-template-columns:1fr 1fr}}
+    @media print{.finding[hidden]{display:block!important}.finding summary:after,.review-toolbar,.scenario-control{display:none!important}.finding-content{display:grid;grid-template-columns:1fr 1fr;padding-left:0}.finding,.research-source,.state-demo,.flow-column{break-inside:avoid}.review-flow{grid-template-columns:repeat(3,1fr)}.research-links,.test-gates{grid-template-columns:1fr 1fr}.review-verdict{background:#edf1f4;color:#182a39}.review-verdict p{color:#455765}}
+    /* Product viewport. Documentation remains available in the other views. */
+    body.workspace-mode{overflow:hidden;background:var(--paper)}
+    body.workspace-mode>.masthead,body.workspace-mode>main>.hero,body.workspace-mode>main>.tabs,body.workspace-mode>main>.footer{display:none}
+    body.workspace-mode>main.shell{max-width:none;padding:0}
+    body.workspace-mode #panel-workspace{padding:0}
+    body.workspace-mode .workspace{height:100vh;height:100dvh;border:0;border-radius:0;display:flex;flex-direction:column}
+    body.workspace-mode .workspace-bar{height:44px;flex:0 0 44px;padding:0 16px;background:#f5f7f9;color:var(--ink);border-bottom:1px solid var(--line)}
+    body.workspace-mode .workspace-bar b{color:var(--ink);font-size:12px;letter-spacing:.3px}
+    .workspace-tools{display:flex;align-items:center;gap:16px;font-size:11px;color:var(--muted)}.workspace-tools a{color:var(--muted);text-decoration:none}.workspace-tools a:hover{color:var(--accent)}
+    .workspace-tools button{border:0;background:none;color:var(--muted);font:inherit;padding:0;cursor:pointer}.workspace-tools button:hover{color:var(--accent)}
+    body.workspace-mode .workspace-grid{flex:1;min-height:0;height:auto;grid-template-columns:220px minmax(0,1fr) clamp(480px,42vw,720px);grid-template-rows:minmax(0,1fr)}
+    body.workspace-mode.native-expanded .workspace-grid{grid-template-columns:220px minmax(0,1fr);grid-template-rows:minmax(0,1fr)}body.workspace-mode.native-expanded .workspace-center{display:none}body.workspace-mode.native-expanded .workspace-grid>.chat{display:flex;grid-column:2;grid-row:1}
+    .workspace-nav .work-nav-btn{font-size:12px;line-height:1.5}.workspace-nav .tree-group summary{font-size:12px}.workspace-nav .tree-group small{font-size:10px}.workspace-nav .tree-caption{margin:3px 0}
+    .workspace-nav .account-dock{flex-shrink:0;background:#f3f5f7}.workspace-nav .account-button{font-size:12px}.workspace-nav .account-button small{font-size:10px}
+    .workspace-center .editor-tab{font-size:11px;min-height:32px;align-items:center}.workspace-center .editor-tab span:last-child{color:var(--muted)}.editor-item>button{font-size:11px;max-width:190px;overflow:hidden;text-overflow:ellipsis}.editor-item .close-tab{flex-shrink:0}
+    .center-content{padding:28px 30px}.center-content h3{font-size:21px;font-weight:600}.center-content .center-intro{font-size:12px;margin:8px 0 22px}
+    .workspace-home{max-width:640px;margin:clamp(30px,9vh,110px) auto 0}.home-mark{font-size:11px;letter-spacing:1.2px;color:var(--muted);margin-bottom:14px}.quick-actions{display:flex;flex-wrap:wrap;gap:8px;margin:24px 0 38px}.quick-actions .button{font-size:12px;padding:8px 13px}.section-label{font-size:11px;font-weight:500;color:var(--muted);margin-bottom:10px}.file-list{display:grid}.file-link{width:100%;display:flex;align-items:center;gap:12px;background:none;border:0;border-bottom:1px solid var(--line);padding:13px 0;text-align:left;font-size:12px}.file-link:hover{color:var(--accent)}.file-link small{margin-left:auto;color:var(--muted);font-size:11px}.file-icon{display:grid;place-items:center;flex-shrink:0;width:26px;height:30px;border:1px solid var(--line);border-radius:4px;font:10px ui-monospace,monospace;color:var(--muted)}
+    .empty-state{max-width:480px;margin:70px auto;text-align:center}.empty-state h3,.empty-state h4{font-size:18px;font-weight:500}.empty-state p{font-size:12px;color:var(--muted);margin:10px 0 20px}.empty-state .button{font-size:12px}.empty-state.compact{margin:40px auto}.muted-status{color:var(--muted);font-size:11px}.content-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:22px}.content-head h3{font-size:20px}.resource-row{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:15px 0;border-bottom:1px solid var(--line);font-size:12px}.resource-row strong{font-weight:500}.resource-row small{color:var(--muted);font-size:11px}.resource-row button{font-size:11px}.small-note{font-size:11px;color:var(--muted);margin-top:18px}.chip{display:inline-block;border:1px solid var(--line);border-radius:9px;padding:2px 9px;font-size:10px;color:var(--muted);white-space:nowrap}.chip.ok{color:#1c7c40;border-color:#9fd3ae;background:#eaf6ee}.chip.run{color:#1c6fb8;border-color:#a8cbe8;background:#eaf2fa}.chip.queue{color:#8a6d1a;border-color:#e2d08a;background:#faf5e2}.chip.fail{color:#b02a37;border-color:#e4aeb3;background:#fbecee}.remote-head{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:4px 0 6px}.remote-section-label{font-size:10px;color:var(--muted);margin:18px 0 4px}.jobs-table{width:100%;border-collapse:collapse;font-size:11px}.jobs-table th{font-weight:500;text-align:left;color:var(--muted);border-bottom:1px solid var(--line);padding:7px 10px;white-space:nowrap}.jobs-table td{border-bottom:1px solid var(--line);padding:7px 10px;overflow-wrap:anywhere}.jobs-table .mono{font-family:ui-monospace,Consolas,monospace;font-size:10px}.jobs-table .chip{font-size:9px;padding:1px 7px}.settings-content{max-width:620px}.settings-form label,.auth-fields label{font-size:12px}.settings-form .form-actions{margin-top:8px}.settings-tabs{margin:18px 0 26px}.settings-form small{font-size:11px}.button:disabled{opacity:.5;cursor:not-allowed}.button:disabled:hover{color:inherit;border-color:var(--line)}
+    .mobile-panels{display:none}
+    @media(max-width:1150px){body.workspace-mode .workspace-grid{grid-template-columns:185px minmax(0,1fr) 440px}.center-content{padding:24px 20px}}
+    @media(max-width:900px) and (min-width:641px){body.workspace-mode .workspace-grid{grid-template-columns:185px minmax(0,1fr);grid-template-rows:minmax(0,2fr) minmax(0,3fr)}.workspace-grid>.workspace-nav{grid-row:1/3}.workspace-grid>.workspace-center{grid-column:2;grid-row:1}.workspace-grid>.chat{grid-column:2;grid-row:2;border-left:0;border-top:1px solid var(--line)}}
+    @media(max-width:640px){#workspace-account,.workspace-tools>a[target="_blank"]{display:none}.workspace-tools{gap:12px;font-size:10px}body.workspace-mode .workspace-bar{flex-wrap:nowrap;padding:0 12px;gap:8px}.workspace-bar b{white-space:nowrap}.mobile-panels{display:flex;gap:4px;flex-shrink:0;padding:6px 10px;border-bottom:1px solid var(--line);background:#f5f7f9}.mobile-panels button{flex:1;border:0;background:none;font-size:12px;padding:6px;border-radius:4px}.mobile-panels button[aria-pressed=true]{background:var(--paper);color:var(--accent)}body.workspace-mode .workspace-grid{display:block;position:relative;min-height:0}.workspace-grid>.workspace-nav,.workspace-grid>.workspace-center,.workspace-grid>.chat{display:none;height:100%;max-height:none;min-height:0;border:0}.workspace-grid[data-mobile-panel=resources]>.workspace-nav,.workspace-grid[data-mobile-panel=content]>.workspace-center,.workspace-grid[data-mobile-panel=chat]>.chat{display:flex}.workspace-nav{flex-direction:column}.workspace-center{width:100%}.workspace-home{margin:32px auto}.quick-actions{margin-bottom:25px}.file-link small{max-width:40%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.center-content{padding:22px 18px}}
+    @media print{body.workspace-mode{overflow:visible}body.workspace-mode .workspace{height:auto}body.workspace-mode .workspace-grid{display:grid;min-height:650px;grid-template-columns:200px minmax(0,1fr) 300px;grid-template-rows:auto}.workspace-grid>.workspace-nav,.workspace-grid>.workspace-center,.workspace-grid>.chat{display:flex;height:auto;grid-column:auto;grid-row:auto}.mobile-panels{display:none}.workspace-tools a{display:none}}
+  </style>
+</head>
+<body data-audience="external">
+  <header class="masthead">
+    <div class="shell mast-inner">
+      <div class="brand"><span class="logo" aria-hidden="true">Q</span><div>幺正量子 <span style="font-weight:400;color:var(--muted)">/ Company Agent</span><small>PRODUCT &amp; SYSTEM ARCHITECTURE</small></div></div>
+      <div class="mast-meta"><span>2026.10.21 · 界面基准 v0.5</span><button class="button" id="print-button">打印 / 保存 PDF</button></div>
+    </div>
+  </header>
+  <main class="shell">
+    <section class="hero">
+      <div><div class="eyebrow">幺正量子 · 产品设计</div><h1>Company Agent</h1><p class="lead">以 DeepSeek Harness 为基础，使用公司本地模型，装配受管插件、MCP 和常用 Skills。日常按通用 Agent 使用；云平台、知识库、HPC 与量子算法按需接入。</p></div>
+      <aside class="hero-aside"><strong>界面基准 v0.5</strong>左栏与中栏按当前样式实现；右栏完整使用 DSH 原生对话，不改布局、样式或交互。这里保留架构与接入说明。</aside>
+    </section>
+    <nav class="tabs" role="tablist" aria-label="架构讨论视图">
+      <button class="tab" id="tab-overview" role="tab" aria-selected="true" aria-controls="panel-overview" data-tab="overview"><span class="num">01</span>系统架构</button>
+      <button class="tab" id="tab-workspace" role="tab" aria-selected="false" aria-controls="panel-workspace" data-tab="workspace" tabindex="-1"><span class="num">02</span>工作区</button>
+      <button class="tab" id="tab-workflow" role="tab" aria-selected="false" aria-controls="panel-workflow" data-tab="workflow" tabindex="-1"><span class="num">03</span>作业与结果闭环</button>
+      <button class="tab" id="tab-governance" role="tab" aria-selected="false" aria-controls="panel-governance" data-tab="governance" tabindex="-1"><span class="num">04</span>账号与权限</button>
+      <button class="tab" id="tab-roadmap" role="tab" aria-selected="false" aria-controls="panel-roadmap" data-tab="roadmap" tabindex="-1"><span class="num">05</span>建设顺序与讨论</button>
+      <button class="tab" id="tab-review" role="tab" aria-selected="false" aria-controls="panel-review" data-tab="review" tabindex="-1"><span class="num">06</span>深度审查</button>
+      <button class="tab" id="tab-evidence" role="tab" aria-selected="false" aria-controls="panel-evidence" data-tab="evidence" tabindex="-1"><span class="num">07</span>依据与验收</button>
+      <button class="tab" id="tab-enterprise" role="tab" aria-selected="false" aria-controls="panel-enterprise" data-tab="enterprise" tabindex="-1"><span class="num">08</span>公司工作与知识</button>
+    </nav>
+
+    <section class="panel" id="panel-overview" role="tabpanel" aria-labelledby="tab-overview">
+      <div class="review-callout"><span><strong>v0.7 集成路线：</strong>DSH + 公司本地模型 + 受管插件 / MCP + 常用 Skills。优先复用，重点做好公司服务接入与接口鲁棒性；量子算法只是并列能力之一。<strong>v0.8 框架对齐：</strong>按 1 个核心循环 + 8 个子系统的 harness 框架核对职责边界，投入集中在权限治理、执行隔离与信任分区等约束承载组件。</span><button class="button" data-jump="enterprise">查看集成与准入设计 →</button></div>
+      <div class="principles">
+        <div class="principle"><small>产品定位</small><h3>公司统一 AI 工作平台</h3><p>量子计算是专业能力之一；普通问答、文档与编码不要求先进入科学作业流程。</p></div>
+        <div class="principle"><small>研发积累</small><h3>查知识，做工作，确认后沉淀</h3><p>工作产物与来源关联；自动辅助整理草稿，团队共享和对外发布经过审核。</p></div>
+        <div class="principle"><small>内外共用</small><h3>共用产品，隔离数据与执行</h3><p>内部身份、场景入口或编码能力均不自动授予源码、客户数据、HPC 和设备权限。</p></div>
+      </div>
+      <div class="section-head"><div><h2>建议的总体架构</h2><p>通用工作直接使用 DSH；计算任务才进入下方作业链。企业知识与受管开发服务作为并列能力接入，不要求每次对话都经过量子平台。</p></div><div class="legend"><span><i class="legend-sample"></i>已有工程边界</span><span><i class="legend-sample future"></i>目标 / 待集成</span></div></div>
+      <div class="arch-layout">
+        <div class="architecture" aria-label="公司工作平台架构，DSH 按任务连接日常办公、开发、知识与科学计算服务">
+          <p class="diagram-caption">以下按职责分层，不表示所有请求都经过模型。账号 / 账单 / 任务查询直接访问平台 API；对话工具经 DSH 与合同内核访问服务；大文件经授权数据通道返回。实线只证明桥接边界，不代表真实服务已验收。</p>
+          <div class="lane"><div class="lane-label">01 交互层<span>统一工作空间</span></div><div class="lane-items">
+            <button class="node" data-node="workspace" aria-pressed="true"><strong>左侧 · 分层目录与账户</strong><small>云平台 / 超算 / 本机<br>工作空间与对话 / 登录 / 设置</small><em>目标产品界面</em></button>
+            <button class="node" data-node="viewer" aria-pressed="false"><strong>中间 · 内容与结果</strong><small>代码 / 线路 / 任务详情<br>图表 / 报告 / Canvas</small><em>授权的数据访问通道</em></button>
+            <button class="node" data-node="conversation" aria-pressed="false"><strong>右侧 · 原生 DSH 对话</strong><small>原生消息 / 工具 / 审批<br>模型展示 / 上下文用量</small><em>复用既有运行时</em></button>
+          </div></div>
+          <div class="connector"><b>↓</b> 身份与项目上下文随请求传递；文件正文不默认注入模型</div>
+          <div class="lane"><div class="lane-label">02 接入层<span>平台身份与产品 API</span></div><div class="lane-items">
+            <button class="node" data-node="identity" aria-pressed="false"><strong>Agent 账号与外部连接</strong><small>产品注册 / 登录 / 用户隔离<br>云平台 / HPC 独立绑定</small><em>新增集成 · 后端鉴权</em></button>
+            <button class="node" data-node="api" aria-pressed="false"><strong>工作空间后端</strong><small>界面聚合 / 事件推送<br>文件授权 / 会话关联</small><em>新增 · 不实现模型循环</em></button>
+            <button class="node" data-node="billing" aria-pressed="false"><strong>报价、额度与账单</strong><small>估价 / 预算预留 / 用量<br>结算 / 退款 / 对账</small><em>复用或补齐平台账本</em></button>
+          </div></div>
+          <div class="connector"><b>↓</b> 目标：由可信后端注入用户级授权；当前 bridge 尚无用户 / 租户委托上下文合同</div>
+          <div class="lane"><div class="lane-label">03 Agent 层<span>唯一智能体运行时</span></div><div class="lane-items">
+            <button class="node existing" data-node="dsh" aria-pressed="false"><strong>DSH 对话与工具生命周期</strong><small>DeepSeek Harness<br>会话 / 工具 / 模型适配</small><em>已有运行时集成</em></button>
+            <button class="node existing" data-node="contracts" aria-pressed="false"><strong>Company Agent 合同内核</strong><small>能力发现 / 参数校验<br>确定性策略 / 短结果</small><em>已有合同与桥接</em></button>
+            <button class="node" data-node="model" aria-pressed="false"><strong>本地模型与授权检索</strong><small>本地推理服务 / 模型网关<br>按权限检索 / 来源引用</small><em>本地模型与租户检索待集成</em></button>
+          </div></div>
+          <div class="connector"><b>↓</b> 按任务选择获准服务；普通办公无需创建计算作业</div>
+          <div class="lane"><div class="lane-label">工作能力<span>与科学服务并列</span></div><div class="lane-items">
+            <button class="node" data-node="productivity" aria-pressed="false"><strong>日常办公与文件</strong><small>文档 / 调研 / 材料整理<br>受控保存与外发</small><em>DSH 基础 + 受管接入</em></button>
+            <button class="node" data-node="development" aria-pressed="false"><strong>代码仓与隔离开发</strong><small>代码差异 / 测试证据<br>版本 / 评审 / 最小权限</small><em>目标 · 不开放生产 shell preset</em></button>
+            <button class="node" data-node="enterpriseKnowledge" aria-pressed="false"><strong>企业知识服务</strong><small>授权检索 / 候选草稿<br>审核发布 / 版本撤回</small><em>接入既有知识库</em></button>
+          </div></div>
+          <div class="connector"><b>↓</b> 需要计算时：结构化作业计划通过校验；校验通过不等于执行许可</div>
+          <div class="lane"><div class="lane-label">04 作业层<span>平台持久执行</span></div><div class="lane-items">
+            <button class="node" data-node="jobs" aria-pressed="false"><strong>作业服务与状态机</strong><small>提交 / 依赖 / 状态 / 取消<br>幂等 / 恢复 / 失败核对</small><em>目标 · 平台侧职责</em></button>
+            <button class="node" data-node="scheduler" aria-pressed="false"><strong>异构资源调度</strong><small>QPU 选择 / 队列 / 预约<br>HPC 协同 / 数据位置</small><em>目标 · 非模型调度器</em></button>
+            <button class="node" data-node="approval" aria-pressed="false"><strong>准入与执行审批</strong><small>权限 / 资源 / 预算 / 安全<br>绑定版本与执行参数</small><em>沿用既有设备审批硬约束</em></button>
+          </div></div>
+          <div class="connector"><b>↓</b> 平台 / 独立服务经 provider 适配接入；科学实现不搬进 Agent</div>
+          <div class="lane"><div class="lane-label">05 计算层<span>科学能力与资源</span></div><div class="lane-items four">
+            <button class="node existing" data-node="catalog" aria-pressed="false"><strong>公司算法平台</strong><small>动态目录 / 参数合同<br>版本化运行 / 资产</small><em>已有平台桥接</em></button>
+            <button class="node existing" data-node="compiler" aria-pressed="false"><strong>模拟器与编译器</strong><small>模拟 / 编译估计<br>后续线路优化等扩展</small><em>已有独立服务桥接</em></button>
+            <button class="node" data-node="qpu" aria-pressed="false"><strong>QPU 资源与设备服务</strong><small>量子处理器 / 设备网关<br>内部校准 / 安全联锁</small><em>真机接入需单独验收</em></button>
+            <button class="node" data-node="hpc" aria-pressed="false"><strong>CPU / GPU / HPC</strong><small>经典计算 / 批处理<br>训练、解码等计算阶段</small><em>目标 · 资源适配</em></button>
+          </div></div>
+          <div class="connector"><b>↑</b> 执行事件与结果清单进入数据服务；受控结果不穿过模型传输</div>
+          <div class="lane"><div class="lane-label">06 数据层<span>结果与知识治理</span></div><div class="lane-items">
+            <button class="node" data-node="resultdata" aria-pressed="false"><strong>结果回收与数据资产</strong><small>原始存储 / 标准化<br>完整性 / 来源 / 血缘</small><em>目标 · 授权数据通道</em></button>
+            <button class="node" data-node="analysis" aria-pressed="false"><strong>模板分析与报告</strong><small>确定性指标 / 绘图<br>版本化环境 / 可复现报告</small><em>目标 · 隔离分析服务</em></button>
+            <button class="node" data-node="retention" aria-pressed="false"><strong>数据集与知识治理</strong><small>归属 / 去敏 / 质量<br>审核发布 / 保留与删除</small><em>目标 · 内外数据隔离</em></button>
+          </div></div>
+          <div class="loopbar"><strong>返回工作空间 ↑</strong>　完整文件与图表 → 授权内容服务 → 中栏；合同允许的句柄与短摘要 → DSH → 右侧对话<small>经权限与质量审核后才进入公司知识库或数据集；会话、检索、日志、缓存和导出均须保持租户隔离。</small></div>
+        </div>
+        <aside class="detail" id="node-detail" aria-live="polite"></aside>
+      </div>
+      <div class="boundary-row">
+        <div class="boundary"><h3>一套 Agent 运行时</h3><p>DSH 负责智能交互。平台作业服务只执行已校验的结构化步骤与科学工作流，不新增模型循环、会话循环或工具循环。</p></div>
+        <div class="boundary"><h3>两条返回通道</h3><p>完整文件和大结果经鉴权接口进入中栏；模型只收合同允许的句柄、少量指标和短摘要，避免敏感内容与大数据进入上下文。</p></div>
+        <div class="boundary"><h3>三个事实来源</h3><p>可信身份服务负责 Agent 用户；云平台与集群负责各自资源、授权和账本；科学服务负责结果。DSH 和 Agent 合同管理对话工具，聊天记录不替代这些正式记录。</p></div>
+      </div>
+      <div class="notice warning"><strong>设备来源必须明确：</strong>当前设备合同对接 <code>ionstack-twinrun</code>，返回来源为 <code>qccd-twin</code>，不能据此声称任意真机已接通。真实量子处理器（QPU）的执行、状态查询、计量与结果来源，需要按实际服务补齐合同并验收。</div>
+    </section>
+
+    <section class="panel" id="panel-enterprise" role="tabpanel" aria-labelledby="tab-enterprise" hidden>
+      <div class="section-head"><div><h2>基于 DSH 的公司通用 Agent</h2><p>公司本地模型、受管插件、MCP 与常用 Skills；通用任务不必经过量子算法。以下是集成设计，尚未全量启用。</p></div><a class="button" href="company-agent-harness-framework-v0.8.zh-CN.md">v0.8 harness 框架对齐</a><a class="button" href="company-agent-dsh-integration-v0.7.zh-CN.md">v0.7 集成与鲁棒性</a></div>
+      <p class="enterprise-summary">复用 DeepSeek Harness 的原生对话和工具生命周期，优先装配成熟扩展。知识库、云平台、HPC 和量子算法并列接入；只补适配、权限、隔离与验收，不为每类能力重建后端。</p>
+      <div class="two-col subsection" id="general-capability-baseline" aria-label="首期通用 Agent 能力目标"><section><h3>首期必须实际完成</h3><ul class="open-list"><li><strong>文件与办公</strong><p>读取、编辑与保存获准文件，生成可打开的文档、表格和选定模板的演示材料。</p></li><li><strong>代码与命令</strong><p>跨文件修改、隔离运行脚本 / 测试、根据失败修正，交付差异和真实验证记录。</p></li><li><strong>数据与调研</strong><p>实际计算和绘图，检索获准网页并引用来源，保存脚本、报告与产物。</p></li></ul></section><section><h3>连续工作与风险分级</h3><ul class="open-list"><li><strong>范围内连续执行</strong><p>已授权的读取、草稿编辑和沙箱测试可连续完成，不每一步重复审批。</p></li><li><strong>副作用单独确认</strong><p>扩大访问、破坏性修改、外发 / 发布与新增费用按策略确认；设备规则不放宽。</p></li><li><strong>真实完成标准</strong><p>文件可打开、结果可复核、失败如实记录；只有聊天或代码建议不算通用 Agent 验收。</p></li></ul></section></div>
+      <div class="two-col subsection" id="dsh-integration-baseline"><section><h3>插件 / MCP / Skills 的分工</h3><ul class="open-list"><li><strong>插件与 MCP 提供工具接入</strong><p>插件负责扩展和注册，MCP 是工具与资源连接协议；可组合或直接接已有 API，不强制每项建设三套封装。</p></li><li><strong>Skills 提供工作方法</strong><p>整理团队常用步骤、模板和检查要求，记录依赖工具、版本与样例；按需加载，不赋予额外权限。</p></li><li><strong>合同约束实际暴露范围</strong><p>安装不等于授权；工具发现不自动全量开放。公司工具继续经合同、策略和适配，量子目录保持动态。</p></li></ul></section><section><h3>接口鲁棒性是主要工程工作</h3><ul class="open-list"><li><strong>故障分类与限额</strong><p>启动、鉴权、限流、超时、断流和坏结果分别处理；限制并发、输出与资源，记录可诊断的短错误。</p></li><li><strong>恢复不重复执行</strong><p>只读有限重试，写操作按幂等合同；提交后未知先查询，设备自动重试为零，取消不冒充后端已停止。</p></li><li><strong>隔离、版本与回归</strong><p>固定版本，按租户保护凭据和缓存；单个服务失败不拖住无关任务，升级先过契约与故障测试。</p></li></ul></section></div>
+      <div class="scenario-tabs" aria-label="工作场景设计"><button data-scenario="research" aria-pressed="true">内部研发</button><button data-scenario="customer" aria-pressed="false">外部客户服务</button><button data-scenario="daily" aria-pressed="false">日常工作与编码</button></div>
+      <div class="scenario-layout" id="enterprise-scenario" aria-live="polite"></div>
+      <p class="review-footer-note">以上按钮只切换方案说明，不切换用户角色、生产 preset 或工具权限。公司平台仍以可信身份与服务授权决定可用范围。</p>
+      <div class="subsection"><h3>研发中使用知识，也形成新知识</h3><div class="pipeline"><div class="pipeline-part"><strong>检索与引用</strong><p>先按项目权限查资料、源码与接口；保留来源版本。知识不是算法目录，也不是操作授权。</p></div><span class="pipeline-arrow">→</span><div class="pipeline-part"><strong>开发与验证</strong><p>代码修改、测试、HPC / 模拟结果和分析报告分别留下证据；模型解释与已验证事实分开。</p></div><span class="pipeline-arrow">→</span><div class="pipeline-part"><strong>草稿与审核</strong><p>在工作完成节点提醒整理；用户选内容、确认范围，敏感检查后提交维护人审核。</p></div><span class="pipeline-arrow">→</span><div class="pipeline-part"><strong>发布与复用</strong><p>审核后发布版本并同步索引；以后按权限检索，过期可复核、纠错与撤回。</p></div></div></div>
+      <div class="two-col subsection"><section><h3>低负担保存，分级共享</h3><ul class="open-list"><li><strong>个人 / 项目草稿</strong><p>选择一次工作中的资料和结论即可开始整理；默认不自动上传全部聊天或文件。</p></li><li><strong>团队共享 / 公司发布</strong><p>校验来源、客户归属、重复和保密范围；读权限不等于发布权，不能通过摘要扩大来源权限。</p></li><li><strong>不是模型训练</strong><p>知识入库指受控文档与检索索引；个人记忆、跨会话上下文与模型训练需要独立许可。</p></li></ul></section><section><h3>通用编码与设备权限分离</h3><ul class="open-list"><li><strong>体验复用 DSH</strong><p>消息、模型、上下文和审批原样保留，文件 / 差异 / 测试证据在中栏。</p></li><li><strong>执行接入受管开发服务</strong><p>限定仓库和版本，隔离运行测试；测试环境没有生产凭据、设备网络或修改 profile 的能力。</p></li><li><strong>保留当前生产边界</strong><p>不启用 shell 编码 preset，不开放 Codex 模型委派。DSH 底层能力不等于本仓已经具备完整自动编码。</p></li></ul></section></div>
+      <div class="notice">模型可选范围也受数据规则限制：内部源码和客户资料只能发往获准模型服务。切换模型不能绕过已有上下文的出域检查；具体接入点仍需验证。</div>
+      <div class="subsection" id="general-agent-roadmap"><h3>建议建设顺序</h3><ol class="open-list"><li><strong>首期：通用 Agent 内部可用版</strong><p>盘点 DSH 固定版本、已有插件 / MCP 与常用 Skills；接公司本地模型，装配受管最小集合，验证真实文件、编程、分析与调研交付。</p></li><li><strong>并列接入公司服务</strong><p>知识库、云平台、HPC 与量子算法按接口就绪程度并行适配。优先复用已有 API / MCP，不为每项重建后端。</p></li><li><strong>鲁棒性与业务专项验收</strong><p>版本、权限、超时、限流、幂等、取消和结果校验统一测试；外部租户与设备另做业务验收。工期按复用盘点重估，不将能力清单全算自研。</p></li></ol><a href="company-agent-general-capabilities-v0.6.zh-CN.md">保留 v0.6 通用任务验收要求</a></div>
+      <details class="subsection"><summary>知识发布流程</summary><div class="knowledge-steps" id="knowledge-design-steps" aria-label="知识发布步骤"></div><div id="knowledge-design-detail" class="knowledge-detail"></div><p class="small-note">步骤说明，不执行知识发布。</p></details>
+      <div class="start-links"><button class="button primary" data-jump="workspace">打开工作区</button><button class="button" data-jump="roadmap">计算服务验收</button></div>
+    </section>
+
+    <section class="panel" id="panel-workspace" role="tabpanel" aria-labelledby="tab-workspace" hidden>
+      <div class="workspace">
+        <div class="workspace-bar"><b>UNITQC Agent</b><div class="workspace-tools"><span id="workspace-account">左侧为示例 · 右侧原生 DSH</span><button id="native-expand" aria-pressed="false">展开对话</button><a href="http://127.0.0.1:3081/" target="_blank" rel="noopener noreferrer">独立打开 DSH ↗</a><a href="#overview">设计文档</a></div></div>
+        <nav class="mobile-panels" aria-label="工作区面板"><button data-mobile-panel="resources" aria-pressed="false">目录</button><button data-mobile-panel="content" aria-pressed="true">内容</button><button data-mobile-panel="chat" aria-pressed="false">对话</button></nav>
+        <div class="workspace-grid" data-mobile-panel="content">
+          <aside class="workspace-nav" aria-label="资源目录与工作空间">
+            <div class="resource-tree">
+              <details class="tree-group" id="cloud-tree"><summary>云平台 <small>未连接</small></summary><div class="tree-children">
+                <button class="work-nav-btn" data-view="cloud">平台首页</button>
+                <details class="project-folder"><summary>线路对比</summary><div class="tree-children">
+                  <button class="work-nav-btn" data-file="cloud-input">input.qasm</button>
+                  <button class="work-nav-btn" data-view="results">comparison.html</button>
+                </div></details>
+              </div></details>
+              <details class="tree-group" id="hpc-tree"><summary>超算 <small>未连接</small></summary><div class="tree-children">
+                <button class="work-nav-btn" data-view="hpc">集群首页</button>
+                <details class="project-folder"><summary>home / project</summary><div class="tree-children">
+                  <button class="work-nav-btn" data-file="hpc-notes">run-notes.md</button>
+                  <button class="work-nav-btn" data-file="hpc-log">job-summary.txt</button>
+                </div></details>
+              </div></details>
+              <details class="tree-group" id="local-tree" open><summary>本机文件</summary><div class="tree-children">
+                <details class="project-folder" open><summary>quantum-project</summary><div class="tree-children">
+                  <button class="work-nav-btn" data-file="local-readme">README.md</button>
+                  <button class="work-nav-btn" data-file="local-input">input.qasm</button>
+                  <button class="work-nav-btn" data-view="results">analysis.html</button>
+                  <button class="work-nav-btn" data-view="canvas">analysis.canvas</button>
+                </div></details>
+              </div></details>
+              <details class="tree-group" id="workspaces-tree" open><summary>工作空间 <small>示例</small></summary><div class="tree-children">
+                <details class="project-folder" open><summary>线路对比</summary><div class="tree-children">
+                  <button class="work-nav-btn session-button" disabled title="示例会话，请在右侧 DSH 中选择实际会话" data-session="compare" aria-current="true">模拟与资源估计</button>
+                  <button class="work-nav-btn session-button" disabled title="示例会话，请在右侧 DSH 中选择实际会话" data-session="analysis">结果分析</button>
+                </div></details>
+                <details class="project-folder"><summary>超算分析</summary><div class="tree-children">
+                  <button class="work-nav-btn session-button" disabled title="示例会话，请在右侧 DSH 中选择实际会话" data-session="hpc">计算日志</button>
+                  <button class="work-nav-btn session-button" disabled title="示例会话，请在右侧 DSH 中选择实际会话" data-session="report">整理报告</button>
+                </div></details>
+                <details class="project-folder" open><summary>算法研发</summary><div class="tree-children">
+                  <button class="work-nav-btn session-button" disabled title="示例会话，请在右侧 DSH 中选择实际会话" data-session="research">知识与接口</button>
+                  <button class="work-nav-btn session-button" disabled title="示例会话，请在右侧 DSH 中选择实际会话" data-session="coding">代码与测试</button>
+                  <button class="work-nav-btn" data-view="development">代码变更</button>
+                  <button class="work-nav-btn" data-view="knowledge">项目知识</button>
+                  <button class="work-nav-btn" data-view="capture">知识草稿</button>
+                </div></details>
+                <details class="project-folder"><summary>日常工作</summary><div class="tree-children">
+                  <button class="work-nav-btn session-button" disabled title="示例会话，请在右侧 DSH 中选择实际会话" data-session="daily">周报</button>
+                  <button class="work-nav-btn" data-view="daily">文档</button>
+                </div></details>
+              </div></details>
+            </div>
+            <div class="account-dock">
+              <button class="account-button" id="account-button" aria-haspopup="dialog"><span class="avatar" aria-hidden="true">U</span><span>登录 / 注册<small>未登录</small></span></button>
+              <span class="gear-note" title="设置统一在原生 DSH 设置对话框：侧栏底部「设置」→「平台连接」/「模型」">设置入口唯一：原生 DSH「设置」</span>
+            </div>
+          </aside>
+          <div class="workspace-center">
+            <div class="editor-tabs" id="editor-tabs" aria-label="已打开的中栏内容"></div>
+            <div class="editor-tab"><span id="editor-label">工作区</span><span id="editor-status"></span></div>
+            <div class="center-content" id="center-content"></div>
+          </div>
+          <aside class="chat" aria-label="DeepSeek Harness 原生对话区域">
+            <iframe id="dsh-native-frame" title="DeepSeek Harness 原生对话" src="http://127.0.0.1:3081/" referrerpolicy="no-referrer"></iframe>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel" id="panel-workflow" role="tabpanel" aria-labelledby="tab-workflow" hidden>
+      <div class="section-head"><div><h2>把“结果回收与分析”作为主流程设计</h2><p>任务受理、执行完成、结果可用、分析完成、账单结算是不同状态，必须分别记录。</p></div><span class="tag target">以下为目标流程，非已实现合同</span></div>
+      <div class="stage-list" aria-label="作业流程步骤">
+        <button class="stage-btn" data-stage="intake" aria-pressed="true"><span class="stage-num">01 / INPUT</span><strong>需求与导入</strong><small>自然语言 / QASM</small></button>
+        <button class="stage-btn" data-stage="plan" aria-pressed="false"><span class="stage-num">02 / PLAN</span><strong>发现与校验</strong><small>目录 / 版本 / 参数</small></button>
+        <button class="stage-btn" data-stage="approve" aria-pressed="false"><span class="stage-num">03 / AUTHORIZE</span><strong>报价与审批</strong><small>预算 / 范围 / 授权</small></button>
+        <button class="stage-btn" data-stage="execute" aria-pressed="false"><span class="stage-num">04 / EXECUTE</span><strong>调度与执行</strong><small>模拟器 / QPU / HPC</small></button>
+        <button class="stage-btn" data-stage="collect" aria-pressed="false"><span class="stage-num">05 / COLLECT</span><strong>回收与校验</strong><small>结果 / 来源 / 完整性</small></button>
+        <button class="stage-btn" data-stage="analyze" aria-pressed="false"><span class="stage-num">06 / ANALYZE</span><strong>分析与报告</strong><small>模板 / 绘图 / 解释</small></button>
+        <button class="stage-btn" data-stage="retain" aria-pressed="false"><span class="stage-num">07 / RETAIN</span><strong>结算与沉淀</strong><small>账本 / 资产 / 知识</small></button>
+      </div>
+      <div class="stage-detail" id="stage-detail" aria-live="polite"></div>
+      <section class="subsection"><h3>分析能力建议拆成三个可版本化的合同</h3><p class="fine muted" style="margin-top:6px">这些是未来分析服务的设计项；后续你提供的格式模板、绘图模板可接入这一层，而不是写进提示词。</p><div class="pipeline">
+        <div class="pipeline-part"><strong>① 数据格式合同</strong><p>定义结果字段、类型、单位、测量语义、实际采样数、来源、版本和缺失值。原始结果保留，标准化数据另存，转换过程可追踪。</p></div><span class="pipeline-arrow">→</span>
+        <div class="pipeline-part"><strong>② 分析 / 绘图模板</strong><p>固定输入 schema、模板版本、依赖环境和资源预算；确定性程序计算指标与不确定性，并生成可复现图表。缺失必要数据时明确阻断。</p></div><span class="pipeline-arrow">→</span>
+        <div class="pipeline-part"><strong>③ 报告与解释合同</strong><p>图表和明细进入中栏；模型接收受限摘要，说明结论、误差与局限，并引用结果资产。把“程序算出的事实”和“模型解释”分开。</p></div>
+      </div></section>
+      <div class="two-col subsection">
+        <div><h3 style="margin-bottom:13px">建议：四条独立状态轴</h3><div class="state-path"><strong>执行：</strong>草稿 → 校验 → 待审批 → 已受理 → 排队 → 执行中 → 完成 / 失败 / 已取消<br><strong>结果：</strong>未产生 → 回收中 → 可用 / 部分可用 / 校验失败<br><strong>分析：</strong>未开始 → 运行中 → 完成 / 失败 / 不适用<br><strong>计费：</strong>未预留 → 已预留 → 待核对 → 已结算 / 已释放 / 已调整<small>另记“观察是否可靠”：已确认 / 待核对（最后确认时间、来源、版本）。超时表示当前不知道结果，不表示设备进入失败状态。以上为目标领域模型，并非现有工具枚举。</small></div><p class="fine muted" style="margin-top:12px">同一作业可以同时是“执行完成、结果校验失败、分析未开始、账单已结算”。工作台按视图聚合，不能用一个 completed 字段代表所有阶段。审批的有效 / 过期 / 消费状态另存。</p></div>
+        <div><h3 style="margin-bottom:8px">必须提前定义的异常语义</h3><ul class="exception-list"><li><b>发送后超时：</b>结果可能未知，先核对服务状态，不能自动再跑一次。当前 <code>request_id</code> 仅作关联，不保证幂等。</li><li><b>点击取消：</b>取消本地会话或请求，不等于设备已停止；界面应显示“取消请求中”，直到服务确认。</li><li><b>已计算但回收失败：</b>保留计算事实，恢复数据回收；账单按实际用量和约定规则处理，不能盲目退款或重复计费。</li><li><b>科学结论不足：</b>显示数据缺失、误差或质量问题；模型不得填造指标，也不把一次运行包装为量子优势证明。</li></ul></div>
+      </div>
+      <section class="subsection"><h3>QPU 与高性能计算（HPC）协同：由平台承接长任务</h3><div class="two-col"><ul class="open-list"><li><strong>逻辑工作流</strong><p>经典预处理 → 量子任务 → 经典分析；算法迭代留在科学执行器。每个 Agent 发起的设备调用仍逐次审批；当前桥接没有让后台执行器自动申请、核验并续行审批的合同，不能将整套迭代隐含授权给 algorithm.run。</p></li><li><strong>资源级调度</strong><p>综合设备能力、拓扑、校准新鲜度、队列、配额、预算和数据位置。重新选择设备若改变批准范围、费用或科学语义，需重新校验和审批。</p></li></ul><ul class="open-list"><li><strong>设备内部调度</strong><p>离子调度和低时延控制留在专业编译 / 设备服务；QPU 资源分配与离子级调度是不同层次。时间敏感解码也应靠近设备执行。</p></li><li><strong>依赖与补偿</strong><p>平台维护步骤依赖、预留过期、部分失败、取消传播、用量和资产关联。交互层只订阅状态；算法失败不会触发未经审批的替代设备运行。</p></li></ul></div></section>
+      <div class="notice">当前对外科学句柄只有 <code>asset_id</code>、<code>circuit_id</code>、<code>twin_id</code>。平台内部可管理任务、项目、账单等业务记录，但这些关联键不是新增的科学句柄，也不能直接作为现有模型工具参数。扩展工具时先修订合同。</div>
+    </section>
+
+    <section class="panel" id="panel-governance" role="tabpanel" aria-labelledby="tab-governance" hidden>
+      <div class="section-head"><div><h2>Agent 用户制度与外部连接分开管理</h2><p>左下角提供注册 / 登录，齿轮设置管理云平台和本地超算连接。优先复用可信身份服务，产品身份和外部授权仍分别验证。</p></div><span class="tag target">目标权限设计 · 需平台接口确认</span></div>
+      <div class="auth-equation"><div><strong>有效权限 = 每一项约束都通过</strong><p>身份认证只是入口；可见、可读、可运行、可审批应分别授权。</p></div><div class="auth-factors"><span>组织 / 租户</span><span>项目成员</span><span>角色</span><span>资源与数据级别</span><span>能力许可</span><span>预算 / 配额</span><span>审批 / 设备安全</span></div></div>
+      <div class="table-scroll"><table class="permission-table"><caption style="text-align:left;padding:14px 16px;font-size:12px">建议的权限差异。下列均是设计建议，不表示当前已经实现用户级鉴权。</caption><thead><tr><th scope="col">能力范围</th><th scope="col">外部用户</th><th scope="col">内部研发 / 算法人员</th><th scope="col">设备操作 / 审批角色</th></tr></thead><tbody>
+        <tr><th scope="row" style="text-align:left;padding:14px 16px;border-top:1px solid var(--line);font-weight:600;background:white">任务、结果与账单</th><td>自己的授权项目<small>按组织角色授予财务或共享权限</small></td><td>所属授权项目<small>内部身份不提供跨项目读取权</small></td><td>操作所需最小范围<small>设备运维不自动获得用户科研正文</small></td></tr>
+        <tr><th scope="row" style="text-align:left;padding:14px 16px;border-top:1px solid var(--line);font-weight:600;background:white">算法目录与运行</th><td>已发布、已授权的接口<small>可运行不代表可读源码</small></td><td>授权组件与内部接口文档<small>实验能力需独立准入和资源许可</small></td><td>与岗位相关的已授权能力<small>同样绑定目录和组件版本</small></td></tr>
+        <tr><th scope="row" style="text-align:left;padding:14px 16px;border-top:1px solid var(--line);font-weight:600;background:white">知识与源码</th><td class="yes">公开文档 + 自有私有资料<small>不进入公司内部检索域</small></td><td class="conditional">按项目与文档 / 仓库权限开放<small>设计、实现、接口各有独立授权</small></td><td>授权操作手册和设备资料<small>敏感控制资料不进入通用模型上下文</small></td></tr>
+        <tr><th scope="row" style="text-align:left;padding:14px 16px;border-top:1px solid var(--line);font-weight:600;background:white">设备运行</th><td class="conditional">资源许可 + 预算 + 本次审批<small>由业务规则指定谁有审批资格</small></td><td class="conditional">资源许可 + 预算 + 本次审批<small>内部账号不能绕过设备策略</small></td><td class="conditional">授权范围内审批 / 操作<small>建议高风险操作区分申请人与审批人</small></td></tr>
+        <tr><th scope="row" style="text-align:left;padding:14px 16px;border-top:1px solid var(--line);font-weight:600;background:white">校准、数据入库</th><td>默认不开放公司内部入口<small>客户自有数据保留权仍独立管理</small></td><td>生成测试方案 / 审核候选数据<small>发布知识或训练数据需要额外权限</small></td><td>审批设备实验与参数变更<small>安全联锁、回滚和审计由设备服务保证</small></td></tr>
+      </tbody></table></div>
+      <div class="governance">
+        <div class="governance-block"><h3>登录、令牌与租户隔离</h3><ul><li>Agent 提供产品级注册、登录和退出；优先使用支持 OpenID Connect 的可信身份服务，也可联接现有平台身份源，不在前端自行保存密码。</li><li>云平台账号与 HPC 集群账号是独立连接，绑定、撤销和权限分别管理；同一用户名或一次登录不自动取得另一个系统的权限。</li><li>由工作空间后端管理短期、最小权限的会话和服务访问；长效平台密钥不进入模型上下文或前端持久存储。</li><li>租户与项目上下文来自可信身份，不能由模型参数自行声明。服务侧逐次验证用户授权，防止共享服务凭据扩大权限。</li><li>DSH 现有本地登录 token 不等同于生产租户身份。共享运行时或每租户隔离部署，需根据会话、文件、插件及缓存隔离验证结果决定。</li></ul></div>
+        <div class="governance-block"><h3>知识、算法实现与数据归属</h3><ul><li>访问控制在检索前过滤，并在原文读取、引用、缓存命中和导出时复核；不能先把内部文档交给模型再要求它保密。</li><li>源码、接口文档、运行权分开授权。员工也只看到许可项目；外部用户可调用发布能力而不暴露实现细节。</li><li>外部用户数据默认仅归所属租户使用，未经明确授权，不并入公司知识库或训练集。</li><li>知识扩充采用“候选 → 去敏与质量检查 → 权限 / 归属确认 → 审核发布”，保留来源、版本、撤回和删除机制。</li></ul></div>
+        <div class="governance-block"><h3>计费由平台账本确定</h3><ul><li>先确认计费单位：采样数、设备时间、计算资源时间、存储或服务套餐；本地模型服务是否收费也应单独约定。</li><li>提交前给出报价版本、费用范围、预算上限和预留有效期；排队超时、重报价和追加迭代需要明确规则。</li><li>设备 / 计算服务产生可信用量事件；账本按唯一事件去重，完成结算、释放预留、退款与对账。</li><li>失败、取消、部分执行可能已经产生费用；模型只能解释账单，不能自行计算应扣余额或宣告退款成功。</li></ul></div>
+        <div class="governance-block"><h3>自动化校准的安全边界</h3><ul><li>可自动完成：历史数据分析、异常发现、方案生成、结果评估与候选参数建议。</li><li>需要受控执行：设备实验、参数应用、影响在途任务的操作；设备安全联锁与紧急停止保持在专业设备服务。</li><li>现有 <code>quantum_device_run</code> 在 <code>lab / sign</code> 配置下必须人工批准；在 <code>boot / algo</code> 下必须拒绝。这些是运行配置，不是用户角色。</li><li>当前范围：先交付审批辅助的校准分析与测试；每次设备操作保持既有审批策略。无人值守设备执行不纳入本方案，科学执行器也不能成为绕过审批的通道。</li></ul></div>
+      </div>
+      <div class="notice warning"><strong>始终失败闭合：</strong>未知工具、未知 preset（运行配置）、缺失 provider（服务适配方）、非法响应均拒绝处理。生产仅允许项目受管组合，不开放可切换到带 shell 的编码配置；官方 Codex 保持既有隔离设置，不成为设备调用通道。</div>
+    </section>
+
+    <section class="panel" id="panel-roadmap" role="tabpanel" aria-labelledby="tab-roadmap" hidden>
+      <div class="section-head"><div><h2>量子计算服务专项：先验证闭环，再扩展设备能力</h2><p>这是科学服务的依赖顺序；公司整体产品优先让算法组使用知识、日常协作和受控开发。两者共同遵守身份、数据与审批边界。</p></div><button class="button" data-jump="enterprise">公司平台建设顺序 →</button></div>
+      <div class="roadmap">
+        <div class="phase-marker"><strong>阶段 0</strong><span>接口与边界</span></div><div class="phase-content"><div><h3>确认身份、作业、账单与结果的事实来源</h3><p>盘点云平台已有接口；选择首个模拟器与一个获准设备服务；核对本地模型工具调用、流式输出、中文效果与 DSH 适配；约定结果模板与敏感边界。</p></div><div class="phase-gate"><b>进入下一阶段的条件</b>有可验证的接口合同、测试租户、责任人和业务验收用例；真实 QPU 来源明确；确定哪些接口复用、哪些新增。</div></div>
+        <div class="phase-marker"><strong>阶段 1A</strong><span>受限试点</span></div><div class="phase-content"><div><h3>先交付模拟作业与可信分析闭环</h3><p>先接统一身份与隔离工作空间，再做受支持的 QASM 导入、单模拟器持久任务、可定位结果和一份可复现报告。提供用量记录；正式收费前验证账本与对账。</p></div><div class="phase-gate"><b>验收重点</b>关闭对话后作业仍受管；同线路多次实验可区分；跨租户访问被拒绝；超限模拟被阻断；缺失或不兼容数据不生成虚假报告。</div></div>
+        <div class="phase-marker"><strong>阶段 1B</strong><span>受监督真机</span></div><div class="phase-content"><div><h3>再开放一个真实设备的付费执行</h3><p>完成服务端审批绑定、幂等受理、报价预算、真实设备来源、运行核对、取消语义、可信计量与账单对账。真实 QPU 不是 TwinRun 名称的推断结果。</p></div><div class="phase-gate"><b>验收重点</b>重复提交只受理一次；参数变更须重新审批；断连后先核对、不重跑；排队中权限 / 报价过期被正确处理；真实设备用量可追溯。</div></div>
+        <div class="phase-marker"><strong>阶段 2</strong><span>内部研发能力</span></div><div class="phase-content"><div><h3>内部知识、软件接口与可复用分析</h3><p>接入文档 / 源码授权，扩展标准化与绘图模板；按平台目录接入获准能力，建立报告复现、数据资产、审核入库和知识更新机制。</p></div><div class="phase-gate"><b>验收重点</b>检索、缓存和引用不越权；源码与运行权分离；分析结果可复现；客户数据不因内部身份被访问或自动转作训练数据。</div></div>
+        <div class="phase-marker"><strong>阶段 3</strong><span>异构协同</span></div><div class="phase-content"><div><h3>多 QPU 调度与 HPC 协作</h3><p>平台维护依赖图、资源预约、检查点、部分失败恢复与多资源账单。机器学习解码、线路优化、离子调度等按能力类别规划，实际可用组件始终以平台实时目录为准。</p></div><div class="phase-gate"><b>验收重点</b>资源切换遵守预算与审批范围；经典 / 量子结果可追溯；算法迭代不依赖聊天进程；设备级实时路径不经过大模型。</div></div>
+        <div class="phase-marker"><strong>阶段 4</strong><span>内部设备与数据</span></div><div class="phase-content"><div><h3>受控校准、测试与数据质量体系</h3><p>逐步开放自动分析、实验建议和审批后的执行；建立数据质量、版本、血缘、保留期、删除、知识发布与回滚。全程保留设备安全与人工审批边界。</p></div><div class="phase-gate"><b>验收重点</b>每次设备执行可关联批准记录；参数变更可审计和回滚；停止信号由设备服务确认；数据和知识可以撤回，不污染其他租户。</div></div>
+      </div>
+      <div class="status-grid">
+        <section class="status-box"><span class="tag live">从当前工程可确认</span><h3 style="margin-top:10px">可以复用的基础</h3><ul><li>DSH 是唯一 Agent 运行时；插件转调合同内核和服务适配器。</li><li>能力发现、短知识检索、工作流结构校验已有工具合同。</li><li>平台算法目录、版本绑定、资产、电路导出、模拟和编译有桥接边界。</li><li>设备审批、失败闭合、返回内容限制和受管运行配置已有明确约束。</li></ul><p class="fine muted">依据：当前 README、架构文档、工具和策略合同；本次没有调用模型或科学服务验证其可用性。</p></section>
+        <section class="status-box"><span class="tag target">本方案明确新增 / 待验证</span><h3 style="margin-top:10px">产品化需要补齐的部分</h3><ul><li>Agent 产品用户、云平台 / HPC 连接与逐用户授权；生产租户隔离；本地模型接入。</li><li>三栏界面、文件上传 / QASM 导入、授权内容访问。</li><li>持久任务查询 / 取消 / 事件；平台幂等、报价、用量与账单集成。</li><li>原始结果回收、分析 / 图表服务、内部检索、跨资源协同。</li><li>实际 QPU 服务来源与安全验收；内部校准和知识入库治理。</li></ul></section>
+      </div>
+      <section class="decisions"><h3>下一轮最值得确认的五个问题</h3>
+        <details open><summary>1. 云平台已经有什么接口，可以直接复用？</summary><p>优先确认：统一登录 / 组织项目、配额余额、提交 / 状态 / 取消、设备目录、原始结果下载、报价 / 用量 / 账单、事件通知与服务端幂等。建议先做接口盘点，不先另建账号库、调度器和计费系统。</p></details>
+        <details><summary>2. v0.6 首期怎样证明是通用 Agent？</summary><p>独立完成办公文件、跨文件代码修改与实际测试、表格计算和网页调研四类代表性任务；不要求先绑定量子云。只有聊天、知识查询或代码建议不算完成。随后接入企业协作与 HPC / 模拟；外部租户和设备保持专项验收。</p></details>
+        <details><summary>3. 真机由谁批准，费用如何控制？</summary><p>需明确用户是否可自行批准获授权资源，是否还要项目负责人或设备管理员审批，以及预算阈值、排队过期、失败收费和取消规则。用户口头同意、账号有余额、内部身份，都不能代替本次有效设备审批。</p></details>
+        <details><summary>4. 内部人员分别能看什么，又能运行什么？</summary><p>建议列出研发、算法、设备操作、项目管理员、财务等业务角色，并将“看文档 / 看实现 / 运行 / 发布 / 审批”分别授权。这里的角色建议不新增 Agent preset，也不改变既有设备拒绝 / 审批策略。</p></details>
+        <details><summary>5. 第一份结果和分析模板是什么？</summary><p>最好提供一份脱敏模拟结果、一份真实设备结果、一份期望报告，以及字段说明、测量语义、误差定义和绘图规范。先验证模板能覆盖真实数据及失败情形，再扩充模型解释和更多科学能力。</p></details>
+      </section>
+      <div class="notice">建议以 Web 三栏工作空间作为首期形态，按需要再封装桌面客户端；界面服务、平台作业服务和设备控制不必同时拆成大量微服务，但部署与权限边界必须明确。后续实施保持：<strong>合同 → Python adapter → DSH 插件 → 测试</strong>，不为页面新增第二套 Agent 运行循环。</div>
+    </section>
+    <section class="panel" id="panel-review" role="tabpanel" aria-labelledby="tab-review" hidden>
+      <div class="section-head"><div><h2>深度审查：从工具可用，走向作业可交付</h2><p>基于当前代码核验和官方资料调研。以下优先级针对产品上线条件，不表示已经发生安全事件。</p></div><a class="button" href="quantum-agent-architecture-review-2026-10-20.zh-CN.md">阅读完整中文审查报告</a></div>
+      <div class="review-verdict"><div><div class="eyebrow" style="color:#8ccecb">总体判断 / ARCHITECTURE REVIEW</div><h3>三栏交互可以保留；正式交付单元应是可追溯的计算作业。</h3><p>最重要的不是再增加一个规划角色或更多工具，而是让同一项用户意图贯穿授权、批准、受理、执行、结果与费用。现有合同基础可复用，商业多租户与真实设备能力仍需专门验收。</p></div><ol><li>前端登录不等于下游按用户权限执行。</li><li>工具返回成功不等于计算完成或结果可用。</li><li>线路编号不等于一次独立实验记录。</li><li>一次人工批准不等于整个混合迭代已获授权。</li><li>格式统一不等于科学结果可以直接比较。</li></ol></div>
+      <h3>修订后的三条通道：业务查询和大数据不必经过模型</h3>
+      <div class="review-flow" aria-label="产品业务、智能交互、科学数据三条独立通道">
+        <div class="flow-column"><h3>产品业务通道</h3><p>任务列表、账单和文件操作不依赖推理。</p><div class="flow-step">浏览器 · 当前用户 / 项目</div><div class="flow-arrow">↓ 可信会话与逐次授权</div><div class="flow-step">工作空间后端 · 聚合 / 事件订阅</div><div class="flow-arrow">↓ 平台 API</div><div class="flow-step">身份 / 项目 / 作业记录 / 账本</div></div>
+        <div class="flow-column"><h3>智能交互通道</h3><p>DSH 是唯一 Agent 运行时。</p><div class="flow-step">右侧对话 + 本地模型适配</div><div class="flow-arrow">↓ 结构化提议；模型不签发授权</div><div class="flow-step">DSH → 合同校验 → 可信调用上下文</div><div class="flow-arrow">↓ 有效授权与适用的本次审批</div><div class="flow-step">平台 / 独立科学服务 · 持久受理</div></div>
+        <div class="flow-column"><h3>科学数据通道</h3><p>原始结果与大文件不通过工具正文传输。</p><div class="flow-step">执行结果 + 来源 + 用量事件</div><div class="flow-arrow">↓ 完整性、归属与语义校验</div><div class="flow-step">结果资产 → 标准化 → 受控分析</div><div class="flow-arrow">↑ 经授权返回</div><div class="flow-step">中栏文件 / 报告；右栏只收短摘要</div></div>
+      </div>
+      <div class="notice">三条通道共享可信授权和关联记录，但各自保存职责内的事实。工作空间可以缓存查询视图，不能另建一份可独立扣费的余额或自说自话的设备状态。安全域可隔离部署，首期无需拆成大量微服务。</div>
+      <div class="review-toolbar"><h3>十二项关键发现</h3><div class="filter-row" aria-label="按审查优先级筛选"><button class="filter" data-review-filter="all" aria-pressed="true">全部 12 项</button><button class="filter" data-review-filter="P0" aria-pressed="false">P0 · 上线前置 6 项</button><button class="filter" data-review-filter="P1" aria-pressed="false">P1 · 试点边界 6 项</button></div><span class="fine muted">点击条目查看证据、建议和验收方法。</span></div>
+      <div class="review-findings">
+        <details class="finding" data-priority="P0" open><summary><span class="tag warn">R01 · P0</span><span><strong>用户身份必须贯穿到科学服务与文件访问</strong><small>当前事实：进程环境 token + 固定服务信封，尚无逐用户委托上下文合同。</small></span></summary><div class="finding-content"><div><h4>证据与风险</h4><p><code>src/company_agent/providers.py</code> 从环境读取 Bearer token；请求只包含操作、关联号与 payload。登录页不能自动赋予后端区分用户的能力；独立云平台的隔离能力仍待确认。</p></div><div><h4>建议方向</h4><p>复用身份源，可信后端注入短期、最小权限委托；资源服务验证接收方、作用域和对象归属。模型不填角色 / 租户；DSH 本地登录 token 不是生产身份体系。<a class="source-jump" href="#source-S1">S1</a><a class="source-jump" href="#source-S2">S2</a></p></div><div class="acceptance"><strong>验收：</strong>跨租户句柄、旧引用、下载地址、缓存和事件订阅均不能越权；撤权后按定义的时限阻止后续访问。</div></div></details>
+        <details class="finding" data-priority="P0"><summary><span class="tag warn">R02 · P0</span><span><strong>持久作业服务必须独立于对话和短请求</strong><small>当前事实：provider 默认 30 秒超时，CLI bridge 35 秒；工作流校验不执行。</small></span></summary><div class="finding-content"><div><h4>证据与风险</h4><p><code>providers.py</code> 与 <code>packages/company-agent-core/src/runtime.js</code> 限制单次请求时间。诊断 completed 表示调用响应已验证，不等于业务任务完成；即使结果是 queued，诊断也可 completed。工作台必须读取平台作业状态。</p></div><div><h4>建议方向</h4><p>平台持久保存意图、受理记录和状态；工作台订阅权威事件，断线按游标恢复并重新查询快照。不是新增 Agent 工具循环。账号、任务查询不经过模型。<a class="source-jump" href="#source-S14">S14</a></p></div><div class="acceptance"><strong>验收：</strong>关闭网页、停止 DSH 或重启界面服务，仍可找回同一受理记录；乱序和重复事件不创建新执行。</div></div></details>
+        <details class="finding" data-priority="P0"><summary><span class="tag warn">R03 · P0</span><span><strong>每次运行都需要可定位的结果资产</strong><small>当前事实：模拟与编译输出没有结果句柄；线路本身不能标识某一次实验。</small></span></summary><div class="finding-content"><div><h4>证据与风险</h4><p><code>contracts/tools.json</code> 中模拟 / 编译的 <code>output_handles</code> 为空；设备虽返回 <code>twin_id</code>，当前无对应读取工具。重复线路实验无法仅靠输入句柄区分结果。</p></div><div><h4>建议方向</h4><p>平台将每次执行与资产关联；模型侧优先沿用 <code>asset_id</code> 并正式扩展合同。内部任务键留在业务层，诊断 request_id 不冒充结果句柄；模拟器不能伪造 twin_id。</p></div><div class="acceptance"><strong>验收：</strong>同一线路两次运行产生独立可追溯结果；恢复回收只读原结果，不重复计算；报告引用指定执行版本。</div></div></details>
+        <details class="finding" data-priority="P0"><summary><span class="tag warn">R04 · P0</span><span><strong>本地审批标记需要升级为服务端可验证的执行约束</strong><small>当前事实：DSH 先审批再执行；远端信封不携带动作绑定的审批记录。</small></span></summary><div class="finding-content"><div><h4>证据与风险</h4><p>现有 <code>approved</code> 标记属于受管进程信任边界，不是跨服务的用户级授权证明。排队后参数、线路内容、目标或价格改变，不能自动沿用批准。</p></div><div><h4>建议方向</h4><p>审批绑定申请人、项目、固定内容摘要、规范参数、实际目标、报价和有效期；在受理事务中关联一次性消费，调度时复核前提。现有 ask / deny 不放宽。<a class="source-jump" href="#source-S3">S3</a></p></div><div class="acceptance"><strong>验收：</strong>改参数、线路内容变化、并发重放、过期、撤权和设备重选都不能沿用失效审批。</div></div></details>
+        <details class="finding" data-priority="P0"><summary><span class="tag warn">R05 · P0</span><span><strong>幂等受理与物理设备只执行一次是不同问题</strong><small>当前事实：request_id 不是幂等键；现有设备零自动重试是正确保守边界。</small></span></summary><div class="finding-content"><div><h4>证据与风险</h4><p>数据库去重不能消除“设备已执行、回执丢失”的不确定性。加入队列或工作流引擎也不会自动获得端到端恰好一次语义。</p></div><div><h4>建议方向</h4><p>平台稳定意图键绑定请求摘要；同键同参返回同一受理，同键异参拒绝。事务发件箱、消费者去重、可信用量和定期对账配合；设备无法核对则继续停止自动重发。<a class="source-jump" href="#source-S4">S4</a><a class="source-jump" href="#source-S5">S5</a></p></div><div class="acceptance"><strong>验收：</strong>在受理、设备执行、结果落盘与结算边界注入崩溃；核对执行、审批、计量与扣费次数，不以 HTTP 成功率代替。</div></div></details>
+        <details class="finding" data-priority="P0"><summary><span class="tag warn">R06 · P0</span><span><strong>全自动混合迭代不能隐含绕过逐次设备审批</strong><small>产品约束：科学迭代可在执行器中运行，但下一次设备调用仍须获准。</small></span></summary><div class="finding-content"><div><h4>风险</h4><p>“把迭代放进 algorithm.run”如果同时给它不受限设备凭据，就可能避开原来的审批边界。当前合同没有后台迭代等待审批并恢复的完整机制。</p></div><div><h4>建议方向</h4><p>首期支持经典 / 模拟迭代和受监督设备步骤。平台会话、批处理和预约仅影响调度，不代表设备授权。Braket 也明确取消混合容器只对量子任务尽力取消，不能等同设备停机。<a class="source-jump" href="#source-S15">S15</a></p></div><div class="acceptance"><strong>验收：</strong>第二次适用设备调用没有新批准就停止；累计采样、迭代、预算和期限有上限；算法组件不能通过独立凭据绕开设备准入。</div></div></details>
+        <details class="finding" data-priority="P1"><summary><span class="tag">R07 · P1</span><span><strong>QASM 入口需要版本化的受支持子集</strong><small>外部证据：语言合法、本地模拟成功与硬件支持是不同层次。</small></span></summary><div class="finding-content"><div><h4>证据与风险</h4><p>Braket 官方列出设备与本地模拟器支持差异。上传中的控制流、include、测量或脉冲内容不能只凭语法解析通过就投递。</p></div><div><h4>建议方向</h4><p>规定版本、门、控制与测量子集；隔离解析，限制大小、时间与展开操作数；按 provider 能力快照准入。保留原始、规范化和编译产物的来源关系。<a class="source-jump" href="#source-S8">S8</a></p></div><div class="acceptance"><strong>验收：</strong>未知语句不静默忽略；不支持的动态电路明确拒绝；恶意 include 和巨大展开被阻断。</div></div></details>
+        <details class="finding" data-priority="P1"><summary><span class="tag">R08 · P1</span><span><strong>统一结果字段之前，先统一可解释的科学语义</strong><small>外部证据：SDK 中的逐次测量可能由概率后计算，未必是设备原始测量。</small></span></summary><div class="finding-content"><div><h4>证据与风险</h4><p>Braket 文档明确提供测量是否来自设备的标记。仅看字段名或一幅直方图，会把概率、真实采样和后生成样本混淆。</p></div><div><h4>建议方向</h4><p>保留真实测量 / 聚合计数 / 精确或采样概率 / 期望值的语义；记录位序、寄存器、映射、测量基、实际采样与后选择分母。模板按能力和数据质量选择，不盲目套置信区间。<a class="source-jump" href="#source-S9">S9</a></p></div><div class="acceptance"><strong>验收：</strong>位序冲突或缺采样数阻止错误比较；只有概率时，不能伪称拥有真实时序样本或执行时序相关分析。</div></div></details>
+        <details class="finding" data-priority="P1"><summary><span class="tag">R09 · P1</span><span><strong>模拟、分析与本地推理也有资源和预算风险</strong><small>推导示例：双精度稠密状态向量 32 量子位仅数组就约 64 GiB。</small></span></summary><div class="finding-content"><div><h4>证据与风险</h4><p>Aer 文档说明稠密状态为 2 的量子位数次幂个复数振幅；双精度每个 16 字节。30 位约 16 GiB，40 位约 16 TiB，均未计复制和运行开销；其他方法不能直接套用。</p></div><div><h4>建议方向</h4><p>模拟前做方法相关估计与准入；限制 CPU / GPU / 内存 / 并发 / 存储 / 推理预算。预留、用量、结算和退款分开记录，重复计量事件去重。<a class="source-jump" href="#source-S10">S10</a></p></div><div class="acceptance"><strong>验收：</strong>巨大模拟在执行前拒绝；小任务洪泛不能绕过累计配额；分析失败不错误抹掉已发生的计算费用。</div></div></details>
+        <details class="finding" data-priority="P1"><summary><span class="tag">R10 · P1</span><span><strong>本地模型接通 API 后，还必须验证工具行为</strong><small>外部证据：工具解析器、聊天模板和模型配置直接影响调用兼容性。</small></span></summary><div class="finding-content"><div><h4>证据与风险</h4><p>vLLM 文档区分自动、必需和指定工具调用；结构化输出保证不等于科学正确或有权限。本仓配置检查不证明公司模型已通过端到端测试。</p></div><div><h4>建议方向</h4><p>固定模型 / 量化 / 引擎 / parser / template 版本，复用 DSH。评测中文任务、参数校验、流式中断、重复调用、目录版本、拒绝后行为和未知结果处理。<a class="source-jump" href="#source-S6">S6</a></p></div><div class="acceptance"><strong>验收：</strong>同时报告合法任务完成、误拒、无效参数、越权执行、时延和成本；不能把“全部拒绝”计为模型安全且好用。</div></div></details>
+        <details class="finding" data-priority="P1"><summary><span class="tag">R11 · P1</span><span><strong>知识、源码、报告与旧会话都需要授权与内容隔离</strong><small>当前事实：配置知识根上的短检索不是租户化企业知识系统。</small></span></summary><div class="finding-content"><div><h4>风险</h4><p>提示注入可以藏在文档、文件注释或工具描述中。撤权后的旧摘要、缓存、引用和下载仍可能泄漏。内联 HTML 报告若与工作空间同源，还可能获得会话访问。</p></div><div><h4>建议方向</h4><p>检索前过滤，读取 / 引用 / 缓存复核；长期记忆按身份隔离并处理撤权。优先受控组件，脚本内容采用独立 origin 与最小 iframe 权限；不继承 token 或设备 API。<a class="source-jump" href="#source-S7">S7</a><a class="source-jump" href="#source-S11">S11</a></p></div><div class="acceptance"><strong>验收：</strong>恶意文档无法触发未授权动作；恶意 HTML / SVG 无法读取会话或外发数据；撤权后旧引用不能重新拉取正文。</div></div></details>
+        <details class="finding" data-priority="P1"><summary><span class="tag">R12 · P1</span><span><strong>复现、数据归属和运营证据要从首期保存</strong><small>设计建议：结果资产、处理活动与责任主体分开建模，不自动把报告入库。</small></span></summary><div class="finding-content"><div><h4>风险</h4><p>事后难以补回编译、环境、校准时点和数据转换版本。真机重跑有统计波动；“可复现”不能承诺逐比特相同。知识总结也不自动带来客户数据使用许可。</p></div><div><h4>建议方向</h4><p>记录输入→执行→结果→模板→报告的来源；独立审核知识发布，定义保留与撤回。用结构化短事件观察授权、审批、用量与恢复；真实服务验收与本地测试分开。<a class="source-jump" href="#source-S12">S12</a></p></div><div class="acceptance"><strong>验收：</strong>同一原始数据可重做报告；重新运行硬件只按预定统计标准比较；删除 / 撤回覆盖索引、缓存和派生内容的既定生命周期。</div></div></details>
+      </div>
+      <section class="subsection"><h3>一个任务的状态不能只用“成功 / 失败”表达</h3><p class="fine muted" style="margin-top:6px">切换下面的设计场景，观察执行、结果、分析、计费各自的状态。均为概念示例，不是线上记录。</p><div class="scenario-control"><label for="state-scenario">场景</label><select id="state-scenario"><option value="recovery">计算已结束，结果回收失败</option><option value="unknown">发送后断连，执行结果待核对</option><option value="analysis">结果完整，但分析模板失败</option><option value="approval">混合迭代等待下一次设备审批</option></select></div><div class="state-demo" id="state-demo" aria-live="polite"></div></section>
+      <section class="subsection"><h3>领域关系：线路、作业、执行和报告各自有生命周期</h3><div class="domain-chain"><strong>组织 / 项目</strong><span>→</span><strong>不可变执行意图</strong><span>↔</span><strong>批准 + 受理</strong><span>→</span><strong>实际执行</strong><span>→</span><strong>结果资产</strong><span>→</span><strong>版本化报告</strong></div><p class="fine muted">会话引用这些对象，不能替代它们。用户 / 任务 / 审批 / 账单等是平台业务记录；不是向现有工具新增科学句柄。模型可见的科学句柄仍只有 asset_id、circuit_id、twin_id。</p></section>
+      <div class="two-col subsection"><div><h3>异构调度先做可行性，再做优化</h3><ul class="open-list"><li><strong>硬约束</strong><p>门集、动态能力、设备状态、校准新鲜度、权限、预算、数据位置和批准范围先全部满足。</p></li><li><strong>软目标</strong><p>在可行候选中权衡等待时间、费用与任务质量要求。队列位置是带时间戳的估计，不承诺固定完成时间。</p></li></ul></div><div><h3>HPC 与 QPU 协同分三层推进</h3><ul class="open-list"><li><strong>松耦合资产流 → 受控迭代</strong><p>先做预处理 / 量子步骤 / 后处理；再加检查点、预约租约和等待审批的恢复。避免 GPU 长期占用等量子队列。</p></li><li><strong>实时路径独立</strong><p>在线解码、离子时序与安全联锁留在设备系统。Slurm 异构作业不自动提供跨 QPU 联锁和原子预约。<a class="source-jump" href="#source-S13">S13</a></p></li></ul></div></div>
+      <section class="subsection"><h3>未来能力的科学验收：不只检查接口能调用</h3><p class="fine muted" style="margin-top:6px">以下是能力类别，不是已发布算法名单；具体组件仍来自平台实时目录。</p><div class="boundary-row"><div class="boundary"><h3>机器学习解码</h3><p>区分离线训练、在线推断和实时反馈。按实验 / 噪声轨迹合理切分训练与测试，保存标签与处理来源；同时看适用误差指标、分布变化和推断时延。</p></div><div class="boundary"><h3>线路优化</h3><p>定义保持的语义与允许近似，验证目标门集、映射与适用等价性。门数变少不必然让设备误差或费用下降；优化产物有独立版本，变更需复核批准范围。</p></div><div class="boundary"><h3>离子调度与校准</h3><p>专业约束验证器负责设备合法性，预计总时长不是唯一指标。校准实验、候选参数和正式应用分开授权，明确维护互斥、统计质量、回退与在途任务处理。</p></div></div></section>
+    </section>
+
+    <section class="panel" id="panel-evidence" role="tabpanel" aria-labelledby="tab-evidence" hidden>
+      <div class="section-head"><div><h2>调研依据与验收设计</h2><p>访问日期：2026-10-20。来源支持具体事实；最终适用范围以公司服务合同、所用版本和实际验收为准。</p></div><span class="tag target">审查建议 ≠ 已通过生产验收</span></div>
+      <div class="review-evidence"><div><h3>代码核验</h3><p>核对工具 / 结果 / provider / 策略合同，以及 Python 调用、DSH 桥接、知识搜索和配置。准确片段与路径保存在完整审查报告中。</p></div><div><h3>一手资料</h3><p>身份标准、工具调用文档、量子结果语义、OpenQASM 支持、异构调度和内容隔离。动态资料在实施时应重新核对并固定版本。</p></div><div><h3>明确未知</h3><p>云平台真实接口、本地模型实际效果、QPU 来源 / 实机行为、HPC 集群、商业计价和合规要求均未现场验证。</p></div></div>
+      <h3>重点验收场景：用故障与越权测试，而不是界面演示判定就绪</h3>
+      <ol class="test-gates"><li>互换两个租户的线路、资产、任务和下载引用，服务端拒绝。</li><li>撤销文档权限，旧缓存、原文、引用与会话访问按策略失效。</li><li>同意图并发提交，只产生一个受理与一次实际执行。</li><li>同一幂等键参数不同，拒绝而非覆盖原任务。</li><li>批准后修改线路内容、参数或目标，要求重新审批。</li><li>排队期间报价 / 授权 / 校准前提失效，重新准入。</li><li>设备已执行但响应丢失，标记待核对，不自动重跑。</li><li>结果文件不完整，隔离数据，独立处理实际用量。</li><li>取消与执行开始竞争，正确呈现停止点和部分费用。</li><li>事件重复、乱序或遗漏，不重复计费或回退状态。</li><li>不支持的 QASM 和超限解析被阻断，不静默降级。</li><li>位序、结果来源和采样语义不兼容时，阻止错误统计。</li><li>文档 / 文件注入不能触发越权工具调用。</li><li>HTML / SVG 报告不能取得工作空间会话或外发数据。</li><li>本地模型参数截断、错误工具名、重复调用在执行前处理。</li><li>巨大模拟或大量小请求被累计预算与并发限制。</li><li>DSH 或界面服务重启，恢复不触发新的设备执行。</li><li>第二次设备调用未批准就等待，算法执行器不绕过准入。</li></ol>
+      <div class="notice">每项记录预期行为、实际结果、版本与证据。安全拒绝与合法任务完成分别评分；阻断所有操作并不算产品可用。试点时定义状态新鲜度、结果回收时延、恢复目标和告警责任，不在没有测量前承诺指标。</div>
+      <h3 style="margin-top:28px">可核查的外部来源</h3>
+      <div class="research-links">
+        <article class="research-source" id="source-S1"><strong><span class="source-id">S1</span><a href="https://www.rfc-editor.org/rfc/rfc9700.html" target="_blank" rel="noopener noreferrer">IETF · RFC 9700</a></strong><p>OAuth 2.0 安全最佳实践：授权码 / PKCE、最小权限、令牌接收方限制、逐请求验证。适用身份对接设计，不是特定产品选型。</p></article>
+        <article class="research-source" id="source-S2"><strong><span class="source-id">S2</span><a href="https://openid.net/specs/openid-connect-core-1_0.html" target="_blank" rel="noopener noreferrer">OpenID Connect Core 1.0</a></strong><p>身份认证与 ID Token 的 issuer / subject / audience / expiry。登录身份与资源 API 访问凭据有不同用途。</p></article>
+        <article class="research-source" id="source-S3"><strong><span class="source-id">S3</span><a href="https://cheatsheetseries.owasp.org/cheatsheets/AI_Agent_Security_Cheat_Sheet.html" target="_blank" rel="noopener noreferrer">OWASP · AI Agent Security</a></strong><p>工具最小权限、动作绑定审批、原子消费、防重放和独立执行校验。工程指导，不代表本项目已通过安全测试。</p></article>
+        <article class="research-source" id="source-S4"><strong><span class="source-id">S4</span><a href="https://aws.amazon.com/builders-library/making-retries-safe-with-idempotent-APIs/" target="_blank" rel="noopener noreferrer">AWS Builders’ Library · 幂等 API</a></strong><p>客户端意图标识和重试的等价响应。只有服务真的提供合同，重试才有相应保证；不能把随机关联号当成幂等实现。</p></article>
+        <article class="research-source" id="source-S5"><strong><span class="source-id">S5</span><a href="https://docs.aws.amazon.com/prescriptive-guidance/latest/cloud-design-patterns/transactional-outbox.html" target="_blank" rel="noopener noreferrer">AWS · Transactional outbox</a></strong><p>业务数据与事件双写的一致性、重复消息和消费去重。消息层保证不等于物理设备端到端恰好执行一次。</p></article>
+        <article class="research-source" id="source-S6"><strong><span class="source-id">S6</span><a href="https://docs.vllm.ai/en/stable/features/tool_calling/" target="_blank" rel="noopener noreferrer">vLLM stable · Tool Calling</a></strong><p>工具 parser、chat template 与模型匹配；结构化输出不保证选择正确。用于制定本地模型验收项，不照搬第二套工具循环。</p></article>
+        <article class="research-source" id="source-S7"><strong><span class="source-id">S7</span><a href="https://cheatsheetseries.owasp.org/cheatsheets/LLM_Prompt_Injection_Prevention_Cheat_Sheet.html" target="_blank" rel="noopener noreferrer">OWASP · Prompt Injection Prevention</a></strong><p>间接注入可来自文档、注释、工具结果和旧会话；模型外权限边界不可由提示词或关键词过滤替代。</p></article>
+        <article class="research-source" id="source-S8"><strong><span class="source-id">S8</span><a href="https://docs.aws.amazon.com/braket/latest/developerguide/braket-openqasm-supported-features.html" target="_blank" rel="noopener noreferrer">Amazon Braket · OpenQASM 支持范围</a></strong><p>设备与本地模拟器支持的语言子集有差异。仅证明需要能力准入，不意味着本公司继承这些支持能力。</p></article>
+        <article class="research-source" id="source-S9"><strong><span class="source-id">S9</span><a href="https://docs.aws.amazon.com/braket/latest/developerguide/braket-result-types.html" target="_blank" rel="noopener noreferrer">Amazon Braket · Result types</a></strong><p>不同设备可能返回概率或真实测量，SDK 测量可由概率后计算。结果必须保留来源与语义，不能只比较字段名。</p></article>
+        <article class="research-source" id="source-S10"><strong><span class="source-id">S10</span><a href="https://qiskit.github.io/qiskit-aer/stubs/qiskit_aer.AerSimulator.html" target="_blank" rel="noopener noreferrer">Qiskit Aer 0.17.1 · AerSimulator</a></strong><p>方法相关能力与内存预算。页面 30 / 32 / 40 位内存量由双精度稠密状态数组推导，不是实测总内存或模拟器通用上限。</p></article>
+        <article class="research-source" id="source-S11"><strong><span class="source-id">S11</span><a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/iframe#sandbox" target="_blank" rel="noopener noreferrer">MDN · iframe sandbox</a></strong><p>同源脚本沙箱的限制与独立来源建议。讨论稿的可信内联脚本设置不能直接作为生产用户报告策略。</p></article>
+        <article class="research-source" id="source-S12"><strong><span class="source-id">S12</span><a href="https://www.w3.org/TR/prov-overview/" target="_blank" rel="noopener noreferrer">W3C · PROV-Overview</a></strong><p>实体、活动、责任主体与派生关系。Overview 是 Working Group Note；用于启发来源建模，不宣称本项目已符合整个标准。</p></article>
+        <article class="research-source" id="source-S13"><strong><span class="source-id">S13</span><a href="https://slurm.schedmd.com/heterogeneous_jobs.html" target="_blank" rel="noopener noreferrer">Slurm · Heterogeneous Job Support</a></strong><p>组件作业、取消、计量与同时调度限制。经典异构作业不是开箱即用的跨 QPU 实时调度或原子预约。</p></article>
+        <article class="research-source" id="source-S14"><strong><span class="source-id">S14</span>Amazon Braket · <a href="https://docs.aws.amazon.com/braket/latest/APIReference/API_CreateQuantumTask.html" target="_blank" rel="noopener noreferrer">创建任务</a> / <a href="https://docs.aws.amazon.com/braket/latest/APIReference/API_GetQuantumTask.html" target="_blank" rel="noopener noreferrer">查询任务</a></strong><p>创建只返回受理引用；查询另含状态、设备、结果存储和成功采样数。支持分离作业与结果，不要求照搬第三方字段。</p></article>
+        <article class="research-source" id="source-S15"><strong><span class="source-id">S15</span>Amazon Braket · <a href="https://docs.aws.amazon.com/braket/latest/developerguide/braket-jobs.html" target="_blank" rel="noopener noreferrer">Hybrid Jobs</a> / <a href="https://docs.aws.amazon.com/braket/latest/developerguide/braket-jobs-cancel.html" target="_blank" rel="noopener noreferrer">取消语义</a></strong><p>经典容器与量子任务分离；取消混合作业终止经典容器，对量子任务尽力取消。队列策略不替代公司权限和设备审批。</p></article>
+      </div>
+      <div class="notice warning"><strong>证据限制：</strong>部分 IBM 官方文档直连返回 HTTP 403，本页不把未读页面当作已验证来源。所有价格、资源可用性、公司模型质量和真实 QPU 行为均未推测。没有提交任何真实计算 / 设备任务，没有修改现有工具合同。</div>
+      <div class="notice"><strong>v0.5 验证：</strong>13 项页面交互测试通过；浏览器检查首页、文件、设置、报告及 8 种窗口宽度。工作区无页面溢出，目录独立滚动，手机面板切换和文档往返通过。本轮只改界面和文档，未调用模型或业务服务，也未运行完整 Python 回归。历史检查见对应版本文档。</div>
+      <p class="review-footer-note">完整报告包含本仓证据摘录、十二项发现、详细状态模型和 18 项故障 / 权限演练设计。来源在点击时才打开；本页面不自动访问外部网络。</p>
+    </section>
+    <footer class="footer"><p>设计与审查依据：2026-10-20 / 21 需求、当前仓库合同及实现、一手资料。<a href="company-agent-dsh-integration-v0.7.zh-CN.md">v0.7 DSH 集成路线</a> · <a href="company-agent-general-capabilities-v0.6.zh-CN.md">v0.6 通用能力基线</a> · <a href="native-dsh-demo.zh-CN.md">原生 DSH 展示</a> · <a href="workspace-ui-baseline-v0.5.zh-CN.md">v0.5 界面基准</a> · <a href="company-agent-platform-plan-v0.4.zh-CN.md">v0.4 公司级平台计划</a> · <a href="quantum-agent-workspace-plan-v0.3.zh-CN.md">v0.3 工作空间实施计划</a> · <a href="quantum-agent-architecture-review-2026-10-20.zh-CN.md">v0.2 完整审查报告</a> · <a href="ARCHITECTURE.md">现有架构边界</a>。本页为独立 HTML，无外部脚本或字体；仅本地设计演示，不代表上线验收，不修改运行合同。</p><span>幺正量子 · 集成 v0.7 / 界面 v0.5</span></footer>
+  </main>
+  <dialog id="approval-dialog" aria-labelledby="approval-title"><span class="tag warn">纯设计示意 · 无实际操作</span><h3 id="approval-title" style="margin-top:13px">一次审批，绑定一次明确的执行</h3><p>正式审批卡应显示：申请人与项目、目标 provider 与实际设备、线路句柄及内容版本、采样次数与执行参数、预算上限、报价版本、有效期和风险提示。</p><ul class="fine"><li>批准的是固定执行快照，参数、设备或费用范围改变时重新校验与审批。</li><li>固定的执行意图在受理时原子关联审批与幂等记录；调度时复核授权、预算和设备前提。网络重发只返回同一受理记录，不重新消费审批或再次运行。</li><li>审批人资格来自平台角色，不能由模型自称或通过前端开关赋予。</li><li>提交后状态未知时先核对原请求，不自动创建另一笔执行。</li></ul><p>当前工具只提供已有合同字段。上述费用、版本绑定和有效期等产品能力须通过正式合同扩展与平台支持落地。</p><div class="dialog-actions"><button class="button primary" id="close-approval">了解设计，关闭示意</button></div></dialog>
+  <dialog id="account-dialog" aria-labelledby="account-title">
+    <h3 id="account-title">登录 Agent</h3>
+    <div class="segmented auth-modes" aria-label="账号页面"><button data-auth-mode="login" aria-pressed="true">登录</button><button data-auth-mode="register" aria-pressed="false">注册</button></div>
+    <div class="auth-fields"><label id="register-name" hidden>名称<input disabled placeholder="你的名称" autocomplete="off"></label><label>邮箱<input disabled placeholder="name@company.com" autocomplete="off"></label><label>密码<input type="password" disabled placeholder="密码" autocomplete="off"></label></div>
+    <p id="account-help">账号服务未连接，暂不可登录。</p>
+    <div class="dialog-actions"><button class="button primary auth-submit" id="auth-submit" disabled>登录</button><button class="button" id="close-account" style="margin-left:8px">关闭</button></div>
+  </dialog>
+  <script>
+    'use strict';
+    // Standalone architecture discussion artifact. All displayed tasks are synthetic.
+    // No authentication, network, device execution, billing or Agent loop is implemented.
+    const nodeDetails = {
+      productivity:{title:'优先装配通用插件 / MCP 与 Skills',summary:'复用成熟文件、办公、网页和分析工具，配合团队工作方法交付实际产物；只补接口缺口，不重建通用 Agent。',owner:'DSH + 受管扩展 + 既有服务',input:'明确目标、授权目录、可用工具 / Skill 版本与公司本地模型。',output:'可打开的文件、真实图表、脚本与带来源的报告。',boundary:'Skill 不赋权；安装 / 发现不等于获准；公司工具合同与短结果要求保持不变。',status:'v0.7 复用优先；当前受管组合未全量开启通用扩展。'},
+      development:{title:'复用编程扩展与隔离执行环境',summary:'DSH 继续管理开发任务，优先复用编辑 / 搜索 / 命令插件或 MCP；在获准隔离环境修改与测试，仅为缺失能力补适配。',owner:'受管插件 / MCP + 既有开发环境；非第二套 Runtime',input:'获准仓库与版本、工具合同、资源 / 网络预算和本地模型。',output:'代码差异、进程状态、测试证据和获准的交付产物。',boundary:'不开放生产宿主 shell；无设备凭据或可写 profile；Codex 宿主隔离与设备逐次审批不变。',status:'先盘点上游复用，再更新合同 / 适配 / 注册 / 门禁，不默认自研整套开发平台。'},
+      enterpriseKnowledge:{title:'知识查询与研发经验沉淀',summary:'接入既有知识库的正文和权限；把选定工作证据整理为草稿，作者确认、维护人审核后再共享。',owner:'企业知识服务 + 各项目内容维护人',input:'已授权来源、代码 / 报告版本、可验证证据与允许的发布范围。',output:'带版本引用的检索、知识候选、发布与索引状态、撤回记录。',boundary:'读权限不等于发布权；草稿不扩大来源权限；客户资料不自动入公司库；知识入库不等于模型训练。',status:'已有受管文本短检索；企业写入、审核与隔离待建设。'},
+      workspace:{title:'目录式工作空间与账户入口',summary:'左栏按云平台、超算、本机文件、工作空间与对话排列，前两项默认收起。左下角固定登录 / 注册和齿轮设置。',owner:'产品前端 + 工作空间后端',input:'可信 Agent 用户、外部连接授权、目录和 DSH 会话映射。',output:'分层目录、账户入口与设置；文件开到中栏，会话选到右栏。',boundary:'隐藏目录不是授权。工作空间是本产品按 Cursor 交互组织的 DSH 会话分组，不读取 Cursor 私有数据。',status:'v0.4 目标设计；本页不实际登录、读取文件或挂载 DSH。'},
+      viewer:{title:'中栏承载可信内容',summary:'代码、线路、结果和报告通过独立数据访问通道显示；不要求把全部内容先经过模型。',owner:'授权文件服务 + 内容查看器',input:'已授权文件或结果资产、明确的展示类型和版本。',output:'多标签文件查看、任务详情、图表、报告与受控 Canvas。',boundary:'原始结果、完整电路、密钥及敏感控制内容不经工具返回。HTML / SVG 等结果需净化或隔离渲染。',status:'目标；现有短摘要工具不能替代完整文件访问服务。'},
+      conversation:{title:'原样使用 DSH 完整对话',summary:'标题、消息、输入框、工具、审批、模型与上下文全部沿用原生；不改布局、样式、文案或交互。',owner:'DSH 原生 UI 与运行时；外层只负责容器和已验证的导航接口',input:'获授权的 DSH 会话和用户引用。',output:'完整原生对话与原生设置，不另绘状态栏。',boundary:'隔离宿主 CSS 和事件；不得裁剪或隐藏原生控件，不为固定栏宽改动原生界面。',status:'本机原生 iframe 已验证；左侧会话联动和多用户部署待接入。'},
+      identity:{title:'Agent 用户身份与外部账户连接',summary:'Agent 有独立产品注册、登录和退出入口；云平台与 HPC 在设置中分别绑定。身份基础设施可以复用，产品会话和外部授权不能混为一谈。',owner:'可信身份服务 + 工作空间授权后端 + 外部连接管理',input:'验证后的产品用户，以及用户授权绑定的云平台 / HPC 连接。',output:'隔离的工作空间、DSH 会话访问与最小权限连接。',boundary:'DSH 本地访问 token 不是用户制度；密码、API token 和 SSH 私钥不进入模型或前端持久存储。',status:'目标新增；需确认身份源、注册策略和连接授权方式。'},
+      api:{title:'面向界面的聚合后端',summary:'负责项目、文件、会话和任务的界面关联，订阅平台状态事件，聚合为工作台数据。',owner:'工作空间后端',input:'可信用户身份、项目上下文、平台 API 与状态事件。',output:'页面数据、授权文件访问和状态更新。',boundary:'不另建模型 / 会话 / 工具循环；不维护第二份具有独立权威的作业状态或余额。',status:'目标新增；可先模块化实现，按隔离需求再拆服务。'},
+      billing:{title:'计费是平台业务，不是模型推断',summary:'将报价、预算预留、可信用量、最终结算和退款分开，界面可解释每笔费用对应的任务与执行。',owner:'云平台计量与账本服务',input:'版本化价格、资源申请、用户预算和去重的用量事件。',output:'费用估计、预留状态、正式账单、退款与对账记录。',boundary:'科学程序报错或结果分析失败，不证明设备未消耗资源。重复请求须防止重复执行与扣费。',status:'复用或补齐平台接口；当前 Agent 工具未提供计费闭环。'},
+      dsh:{title:'DSH：唯一 Agent 运行时',summary:'DeepSeek Harness 负责模型、会话、工具生命周期和运行配置。产品化围绕这套运行时集成，而不是再实现一套智能体引擎。',owner:'DSH 运行时 + 受管配置',input:'模型适配、已注册工具、确定性权限策略。',output:'流式对话、工具事件、待审批调用和短结果。',boundary:'生产仅允许项目管理的 system-trust 组合。Codex 保持 permissionMode: never、inheritsParentContext: false，且不向模型挂载其委派工具。',status:'已有集成；生产多租户隔离及本地推理适配需单独验证。'},
+      contracts:{title:'合同内核与服务适配',summary:'contracts 定义工具、provider、结果和策略；Python 内核执行完整校验；DSH 插件仅注册与转调。',owner:'Company Agent 合同与治理层',input:'受管合同、明确参数、允许的科学句柄。',output:'验证后的服务请求，以及受限结果信封。',boundary:'未知工具、未知配置、缺失服务、坏信封失败闭合。Agent 不直接导入科学算法包。',status:'已有；扩展时按合同 → Python adapter → DSH 插件 → 测试实施。'},
+      model:{title:'本地模型与授权知识',summary:'本地部署解决推理位置问题；生产仍需工具调用质量、权限过滤、来源引用和模型上下文安全。',owner:'本地推理服务 + DSH 模型适配 + 检索服务',input:'经过授权和裁剪的上下文、检索查询。',output:'结构化工具请求、短解释、带来源与版本的资料引用。',boundary:'文档是参考数据，不是可越权的指令。内外部检索域、缓存、日志和会话都需要隔离。',status:'现有短知识检索可参考；生产租户检索和本地模型兼容性待集成。'},
+      jobs:{title:'平台保存长期作业状态',summary:'持久化执行计划、依赖、受理记录、状态事件、检查点和恢复信息。浏览器或对话关闭后，平台仍负责已受理任务。',owner:'平台作业服务 / 科学执行器',input:'校验后的结构化作业和有效授权。',output:'权威任务状态、结果关联、用量与失败原因。',boundary:'这不是另一套 Agent 工具循环。现有 workflow.validate 只校验，不代表具备持久执行和恢复能力。',status:'目标能力；提交、查询、取消、事件和幂等需逐项确认。'},
+      scheduler:{title:'区分资源调度与设备内部调度',summary:'平台选择合适的量子处理器、经典集群与队列；离子级调度和实时控制交给专业服务。',owner:'平台资源调度器 + HPC / 设备适配',input:'能力要求、预算、配额、设备状态、校准新鲜度与数据位置。',output:'获准资源分配、队列与预约、依赖执行计划。',boundary:'模型可以表达目标和偏好，不直接控制设备时序。资源切换不得超出批准范围。',status:'目标；可对接已有调度系统，避免先重建底层。'},
+      approval:{title:'审批是确定性的执行约束',summary:'登录、静态校验、额度充足、人工审批和设备安全检查是不同条件，必须分别通过。',owner:'平台授权 / 准入 + 既有 Agent 设备策略',input:'调用快照、用户资源许可、预算、有效审批和设备约束。',output:'允许本次执行，或明确拒绝 / 阻断。',boundary:'quantum_device_run 在 lab / sign 必须 ask，在 boot / algo 必须 deny。内部身份和校准任务也不能跳过此策略。',status:'现有设备策略可复用；产品化审批绑定、预算与有效期需扩展。'},
+      catalog:{title:'算法从平台目录发现',summary:'公司算法及后续能力统一由 company-quantum-platform 发布可发现目录和可执行合同。',owner:'公司量子平台',input:'algorithm.catalog 查询；运行绑定 component_id、组件版本和目录版本。',output:'获准能力元数据、受控执行与科学资产。',boundary:'Agent 不固化算法名单、不直接 import 科学包。目录可见不等于可运行；源码读取权另行授权。',status:'已有平台桥接；具体可用算法以实时授权目录和服务准入为准。'},
+      compiler:{title:'模拟与编译保留独立实现',summary:'通过既有 provider 边界调用模拟器和编译估计服务。新优化能力由平台目录或正式扩展合同接入。',owner:'独立模拟器 / 编译器服务',input:'已注册 circuit_id 和明确的运行参数。',output:'合同允许的摘要、资源估计和来源；大结果走授权资产通道。',boundary:'模拟和编译不得返回 twin_id，也不得标注为 qccd-twin 来源。实际 QASM 导入能力需另行确认。',status:'已有桥接边界；真实服务、结果回收与新能力分别验收。'},
+      qpu:{title:'真机、TwinRun 与来源要区分',summary:'目标是获准访问真实 QPU，但当前设备合同的 provider 是 ionstack-twinrun，来源标记是 qccd-twin。',owner:'实际设备服务 / 专业设备控制系统',input:'获准线路与参数、资源许可、安全检查和本次审批。',output:'真实来源、执行状态、可信用量与受控结果。',boundary:'仅 quantum_device_run 且 provider 为 ionstack-twinrun 时可返回 twin_id。不能把该标识泛化为所有设备任务。',status:'已有 TwinRun 边界；真实 QPU 适配、状态、计量和来源需独立合同与验收。'},
+      resultdata:{title:'结果回收与可追溯数据资产',summary:'把执行完成与结果可用分开：订阅完成事件，核对清单和内容摘要，保存原始结果，再形成版本化标准数据。',owner:'平台结果服务 + 受控对象存储',input:'执行事件、结果清单、原始数据与可信来源。',output:'完整性状态、标准化数据、质量摘要和受控资产。',boundary:'原始数据不进入工具结果；下载、预览、转换和缓存都验证租户及项目权限。回收失败不触发再次设备执行。',status:'目标；需确认各 provider 的原始结果接口与数据格式。'},
+      analysis:{title:'模板驱动的结果分析',summary:'把后续提供的格式、指标与绘图模板注册为版本化分析能力，在隔离服务中执行；科学数值由程序计算，模型基于摘要解释。',owner:'结果分析服务 + 模板注册与审核',input:'授权标准数据、模板版本、依赖环境和资源预算。',output:'可复现指标、图表、报告及合同允许的短摘要。',boundary:'不运行任意客户端脚本或生产 shell；缺失数据、质量问题和不确定性必须如实呈现。',status:'目标；先用一对脱敏模拟 / 设备结果和一份期望报告验收。'},
+      retention:{title:'先审核，再沉淀为公司知识',summary:'结果、报告、知识条目与训练数据是不同资产，必须各自记录来源、许可、版本、质量与使用范围。',owner:'数据治理 + 授权知识服务',input:'符合归属条件的数据、报告与知识候选。',output:'审核后的授权知识、内部数据集、版本与删除 / 撤回记录。',boundary:'外部用户数据默认不跨租户、不进入公司训练集；内部身份也不获得所有项目的数据。检索内容保持参考数据地位。',status:'目标；现有短知识检索不是生产数据治理或自动入库系统。'},
+      hpc:{title:'经典资源承接计算阶段',summary:'经典预处理、模拟、训练、解码和分析可能需要 CPU、GPU 或高性能计算集群，统一作为平台资源接入。',owner:'集群调度器 + 平台资源适配',input:'已注册科学执行器、资源预算、授权数据与步骤依赖。',output:'检查点、计算资产、状态和计量事件。',boundary:'不在 Agent 中 import 算法或运行任意 shell；低时延解码和控制路径不经过大模型。',status:'目标扩展；先对接已有集群作业接口，再做跨资源协同。'}
+    };
+    const stageDetails = {
+      intake:{title:'01 · 先把输入变成可验证的资产',text:'自然语言需求先澄清目标、资源约束、预算和成功标准。上传的 OpenQASM 是线路描述文件，应经过受控解析与平台注册，而不是直接当作任意代码执行。',items:['验证文件大小、语法版本、门集、参数和目标设备兼容性；限制外部 include 与资源消耗。','原始文件保留内容摘要和版本；生成平台认可的电路引用，不把正文塞进工具结果。','QASM 导入不是当前 circuit.export 的同义功能；需要新增平台接口并按顺序扩展合同。']},
+      plan:{title:'02 · 发现能力，而不是硬编码算法名单',text:'通过平台 algorithm.catalog 获取当前可用组件与参数合同，再形成有依赖关系的结构化计划。内部实现文档仅在获授权时检索。',items:['绑定 component_id、component_version 和 catalog_version；检查准入与运行许可。','区分算法服务、模拟器、编译器、设备服务的结果来源和输入输出。','现有工作流校验只证明结构与参数合法；不证明有资源、不证明科学有效、不代替审批。']},
+      approve:{title:'03 · 先说明成本与执行范围，再申请审批',text:'展示目标资源、参数快照、费用范围、预算上限和有效期；按项目角色确定批准人。报价、预留和审批是相互关联但独立的记录。',items:['预算预留与过期释放由平台处理；大模型不计算余额或创建支付授权。','设备运行保留既有 ask / deny 策略；“以后都同意”不能自动替代本次批准。','排队后报价或资源发生变化时复核；变更超出批准范围必须重新批准。']},
+      execute:{title:'04 · 平台执行，界面订阅状态',text:'平台受理后持久保存作业，调度模拟器、经典资源和已批准设备步骤。会话只展示服务给出的事实。',items:['平台建立真正的幂等受理语义；当前 request_id 只是请求关联，不提供此保证。','迭代算法由科学执行器按预算与检查点运行；每次设备调用仍遵守适用审批策略。','取消、失败和结果未知分别处理；不因本地请求结束就宣称物理设备已停止。']},
+      collect:{title:'05 · 结果回收是一项独立能力',text:'监听平台完成事件，读取并校验结果清单、内容摘要、schema 与执行来源。原始数据受控保存，标准化产物另存并记录转换版本。',items:['关联输入电路版本、组件版本、设备来源、实际采样数和相关实验元数据。','拒绝不完整或无法验证来源的科学结果；恢复回收时不重复触发计算。','模型只拿允许的句柄和短摘要；完整数据经逐次鉴权进入中栏或用户下载。']},
+      analyze:{title:'06 · 程序负责数值，模型负责有依据的解释',text:'在隔离的分析服务中执行已审阅、版本固定的格式与绘图模板。模板不得借助生产编码 preset 或任意 shell 获取设备权限。',items:['固定输入字段、单位、计算方法、模板版本和依赖环境；缺字段或不兼容时明确失败。','图表与完整报告保存在受控资产中，模型只使用合同允许的摘要指标。','报告展示结果来源、数据质量与不确定性；明确区分计算事实和模型生成的解释。']},
+      retain:{title:'07 · 账单和知识各自经过正式处理',text:'实际用量进入平台账本；结果、报告与输入关联保存。知识库和训练集只接收经过归属、质量、脱敏和权限审核的数据。',items:['结算、预留释放、退款按平台规则和去重事件处理；分析失败不抹去已发生用量。','报告可复现：保留组件、数据、环境和模板版本，以及必要的审批 / 执行关联。','客户数据默认不跨租户、不进入公司训练集；支持保留期限、删除、撤回和知识版本更新。']}
+    };
+    const tasks = [
+      {name:'示例 A · 模拟基线',kind:'running',label:'运行中',meta:'独立模拟器 · 演示状态 · 非真实任务',action:'查看结果布局',view:'results'},
+      {name:'示例 B · 已批准的设备作业',kind:'queued',label:'排队中',meta:'目标设备待实际接入 · 仅展示队列形态',action:'查看审批设计',view:'approval'},
+      {name:'示例 C · 对比分析报告',kind:'completed',label:'已完成',meta:'模板报告 · 下方图表仅用于布局示意',action:'打开报告',view:'results'},
+      {name:'示例 D · 新设备运行申请',kind:'approval',label:'待审批',meta:'尚未提交 · 报价、资源与权限均待确认',action:'查看审批设计',view:'approval'}
+    ];
+    let currentView = 'welcome';
+    const openViews = ['welcome'];
+    // Connection settings live in DSH's native Plugins page; the page only
+    // carries the portal previews it renders itself.
+    const connectionUrls = {cloud:'https://220.178.61.185:8443',hpc:'http://192.168.110.37'};
+    const demoSessions = {
+      compare:'线路对比 / 模拟与资源估计',
+      analysis:'线路对比 / 结果分析',
+      hpc:'超算分析 / 计算日志',
+      report:'超算分析 / 整理报告',
+      research:'算法研发 / 知识与接口',
+      coding:'算法研发 / 代码与测试',
+      daily:'日常工作 / 周报'
+    };
+    const demoFiles = {
+      'cloud-input':{name:'input.qasm',source:'云平台 / 线路对比',body:null,connection:'cloud'},
+      'hpc-notes':{name:'run-notes.md',source:'超算 / home / project',body:null,connection:'hpc'},
+      'hpc-log':{name:'job-summary.txt',source:'超算 / home / project / logs',body:null,connection:'hpc'},
+      'local-readme':{name:'README.md',source:'本机 / quantum-project',body:'# 线路对比\n\ninputs/     输入文件\nreports/    分析报告\n\n## 工作记录\n\n- 确认输入文件与运行参数\n- 比较模拟结果\n- 整理报告与项目笔记'},
+      'local-input':{name:'input.qasm',source:'本机 / quantum-project / inputs',body:null}
+    };
+    let currentFilter = 'all';
+    let audience = 'external';
+    const escapeHtml = value => String(value).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+    const workScenarios = {
+      research:{title:'内部研发：知识、代码、计算与证据关联',text:'算法组先在真实项目中使用；内部平台和知识库已有业务基础，但接入状态需逐项核实。',steps:['查授权知识、接口与代码版本。','形成修改差异，在隔离环境运行获准测试。','按需申请 HPC / 模拟验证，中栏查看真实报告。','交付代码，把选定经验整理为知识候选。'],boundary:'同事、源码、客户资料、集群与设备分别授权；内部身份不代表全部可用。'},
+      customer:{title:'外部服务：发布能力与客户项目隔离',text:'同一产品形态提供公开 / 获准知识、云任务和结果分析；不暴露公司内网或默认共享客户正文。',steps:['客户登录自己的组织与项目。','查询已发布文档和平台实时授权算法目录。','经云平台受理任务；设备执行仍逐次审批。','查看报告、用量和账单，知识保存到客户项目。'],boundary:'支持人员访问需显式许可；客户数据不自动进入公司知识库或训练集。'},
+      daily:{title:'日常工作与编码：无需先创建量子任务',text:'参照 WorkBuddy / Codex 的任务交付体验，文件、办公、网页调研、数据分析和真实代码修改都是首期基础，已有本地模型通过 DSH 接入。',steps:['明确目标、获准目录 / 资料与交付格式，按需要规划步骤。','实际读写文件、修改代码，在隔离环境运行脚本和测试。','检查工具结果并在预算内修正，保留来源、差异和验证证据。','交付可打开的文件 / 报告；外发、发布或扩大范围时再确认。'],boundary:'范围内普通工作可连续完成；当前合同尚未实现完整执行能力，不能将此说明当成功能已上线。'}
+    };
+    function renderWorkScenario(key) {
+      if (!Object.hasOwn(workScenarios,key)) return;
+      const item = workScenarios[key];
+      document.querySelectorAll('[data-scenario]').forEach(button => button.setAttribute('aria-pressed',String(button.dataset.scenario === key)));
+      document.getElementById('enterprise-scenario').innerHTML = `<div><div class="eyebrow">工作场景设计 · 非权限切换</div><h3>${escapeHtml(item.title)}</h3><p>${escapeHtml(item.text)}</p><p><strong>边界：</strong>${escapeHtml(item.boundary)}</p></div><ol>${item.steps.map(step => `<li>${escapeHtml(step)}</li>`).join('')}</ol>`;
+    }
+    const knowledgeStages = {
+      select:{label:'1 选择来源',title:'从明确选择的工作证据开始',text:'用户选对话片段、代码版本、测试或报告；项目可在合并 / 结题时提醒整理，但不自动收集所有聊天或文件。',checks:['先检查来源读取与派生许可。','关联代码、资料和报告的具体版本。','知识草稿默认不比来源范围更宽。']},
+      draft:{label:'2 整理草稿',title:'把过程记录整理为可复用解释',text:'模型辅助提取问题、方案、适用条件和限制；经过验证的结论与推断分别标记。',checks:['保留作者与来源，展示草稿差异。','没有测试证据就明确“未验证”。','这一步不发布，不训练模型。']},
+      check:{label:'3 检查确认',title:'作者确认内容与可见范围',text:'检测敏感信息、客户来源、重复与过期引用；自动检测只辅助判断，不保证绝对安全。',checks:['包含受限来源时不能直接改成公开。','客户内容需要合法授权和相应审核。','个人草稿可轻量保存，团队共享走审核。']},
+      review:{label:'4 提交审核',title:'知识维护人检查证据与发布资格',text:'服务端保存待审记录；读取权限不等于发布权，审核人必须具有相应内容域权限。',checks:['退回修改仍保持草稿状态。','旧版本审批不能发布更新后的内容。','重复提交按同一意图去重，不重复建条目。']},
+      publish:{label:'5 发布索引',title:'正式版本发布与检索同步分别确认',text:'批准版本写入既有知识源，索引同步后才可检索；不能把“已保存待索引”说成“已可检索”。',checks:['正文和引用保存版本及审核记录。','索引失败只恢复同步，不重复生成内容。','检索前、原文读取和缓存命中都检查权限。']},
+      maintain:{label:'6 复用维护',title:'复核、纠错与撤回保持可追溯',text:'以后按权限检索引用；接口升级、来源变化和撤权触发复核。撤回后停止新读取与传播。',checks:['保留历史版本与撤回提示。','处理索引、缓存、下载和跨会话引用。','不把文档入库混同于模型训练或长期记忆。']}
+    };
+    let knowledgeStage = 'select';
+    function setKnowledgeStage(key, focus = true) {
+      if (!Object.hasOwn(knowledgeStages,key)) return;
+      knowledgeStage = key;
+      const stage = knowledgeStages[key];
+      document.getElementById('knowledge-design-steps').innerHTML = Object.entries(knowledgeStages).map(([name,item]) => `<button data-knowledge-stage="${name}" aria-pressed="${name === key}">${escapeHtml(item.label)}</button>`).join('');
+      document.getElementById('knowledge-design-detail').innerHTML = `<h4>${escapeHtml(stage.title)}</h4><p>${escapeHtml(stage.text)}</p><ul>${stage.checks.map(item => `<li>${escapeHtml(item)}</li>`).join('')}</ul>`;
+      const selected = document.querySelector(`[data-knowledge-stage="${key}"]`);
+      if (focus && selected) selected.focus();
+    }
+    const stateScenarios = {
+      recovery: {states:['执行完成','回收失败','未开始','用量已确认 · 待结算'],note:'应恢复原结果传输和校验；不能因为回收失败就再次运行设备。费用按实际用量与服务规则处理。'},
+      unknown: {states:['最后已确认：已受理','待核对','未开始','保留预留 · 待核对'],note:'观察质量：结果未知。断连只说明缺乏新的可信观察，不能推断设备失败、未执行或可以退款。先按原意图核对，保持零自动设备重试。'},
+      analysis: {states:['执行完成','完整且可用','模板执行失败','计算已结算 · 分析另核'],note:'固定原始数据和模板版本，在无外部副作用的分析服务中恢复；重新分析不等于重新计算。检查失败原因、计费规则与复现条件。'},
+      approval: {states:['上一设备步骤完成','上一结果可用','已生成下一步建议','上一步已计量'],note:'下一步仍等待新的适用设备审批。计划、预算上限和科学执行器都不能替代 quantum_device_run 的逐次 ask；未获批准不得继续设备执行。'}
+    };
+    function renderStateScenario(key) {
+      const scenario = stateScenarios[key] || stateScenarios.recovery;
+      const labels = ['执行状态','结果状态','分析状态','计费状态'];
+      document.getElementById('state-demo').innerHTML = `<div class="state-columns">${labels.map((label,index) => `<div class="state-column"><small>${escapeHtml(label)}</small><strong>${escapeHtml(scenario.states[index])}</strong></div>`).join('')}</div><p>${escapeHtml(scenario.note)}</p>`;
+    }
+    function filterReview(priority) {
+      document.querySelectorAll('[data-review-filter]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.reviewFilter === priority)));
+      document.querySelectorAll('[data-priority]').forEach(item => { item.hidden = priority !== 'all' && item.dataset.priority !== priority; });
+    }
+    function navigateHash() {
+      const hash = window.location.hash.slice(1);
+      const target = document.getElementById(hash);
+      if (hash.startsWith('source-') && target) {
+        selectTab('evidence', false, false);
+        target.scrollIntoView({block:'center'});
+      } else if (document.querySelector(`[data-tab="${CSS.escape(hash)}"]`)) {
+        selectTab(hash, false, false);
+      } else {
+        selectTab('workspace',false,false);
+      }
+    }
+    function setNativeExpanded(expanded) {
+      document.body.classList.toggle('native-expanded',expanded);
+      const button = document.getElementById('native-expand');
+      button.setAttribute('aria-pressed',String(expanded));
+      button.textContent = expanded ? '恢复三栏' : '展开对话';
+      if (expanded) setMobilePanel('chat');
+    }
+    function setMobilePanel(name) {
+      if (!['resources','content','chat'].includes(name)) return;
+      if (name !== 'chat' && document.body.classList.contains('native-expanded')) setNativeExpanded(false);
+      document.querySelector('.workspace-grid').dataset.mobilePanel = name;
+      document.querySelectorAll('button[data-mobile-panel]').forEach(button => button.setAttribute('aria-pressed',String(button.dataset.mobilePanel === name)));
+    }
+    function selectTab(name, focusTab = false, updateHash = true) {
+      if (!document.getElementById('panel-' + name)) return;
+      document.body.classList.toggle('workspace-mode',name === 'workspace');
+      document.title = name === 'workspace' ? 'UNITQC Agent · 工作区' : 'UNITQC Agent · 设计文档';
+      document.querySelectorAll('[data-tab]').forEach(button => { const selected = button.dataset.tab === name; button.setAttribute('aria-selected', String(selected)); button.tabIndex = selected ? 0 : -1; if (selected && focusTab) button.focus(); });
+      document.querySelectorAll('[role=tabpanel]').forEach(panel => { panel.hidden = panel.id !== 'panel-' + name; });
+      if (updateHash && window.location.hash !== '#' + name) window.history.replaceState(null, '', '#' + name);
+    }
+    function renderNode(key) {
+      const d = nodeDetails[key];
+      document.querySelectorAll('[data-node]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.node === key)));
+      document.getElementById('node-detail').innerHTML = `<div><div class="eyebrow">模块职责 / RESPONSIBILITY</div><h3>${escapeHtml(d.title)}</h3><p>${escapeHtml(d.summary)}</p></div><dl><div><dt>归属</dt><dd>${escapeHtml(d.owner)}</dd></div><div><dt>输入</dt><dd>${escapeHtml(d.input)}</dd></div><div><dt>输出</dt><dd>${escapeHtml(d.output)}</dd></div><div><dt>边界</dt><dd>${escapeHtml(d.boundary)}</dd></div></dl><p class="detail-note">${escapeHtml(d.status)}</p>`;
+    }
+    function renderStage(key) {
+      const d = stageDetails[key];
+      document.querySelectorAll('[data-stage]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.stage === key)));
+      document.getElementById('stage-detail').innerHTML = `<div><h3>${escapeHtml(d.title)}</h3><p>${escapeHtml(d.text)}</p></div><ul>${d.items.map(item => `<li>${escapeHtml(item)}</li>`).join('')}</ul>`;
+    }
+    function realTaskRows() {
+      const c = remotePanels.cloud, h = remotePanels.hpc;
+      const rows = [];
+      const kindOf = value => {
+        const string = String(value || '').toLowerCase();
+        return /run|执行/.test(string) ? 'running' : /queue|pending|hold|wait|排队/.test(string) ? 'queued' : 'completed';
+      };
+      if (c.overview && c.overview.reason === 'ok' && Array.isArray(c.overview.jobs)) {
+        c.overview.jobs.slice(0, 8).forEach(job => rows.push({
+          name:`云平台任务 · ${job.id || '（无编号）'}`,kind:kindOf(job.status),label:String(job.status || '未知'),
+          meta:`云平台 · ${job.device || '设备未知'} · 更新 ${job.updated || job.submitted || '—'}`,action:'云平台查看',view:'cloud'}));
+      }
+      if (h.overview && h.overview.reason === 'ok') {
+        (h.overview.running || []).slice(0, 5).forEach(job => rows.push({
+          name:`集群作业 ${job.job || '（无编号）'}`,kind:'running',label:String(job.state || '运行中'),
+          meta:`超算 · ${job.part || '—'} · 已运行 ${job.elapsed || '—'}`,action:'超算查看',view:'hpc'}));
+        (h.overview.history || []).slice(0, 5).forEach(job => rows.push({
+          name:`集群作业 ${job.job || '（无编号）'}`,kind:'completed',label:String(job.state || '结束'),
+          meta:`超算 · ${job.part || '—'} · 结束 ${job.end || '—'}`,action:'超算查看',view:'hpc'}));
+      }
+      return rows;
+    }
+    const statNames = {running:'运行中',queued:'排队中',completed:'已完成',approval:'待审批'};
+    function renderWorkbenchStats() {
+      const real = realTaskRows();
+      const hasReal = real.length > 0;
+      const source = hasReal ? real.concat(tasks.filter(task => task.kind === 'approval')) : tasks;
+      const counts = {running:0,queued:0,completed:0,approval:0};
+      source.forEach(task => {counts[task.kind] = (counts[task.kind] || 0) + 1;});
+      Object.keys(counts).forEach(kind => {
+        const el = document.getElementById('stat-' + kind);
+        if (!el) return;
+        el.innerHTML = `<b>${counts[kind]}</b><span>${statNames[kind]}${!hasReal ? '（示例）' : kind === 'approval' ? '（设计示例）' : ''}</span>`;
+      });
+    }
+    function renderTaskRows() {
+      const real = realTaskRows();
+      const hasReal = real.length > 0;
+      let selected;
+      if (hasReal) {
+        selected = real.concat(currentFilter === 'all' || currentFilter === 'approval' ? tasks.filter(task => task.kind === 'approval') : [])
+          .filter(task => currentFilter === 'all' || task.kind === currentFilter);
+      } else {
+        selected = tasks.filter(task => currentFilter === 'all' || task.kind === currentFilter);
+      }
+      const note = hasReal ? `<p class="small-note" style="margin:0 0 12px">以上各条来自云平台 / 集群状态接口的真实任务；「待审批」仍为设计示例，真实审批记录由平台批准流程返回。</p>` : '';
+      document.getElementById('task-list').innerHTML = note + selected.map(task => `<div class="task-row"><div><div class="task-name">${escapeHtml(task.name)}</div><div class="task-meta">${escapeHtml(task.meta)}</div></div><div class="task-action"><span class="tag ${task.kind === 'running' ? 'live' : task.kind === 'approval' ? 'warn' : ''}">${escapeHtml(task.label)}</span><button class="text-button" data-task-action="${task.view}">${escapeHtml(task.action)}</button></div></div>`).join('');
+      renderWorkbenchStats();
+      document.querySelectorAll('[data-filter]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.filter === currentFilter)));
+    }
+    function viewWorkbench() {
+      return `<div class="content-head"><h3>工作台</h3><button class="button" data-workbench-refresh>刷新任务</button></div><p class="center-intro">正在运行、排队、历史与待审批任务，统一按项目查看。</p><div id="workbench-real" aria-live="polite"><p class="small-note">正在读取运行 / 排队 / 历史任务…</p></div><div class="stats"><div class="stat" id="stat-running"><b>—</b><span>运行中</span></div><div class="stat" id="stat-queued"><b>—</b><span>排队中</span></div><div class="stat" id="stat-completed"><b>—</b><span>已完成</span></div><div class="stat" id="stat-approval"><b>—</b><span>待审批</span></div></div><div class="filter-row" aria-label="示例任务筛选"><button class="filter" data-filter="all">全部</button><button class="filter" data-filter="running">运行</button><button class="filter" data-filter="queued">排队</button><button class="filter" data-filter="completed">历史</button><button class="filter" data-filter="approval">待审批</button></div><div class="task-list" id="task-list"></div><p class="report-note" style="margin-top:18px">任务清单优先展示云平台与集群返回的真实任务；示例行为布局演示。审批队列、进度取消与计费记录由平台服务返回。</p>`;
+    }
+    function viewFiles() {
+      return `<h3>文件与线路</h3><p class="center-intro">用户上传 → 格式与安全校验 → 平台注册 → 版本化引用。</p><div class="file-preview"><header>实验输入 / input.qasm · 文件查看器设计示意</header><div class="file-lines"><span class="comment">// 此处展示线路文件，正文经鉴权读取</span><span>格式　　OpenQASM · 版本待解析</span><span>内容　　门操作 / 参数 / 测量定义</span><span>校验　　语法 · 门集 · 资源上限</span><span>注册　　通过校验后获得 circuit_id</span><span class="comment">// 完整电路不经模型工具结果返回</span></div></div><dl class="metadata-grid"><div><dt>存储归属</dt><dd>用户租户 / 当前项目</dd></div><div><dt>内容版本</dt><dd>由受控上传服务生成</dd></div><div><dt>上下文引用</dt><dd>显式选择、授权后加入</dd></div><div><dt>默认执行行为</dt><dd>仅上传，不自动运行</dd></div></dl><div class="notice warning">QASM 上传 / 导入是待补齐能力；现有电路导出工具不等于支持任意上传线路。</div>`;
+    }
+    function viewResults() {
+      return `<div class="content-head"><h3>结果对比</h3><span class="muted-status">示例数据</span></div><h4>指标对比</h4><svg class="chart" viewBox="0 0 540 268" role="img" aria-label="演示柱状图，横轴为检查项 A、B、C，纵轴为无量纲示意值，范围 0 到 1。系列一分别为 0.80、0.65、0.90，系列二分别为 0.74、0.61、0.83。非计算结果。"><text x="22" y="23" fill="#60717f" font-size="11">示意指标（无量纲）</text><g stroke="#dbe2e7" fill="none"><path d="M64 48H510M64 82H510M64 116H510M64 150H510M64 184H510"/><path d="M64 48V218H510"/></g><g fill="#60717f" font-size="10"><text x="36" y="52">1.0</text><text x="36" y="86">0.8</text><text x="36" y="120">0.6</text><text x="36" y="154">0.4</text><text x="36" y="188">0.2</text><text x="36" y="222">0.0</text><text x="120" y="239">检查项 A</text><text x="263" y="239">检查项 B</text><text x="405" y="239">检查项 C</text></g><g fill="#087e82"><rect x="110" y="82" width="30" height="136" rx="2"/><rect x="253" y="107.5" width="30" height="110.5" rx="2"/><rect x="396" y="65" width="30" height="153" rx="2"/></g><g fill="#b3c3ce"><rect x="146" y="92.2" width="30" height="125.8" rx="2"/><rect x="289" y="114.3" width="30" height="103.7" rx="2"/><rect x="432" y="76.9" width="30" height="141.1" rx="2"/></g><rect x="336" y="13" width="9" height="9" fill="#087e82"/><text x="350" y="22" fill="#60717f" font-size="10">演示系列一</text><rect x="434" y="13" width="9" height="9" fill="#b3c3ce"/><text x="448" y="22" fill="#60717f" font-size="10">演示系列二</text><text x="246" y="260" fill="#60717f" font-size="10">检查项（分类）</text></svg><p class="small-note">布局样例，非计算结果 · 2026-10-20</p>`;
+    }
+    function viewKnowledge() {
+      return `<div class="content-head"><h3>项目知识</h3><button class="button" data-view="capture">草稿</button></div><div class="resource-row"><strong>知识库</strong><small>未连接</small></div><div class="empty-state"><h4>连接知识库</h4><p>连接后搜索项目资料。</p><p class="small-note">管理入口：侧栏底部「设置」→「平台连接」。</p></div>`;
+    }
+    function viewKnowledgeCapture() {
+      return `<div class="content-head"><h3>知识草稿</h3><span class="muted-status">未连接知识库</span></div><div class="empty-state"><h4>暂无草稿</h4><p>从对话、文件或报告中整理。</p><button class="button" disabled>新建草稿</button></div>`;
+    }
+    function viewDevelopment() {
+      return `<div class="content-head"><h3>代码变更</h3><span class="muted-status">未连接仓库</span></div><div class="empty-state"><h4>连接代码仓库</h4><p>查看修改和测试记录。</p><p class="small-note">管理入口：侧栏底部「设置」→「平台连接」。</p></div>`;
+    }
+    function viewDailyWork() {
+      return `<div class="content-head"><h3>文档</h3><button class="button" disabled>新建文档</button></div><div class="empty-state"><h4>暂无文档</h4><p>连接文件服务后创建和保存。</p></div>`;
+    }
+    function viewBilling() {
+      return `<h3>用量与账单</h3><p class="center-intro">当前无平台连接；下方显示业务结构，不展示虚构余额或价格。</p><ul class="open-list"><li><strong>预算与预留</strong><p>提交前由平台报价；展示费用范围、预算上限和过期条件。</p></li><li><strong>执行用量</strong><p>绑定实际执行记录，区分 QPU、CPU / GPU、存储以及约定的分析服务费用。</p></li><li><strong>账单与结算</strong><p>平台账本返回正式金额、计价规则版本、扣费与预留释放状态。</p></li><li><strong>失败、取消与退款</strong><p>按实际用量与服务规则处理；结果未知时先核对，避免重复执行与扣费。</p></li></ul><div class="notice">模型可以解释账单；付款、预算修改和结算状态必须由授权服务处理。</div>`;
+    }
+    function viewCalibration() {
+      return `<h3>校准与测试</h3><p class="center-intro">内部授权功能 · 自动分析不等于无人审批运行设备。</p><ol class="open-list"><li><strong>分析已授权历史数据</strong><p>发现漂移、评估质量，生成待检查的实验计划。</p></li><li><strong>申请受控设备执行</strong><p>检查维护窗口、设备安全和项目权限，提交明确参数并等待人工批准。</p></li><li><strong>评估结果与候选参数</strong><p>生成版本化比较报告；变更应用需独立授权、安全验证和回滚记录。</p></li></ol><div class="notice warning">lab / sign 下 quantum_device_run 逐次 ask；boot / algo 下 deny。模型不直接写设备控制指令或绕过安全联锁。</div>`;
+    }
+    function viewDatasets() {
+      return `<h3>数据沉淀</h3><p class="center-intro">内部数据与知识建设 · 保留来源、版本、质量、归属和删除能力。</p><ul class="open-list"><li><strong>原始结果层</strong><p>受控存储原始结果与执行来源，不直接进入模型或公共知识库。</p></li><li><strong>标准化数据层</strong><p>校验 schema、单位、测量语义和质量；保留转换版本与数据血缘。</p></li><li><strong>报告与知识候选层</strong><p>模板输出与模型解释分开标记；去敏、质量与归属审核后才发布。</p></li><li><strong>撤回与删除</strong><p>按保留策略处理资产、索引、缓存和派生知识，支持版本回滚。</p></li></ul><div class="notice warning">外部用户数据不会因为员工能登录内部界面，就自动成为公司的共享或训练数据。</div>`;
+    }
+    function viewWelcome() {
+      return `<section class="workspace-home"><div class="home-mark">UNITQC AGENT</div><h3>工作区</h3><p class="center-intro">打开文件，或从右侧开始对话。</p><div class="quick-actions"><button class="button" data-view="cloud">云平台</button><button class="button" data-view="hpc">超算</button><button class="button" data-view="knowledge">知识库</button><button class="button" data-view="canvas">Canvas</button></div><h4 class="section-label">项目文件</h4><div class="file-list"><button class="file-link" data-file="local-readme"><span class="file-icon" aria-hidden="true">MD</span>README.md<small>quantum-project</small></button><button class="file-link" data-view="results"><span class="file-icon" aria-hidden="true">HT</span>analysis.html<small>reports</small></button><button class="file-link" data-view="canvas"><span class="file-icon" aria-hidden="true">CV</span>analysis.canvas<small>quantum-project</small></button></div></section>`;
+    }
+    function viewPortal(kind) {
+      const name = kind === 'cloud' ? '云平台' : '超算';
+      const localPortal = `/company-workspace/portal/${kind}/`;
+      const initialFrame = ` src="${localPortal}"`;
+      return `<div class="content-head"><h3>${name}</h3><span class="muted-status" id="${kind}-head-status">检测中…</span></div><div class="portal-toolbar"><span>页面已嵌入中栏，可直接操作。连接管理入口：侧栏底部「设置」→「平台连接」。</span><a id="${kind}-open-link" class="button" href="${connectionUrls[kind]}" target="_blank" rel="noopener noreferrer">在浏览器打开 ↗</a></div><iframe class="portal-frame" title="${name}页面"${initialFrame} referrerpolicy="no-referrer" data-portal-frame="${kind}"></iframe><div id="${kind}-panel-body" aria-live="polite"><div class="remote-section-label">连接状态</div><p class="small-note">正在读取服务状态…</p></div><div class="form-actions" style="margin-top:14px"><button class="button" data-remote-refresh="${kind}">刷新状态</button></div>`;
+    }
+    function viewFile(key) {
+      const file = demoFiles[key];
+      return `<div class="content-head"><h3>${escapeHtml(file.name)}</h3><span class="muted-status">只读</span></div>${file.body !== null ? `<pre class="file-body">${escapeHtml(file.body)}</pre>` : `<div class="empty-state"><h4>${file.connection ? '文件未加载' : '未打开文件'}</h4><p>${file.connection ? '请先连接文件来源。' : '当前仅显示示例目录。'}</p>${file.connection ? '<p class="small-note">管理入口：侧栏底部「设置」→「平台连接」。</p>' : ''}</div>`}`;
+    }
+    function viewCanvas() {
+      return `<div class="content-head"><h3>analysis.canvas</h3><span class="muted-status">未生成</span></div><div class="empty-state"><h4>暂无内容</h4><p>分析生成的图表和报告会显示在这里。</p><button class="button" data-view="results">查看示例报告</button></div>`;
+    }
+    const remotePanels = {cloud:{status:null, overview:null}, hpc:{status:null}};
+    const remoteName = kind => kind === 'cloud' ? '云平台' : '超算';
+    const remoteChipText = (status) => !status ? '未连接'
+      : status.connected ? '已连接'
+      : status.reason === 'missing_api_key' ? '未配置密钥'
+      : status.reason === 'auth_failed' ? '认证失败'
+      : status.reason === 'unreachable' || status.reason === 'no_backend' ? '未连接'
+      : status.reason === 'unconfigured' ? '未配置'
+      : '未连接';
+    const chipClassOf = status => !status ? 'chip'
+      : status.connected ? 'chip ok'
+      : status.reason === 'missing_api_key' || status.reason === 'unconfigured' ? 'chip queue' : 'chip fail';
+    const statusChip = (kind) => {
+      const panel = remotePanels[kind];
+      return `<span class="${panel && chipClassOf(panel.status) || 'chip'}">${remoteChipText(panel && panel.status)}</span>`;
+    };
+    const workStatusDetail = kind => {
+      const panel = remotePanels[kind];
+      if (!panel || !panel.status) return '检测中…';
+      const base = remoteChipText(panel.status);
+      return panel.status.detail ? base + '：' + panel.status.detail : base;
+    };
+    const taskChipClass = value => {
+      const s = String(value || '').toLowerCase();
+      return /run|执行/.test(s) ? 'chip run' : /queue|pending|wait|排队/.test(s) ? 'chip queue'
+        : /complet|finish|success|完成|成功/.test(s) ? 'chip ok'
+        : /fail|error|cancel|失败|错误|取消/.test(s) ? 'chip fail' : 'chip';
+    };
+    const honestBox = (title, text, extra='') => `<div class="empty-state compact"><h4>${title}</h4><p>${text}</p>${extra}</div>`;
+    function remoteErrorBody(status) {
+      const rows = `<div class="resource-row"><strong>API 地址</strong><small>${status.apiBase || '未配置'}</small></div><p class="small-note">密钥保存在客户端服务端配置中，不进入网页存储与对话内容。</p>`;
+      if (status.reason === 'missing_api_key')
+        return honestBox('云服务地址已就绪，未开通账号', '本机服务端尚未持有云平台凭据。在设置对话框的「平台连接」页申请开通，管理员批准后凭据由服务端统一注入。') + rows;
+      if (status.reason === 'auth_failed')
+        return honestBox('云服务拒绝了当前密钥', `服务返回 ${status.error || '认证错误'}：${status.detail || 'API key 无效或已过期'}。凭据由服务端统一托管：请在「平台连接」页重新申请开通，或联系管理员更新服务端凭据。`) + rows;
+      return honestBox('云服务当前不可达', status.detail || '网络或服务暂不可用；稍后用刷新按钮重试。') + rows;
+    }
+    function taskTable(rowsData, emptyText) {
+      if (!rowsData) return `<div class="empty-state compact"><p>任务清单暂不可读；可稍后刷新。</p></div>`;
+      if (!rowsData.length) return `<div class="empty-state compact"><p>${emptyText}</p></div>`;
+      const head = `<tr><th>任务</th><th>设备</th><th>状态</th><th>提交时间</th><th>更新时间</th></tr>`;
+      const body = rowsData.map(j => `<tr><td class="mono">${escapeHtml(j.id || '—')}</td><td class="mono">${escapeHtml(j.device || '—')}</td><td><span class="${taskChipClass(j.status)}">${escapeHtml(j.status || '未知')}</span></td><td>${escapeHtml(j.submitted || '—')}</td><td>${escapeHtml(j.updated || '—')}</td></tr>`).join('');
+      return `<table class="jobs-table">${head}${body}</table>`;
+    }
+    function deviceTable(rowsData) {
+      if (!rowsData) return `<div class="empty-state compact"><p>设备清单暂不可读；可稍后刷新。</p></div>`;
+      if (!rowsData.length) return `<div class="empty-state compact"><p>当前没有可用设备记录。</p></div>`;
+      const head = `<tr><th>设备</th><th>名称</th><th>状态</th><th>量子比特</th></tr>`;
+      const body = rowsData.map(d => `<tr><td class="mono">${escapeHtml(d.id || '—')}</td><td>${escapeHtml(d.name || '—')}</td><td><span class="${taskChipClass(d.status)}">${escapeHtml(d.status || '未知')}</span></td><td>${escapeHtml(d.qubits || '—')}</td></tr>`).join('');
+      return `<table class="jobs-table">${head}${body}</table>`;
+    }
+    function paintCloud() {
+      if (typeof document === 'undefined') return; // teardown-safe
+      const panel = remotePanels.cloud;
+      const head = document.getElementById('cloud-head-status');
+      if (head) {head.textContent = remoteChipText(panel.status);head.className = chipClassOf(panel.status);}
+      const frame = document.querySelector('[data-portal-frame="cloud"]');
+      if (frame && panel.status?.portal && frame.src !== `/company-workspace/portal/cloud/`) frame.src = `/company-workspace/portal/cloud/`;
+      const open = document.getElementById('cloud-open-link');
+      if (open) {open.hidden = !panel.status?.portal;open.href = panel.status?.portal || connectionUrls.cloud || '#';}
+      const el = document.getElementById('cloud-panel-body');
+      if (!el) return;
+      if (!panel.status || !panel.status.connected) {
+        el.innerHTML = `<div class="remote-section-label">实时状态</div>${remoteStatusBox(panel.status)}`;
+        return;
+      }
+      if (!panel.overview) {el.innerHTML = `<div class="remote-section-label">实时状态</div><div class="resource-row"><strong>已连接</strong><small>正在读取设备与任务…</small></div>`;return;}
+      if (panel.overview.reason === 'auth_failed' || panel.overview.reason === 'unreachable') {el.innerHTML = `<div class="remote-section-label">实时状态</div>${remoteStatusBox(panel.overview)}`;return;}
+      el.innerHTML = `<div class="remote-section-label">计算设备</div>${deviceTable(panel.overview.devices)}<div class="remote-section-label">最近任务（提交 / 运行 / 排队 / 历史，前 15 条）</div>${taskTable(panel.overview.jobs, '暂无任务记录：在右侧对话让 Agent 提交作业，或到云平台网页提交。')}<div class="remote-section-label">云平台文件</div>${honestBox('SDK 文件边界', panel.overview.filesNote || '当前 SDK 没有远端文件夹浏览接口；云端文件通过提交工具上传、结果工具回收。')}<p class="small-note">任务完成后在对话中引用任务 ID，Agent 通过云平台合同工具取回结果并生成分析；密钥保存在服务端，不进入对话。</p>`;
+    }
+    function remoteStatusBox(status) {
+      const chip = `<span class="${chipClassOf(status)}">${remoteChipText(status)}</span>`;
+      if (status && status.reason === 'auth_failed') return `${chip}${remoteErrorBody(status)}`;
+      if (status && status.reason === 'missing_api_key') return `${chip}${remoteErrorBody(status)}`;
+      if (status && status.reason === 'unreachable' && status.detail) return `${chip}${honestBox('服务当前不可达', status.detail)}`;
+      if (status && status.connected) return `${chip}<div class="resource-row"><strong>已连接</strong><small>正在汇总设备与任务…</small></div>`;
+      return `${chip}<p class="small-note">服务地址已配置；实时数据在客户端服务可用后展示。</p>`;
+    }
+    function paintHpc() {
+      if (typeof document === 'undefined') return; // teardown-safe
+      const panel = remotePanels.hpc;
+      const status = panel.status;
+      const head = document.getElementById('hpc-head-status');
+      if (head) {head.textContent = remoteChipText(status);head.className = chipClassOf(status);}
+      const el = document.getElementById('hpc-panel-body');
+      if (!el) return;
+      const open = document.getElementById('hpc-open-link');
+      if (open) {open.hidden = !status?.portal;open.href = status?.portal || connectionUrls.hpc || '#';}
+      const frame = document.querySelector('[data-portal-frame="hpc"]');
+      if (frame) {
+        frame.hidden = !status?.portal;
+        if (!frame.hidden && frame.src !== `${location.origin}/company-workspace/portal/hpc/`) frame.src = `/company-workspace/portal/hpc/`;
+      }
+      if (!status) return;
+      if (status.reason === 'unconfigured') {
+        el.innerHTML = `<div class="remote-section-label">实时状态</div>${honestBox('本机未接入集群', '服务端未配置 HPC_PORTAL / HPC_HOST / HPC_USER（本机 SSH 密钥认证）。由管理员把集群门户与登录节点写入服务端配置后，此处展示集群门户与作业状态；集群凭据不进入本页存储与对话。')}`;
+        return;
+      }
+      if (status.reason === 'unreachable') {
+        el.innerHTML = `<div class="remote-section-label">实时状态</div>${honestBox('集群门户不可达', status.detail || '网络或服务暂不可用；稍后重试。')}`;
+        return;
+      }
+      const chip = statusChip('hpc');
+      const jobsNote = status.sshOk ? '' : `<p class="small-note">登录节点 SSH（${status.user || ''}@${status.host || ''}）暂不可用，作业表暂缺。${status.sshDetail || ''}</p>`;
+      if (!panel.overview) {
+        el.innerHTML = `<div class="remote-section-label">集群门户（${status.embeddable ? '嵌入展示' : '禁止嵌入 · ' + (status.framePolicy === 'self' ? 'SAMEORIGIN' : status.framePolicy === 'deny' ? 'DENY' : 'frame-ancestors 限制')}）</div>${portalBody(status)}<div class="remote-section-label">作业情况</div>${chip}<p class="small-note">正在读取 squeue / sacct…</p>${jobsNote}`;
+        return;
+      }
+      const runningTable = slurmTable(panel.overview.running, ['job','part','state','elapsed','start'], '当前没有运行或排队中的作业（squeue）。');
+      const historyTable = slurmTable(panel.overview.history, ['job','part','state','elapsed','end'], '近 7 天无集群作业记录。');
+      el.innerHTML = `<div class="remote-section-label">集群门户</div>${portalBody(status)}<div class="remote-section-label">运行 / 排队任务（squeue）</div>${runningTable}<div class="remote-section-label">近期历史作业（sacct · 近 7 天）</div>${historyTable}<div class="remote-section-label">超算远端目录</div>${panel.overview.files?.length ? `<div class="file-list">${panel.overview.files.map(file => `<div class="resource-row"><strong>${escapeHtml(file.name)}</strong><small>${escapeHtml(file.kind)}</small></div>`).join('')}</div>` : honestBox('目录未展开', panel.overview.filesNote || '远端目录通过 SSH 读取；上传、下载、创建和删除仍由对话工具执行并逐次审批。')}<p class="small-note">作业提交：在右侧对话让 Agent 组织 sbatch 作业（按集群 hpc 分区约定）；结果回收到 $HOME 下工程目录后由 Agent 汇总分析。</p>`;
+    }
+    function portalBody(status) {
+      if (status.embeddable) return `<iframe title="HPC 集群门户" src="/company-workspace/portal/hpc/" style="width:100%;height:56vh;border:1px solid var(--line);border-radius:6px;background:var(--paper)" referrerpolicy="no-referrer"></iframe>`;
+      return `${honestBox('按集群安全策略不在本页嵌入', '请用上方「在浏览器打开」进入集群门户首页。')}`;
+    }
+    function slurmTable(rowsData, columns, emptyText) {
+      if (rowsData === null) return `<p class="small-note">数据暂不可用。</p>`;
+      if (!rowsData.length) return `<div class="empty-state compact"><p>${emptyText}</p></div>`;
+      const labels = {job:'作业', id:'任务', device:'设备', part:'分区', state:'状态', elapsed:'运行时长', start:'开始', submitted:'提交', updated:'更新', end:'结束'};
+      const space = value => String(value == null || value === '' ? '—' : value).replace(/\s+/g, ' ');
+      const head = `<tr>${columns.map(col => `<th>${labels[col] || col}</th>`).join('')}</tr>`;
+      const body = rowsData.map(row => `<tr>${columns.map(col => `<td class="${col === 'job' || col === 'id' ? 'mono' : ''}">${escapeHtml(space(row[col]))}</td>`).join('')}</tr>`).join('');
+      return `<table class="jobs-table">${head}${body}</table>`;
+    }
+    async function loadRemoteStatus(kind) {
+      if (typeof fetch !== 'function') {remotePanels[kind].status = {connected:false, reason:'no_backend'};}
+      else try {
+        const res = await fetch(`/company-workspace/${kind}/status`);
+        remotePanels[kind].status = await res.json();
+      } catch {remotePanels[kind].status = {connected:false, reason:'unreachable', detail:'客户端连接接口不可用'};}
+      if (remotePanels[kind].status && remotePanels[kind].status.connected) {
+        try {
+          const res = await fetch(`/company-workspace/${kind}/overview`);
+          remotePanels[kind].overview = await res.json();
+        } catch {remotePanels[kind].overview = {reason:'unreachable'};}
+      }
+    }
+    async function mountRemote(kind) {
+      const el = document.getElementById(kind + '-panel-body');
+      if (!el) return;
+      const head = document.getElementById(kind + '-head-status');
+      if (head) head.textContent = '检测中…';
+      el.innerHTML = `<div class="remote-section-label">实时状态</div><p class="small-note">正在连接 ${remoteName(kind)}服务…</p>`;
+      await loadRemoteStatus(kind);
+      const remote = remotePanels[kind];
+      if (remote.status && remote.status.portal) {
+        const frame = document.querySelector(`[data-portal-frame="${kind}"]`);
+        if (frame && frame.src !== `${location.origin}/company-workspace/portal/${kind}/`) frame.src = `/company-workspace/portal/${kind}/`;
+      }
+      if (kind === 'cloud') paintCloud(); else paintHpc();
+    }
+    async function mountWorkbench() {
+      const el = document.getElementById('workbench-real');
+      if (!el) return;
+      el.innerHTML = `<p class="small-note">正在读取运行 / 排队 / 历史任务…</p>`;
+      await Promise.all([loadRemoteStatus('hpc'), loadRemoteStatus('cloud')]);
+      const h = remotePanels.hpc, c = remotePanels.cloud;
+      const blocks = [];
+      if (h.status && h.status.connected && h.overview && h.overview.reason === 'ok') {
+        const runningCount = (h.overview.running || []).length;
+        const histCount = (h.overview.history || []).length;
+        blocks.push(`<div class="remote-section-label">HPC 运行 / 排队（squeue · ${runningCount}）</div>${slurmTable(h.overview.running, ['job','part','state','elapsed','start'], '当前没有运行或排队中的集群作业。')}<div class="remote-section-label">HPC 近 7 天历史（sacct · ${histCount}）</div>${slurmTable(h.overview.history, ['job','part','state','elapsed','end'], '近 7 天无集群作业记录。')}`);
+      } else {
+        blocks.push(`<div class="remote-section-label">HPC 集群</div><div class="resource-row"><strong>${h.status ? remoteChipText(h.status) : '未连接'}</strong><small>${h.status && h.status.reason === 'unconfigured' ? '服务端未配置集群连接；配置后此处显示 squeue / sacct 作业。' : '状态数据暂不可读；用「刷新任务」重试。'}</small></div>`);
+      }
+      if (c.status && c.status.connected && c.overview && c.overview.reason === 'ok') {
+        const jobs = c.overview.jobs || [];
+        blocks.push(`<div class="remote-section-label">云平台最近任务（${jobs.length}）</div>${taskTable(jobs.slice(0, 15), '云平台暂无任务记录：在右侧对话让 Agent 提交作业。')}`);
+      } else {
+        blocks.push(`<div class="remote-section-label">云平台任务</div><div class="resource-row"><strong>${c.status ? remoteChipText(c.status) : '未连接'}</strong><small>${c.status && c.status.reason === 'auth_failed' ? '云服务拒绝了当前密钥：' + (c.status.detail || '') : '云平台连接未就绪；在「平台连接」页申请开通后此处显示提交 / 排队 / 历史任务。'}</small></div>`);
+      }
+      el.innerHTML = blocks.join('');
+      renderTaskRows();
+    }
+    const views = {
+      welcome:{label:'工作区',render:viewWelcome},
+      cloud:{label:'云平台',status:'未连接',render:() => viewPortal('cloud')},
+      hpc:{label:'超算',status:'未连接',render:() => viewPortal('hpc')},
+      'local-workspace':{label:'本机工作区',status:'真实目录',render:() => `<div class="content-head"><h3>本机工作区</h3><span class="muted-status">DSH Workspace</span></div><p class="center-intro">这里显示当前会话绑定的真实本机目录。目录选择、会话创建和工具文件边界由 DSH 原生 Workspace 管理。</p><div id="local-workspace-real" class="empty-state"><p>正在读取当前 Workspace…</p></div>`},
+      canvas:{label:'analysis.canvas',render:viewCanvas},
+      workbench:{label:'任务',render:viewWorkbench},
+      files:{label:'文件',render:viewFiles},
+      results:{label:'analysis.html',status:'示例报告',render:viewResults},
+      knowledge:{label:'项目知识',render:viewKnowledge},
+      capture:{label:'知识草稿',render:viewKnowledgeCapture},
+      development:{label:'代码变更',render:viewDevelopment},
+      daily:{label:'文档',render:viewDailyWork},
+      billing:{label:'账单',render:viewBilling},
+      calibration:{label:'校准',render:viewCalibration},
+      datasets:{label:'数据',render:viewDatasets}
+    };
+    Object.entries(demoFiles).forEach(([key,file]) => {
+      views['file-' + key] = {label:file.name,path:file.source + ' / ' + file.name,status:file.body === null ? '未加载' : '示例文件',render:() => viewFile(key)};
+    });
+    function renderEditorTabs() {
+      const container = document.getElementById('editor-tabs');
+      container.innerHTML = openViews.map(name => `<span class="editor-item ${name === currentView ? 'active' : ''}"><button data-view="${name}" title="${escapeHtml(views[name].path || views[name].label)}" ${name === currentView ? 'aria-current="page"' : ''}>${escapeHtml(views[name].label)}</button><button class="close-tab" data-close-view="${name}" aria-label="关闭 ${escapeHtml(views[name].label)}">×</button></span>`).join('');
+    }
+    function renderView(name) {
+      if (!Object.hasOwn(views, name)) return;
+      if (audience !== 'internal' && ['calibration','datasets'].includes(name)) name = 'welcome';
+      currentView = name;
+      if (!openViews.includes(name)) openViews.push(name);
+      document.querySelectorAll('.workspace-nav [data-view], .workspace-nav [data-file]').forEach(button => {
+        const target = button.dataset.file ? 'file-' + button.dataset.file : button.dataset.view;
+        if (target === name) button.setAttribute('aria-current','page'); else button.removeAttribute('aria-current');
+      });
+      renderEditorTabs();
+      document.getElementById('editor-label').textContent = views[name].path || views[name].label;
+      document.getElementById('editor-status').textContent = views[name].status || '';
+      document.getElementById('center-content').innerHTML = views[name].render();
+      setMobilePanel('content');
+      if (name === 'workbench') {renderTaskRows();mountWorkbench();}
+      if (name === 'cloud' || name === 'hpc') mountRemote(name);
+    }
+    function closeView(name) {
+      const index = openViews.indexOf(name);
+      if (index < 0) return;
+      openViews.splice(index, 1);
+      const next = currentView === name ? openViews[Math.min(index,openViews.length - 1)] || 'welcome' : currentView;
+      renderView(next);
+      const active = document.querySelector('#editor-tabs [aria-current="page"]');
+      if (active) active.focus();
+    }
+    function setSession(key) {
+      if (!Object.hasOwn(demoSessions, key)) return;
+      document.querySelectorAll('[data-session]').forEach(button => {
+        if (button.dataset.session === key) button.setAttribute('aria-current','true'); else button.removeAttribute('aria-current');
+      });
+      // Preview navigation only; native DSH will own the actual session UI.
+      setMobilePanel('chat');
+    }
+    function setAuthMode(mode) {
+      if (!['login','register'].includes(mode)) return;
+      const register = mode === 'register';
+      document.getElementById('account-title').textContent = register ? '注册 Agent 账号' : '登录 Agent';
+      document.getElementById('register-name').hidden = !register;
+      document.getElementById('auth-submit').textContent = register ? '注册' : '登录';
+      document.getElementById('account-help').textContent = register ? '账号服务未连接，暂不可注册。' : '账号服务未连接，暂不可登录。';
+      document.querySelectorAll('[data-auth-mode]').forEach(button => button.setAttribute('aria-pressed',String(button.dataset.authMode === mode)));
+    }
+    function setAudience(value) {
+      audience = value;
+      document.body.dataset.audience = value;
+      document.querySelectorAll('[data-audience-choice]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.audienceChoice === value)));
+      document.getElementById('workspace-account').textContent = value === 'internal' ? '示意组织 / 内部研发　·　未连接服务' : '示意租户 / 外部用户　·　未连接服务';
+      renderView(currentView);
+    }
+    const dialog = document.getElementById('approval-dialog');
+    document.addEventListener('click', event => {
+      const button = event.target.closest('button');
+      if (!button) return;
+      if (button.id === 'native-expand') setNativeExpanded(!document.body.classList.contains('native-expanded'));
+      if (button.dataset.mobilePanel) setMobilePanel(button.dataset.mobilePanel);
+      if (button.dataset.scenario) renderWorkScenario(button.dataset.scenario);
+      if (button.dataset.knowledgeStage) setKnowledgeStage(button.dataset.knowledgeStage);
+      if (button.dataset.reviewFilter) filterReview(button.dataset.reviewFilter);
+      if (button.dataset.tab) selectTab(button.dataset.tab);
+      if (button.dataset.jump) selectTab(button.dataset.jump, true);
+      if (button.dataset.node) renderNode(button.dataset.node);
+      if (button.dataset.stage) renderStage(button.dataset.stage);
+      if (button.dataset.audienceChoice) setAudience(button.dataset.audienceChoice);
+      if (button.dataset.view) renderView(button.dataset.view);
+      if (button.dataset.file) renderView('file-' + button.dataset.file);
+      if (button.dataset.closeView) closeView(button.dataset.closeView);
+      if (button.dataset.session) setSession(button.dataset.session);
+      if (button.id === 'account-button') {
+        setAuthMode('login');document.getElementById('account-dialog').showModal();
+      }
+      if (button.dataset.authMode) setAuthMode(button.dataset.authMode);
+      if (button.id === 'close-account') document.getElementById('account-dialog').close();
+      if (button.dataset.filter) {currentFilter = button.dataset.filter;renderTaskRows();}
+      if (button.dataset.taskAction === 'approval' || button.id === 'approval-demo-button') dialog.showModal();
+      else if (button.dataset.taskAction) renderView(button.dataset.taskAction);
+      if (button.id === 'close-approval') dialog.close();
+      if (button.id === 'print-button') window.print();
+      if (button.dataset.workbenchRefresh !== undefined) mountWorkbench();
+      if (button.dataset.remoteRefresh) renderView(button.dataset.remoteRefresh);
+    });
+    document.querySelector('[role=tablist]').addEventListener('keydown', event => {
+      const buttons = Array.from(document.querySelectorAll('[data-tab]'));
+      let index = buttons.indexOf(document.activeElement);
+      if (index < 0 || !['ArrowLeft','ArrowRight','Home','End'].includes(event.key)) return;
+      if (event.key === 'Home') index = 0;
+      else if (event.key === 'End') index = buttons.length - 1;
+      else index = (index + (event.key === 'ArrowRight' ? 1 : -1) + buttons.length) % buttons.length;
+      event.preventDefault();selectTab(buttons[index].dataset.tab, true);
+    });
+    const printDetails = new Map();
+    window.addEventListener('beforeprint', () => {
+      printDetails.clear();
+      document.querySelectorAll('.decisions details, .finding').forEach(item => { printDetails.set(item, item.open); item.open = true; });
+    });
+    window.addEventListener('afterprint', () => {
+      printDetails.forEach((open, item) => { item.open = open; });
+      printDetails.clear();
+    });
+    document.getElementById('state-scenario').addEventListener('change', event => renderStateScenario(event.target.value));
+    window.addEventListener('hashchange', navigateHash);
+    renderNode('workspace');renderStage('intake');renderView('welcome');renderWorkScenario('research');setKnowledgeStage('select',false);renderStateScenario('recovery');navigateHash();
+  </script>
+</body>
+</html>

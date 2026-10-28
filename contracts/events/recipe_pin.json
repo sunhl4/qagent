@@ -1,9 +1,0 @@
-{
-  "type": "qagent/recipe_pin",
-  "required": [
-    "recipe",
-    "params"
-  ],
-  "additionalProperties": false,
-  "note": "Short fields only. No Pauli / CAL / bitstrings."
-}

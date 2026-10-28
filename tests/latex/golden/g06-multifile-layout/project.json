@@ -1,0 +1,11 @@
+{
+  "id": "g06-multifile-layout",
+  "compiler": "pdflatex",
+  "main": "main.tex",
+  "backend": null,
+  "packages": [],
+  "contains": ["Multi-File Layout", "flat layout"],
+  "pages_min": 1,
+  "purpose": "layout-multifile",
+  "description": "Multi-file baseline: sections included through a flat directory layout with no rewrites on disk."
+}

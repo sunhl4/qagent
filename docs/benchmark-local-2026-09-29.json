@@ -1,0 +1,30 @@
+{
+  "version": "1.0",
+  "scope": "synthetic_local_loopback_only",
+  "quality": {
+    "documents": 12,
+    "cases": 16,
+    "methods": {
+      "whitespace": {
+        "recall_at_8": 0.4286,
+        "mrr_at_8": 0.4286,
+        "empty_accuracy": 1,
+        "median_ms": 0.715
+      },
+      "cjk_bigrams": {
+        "recall_at_8": 1.0,
+        "mrr_at_8": 1.0,
+        "empty_accuracy": 1,
+        "median_ms": 1.029
+      }
+    }
+  },
+  "repeats": 10,
+  "timings": {
+    "python_startup": {"median_ms": 11.158, "p95_ms": 17.332},
+    "tools_read_validate": {"median_ms": 9.32, "p95_ms": 18.373},
+    "local_per_read": {"median_ms": 237.155, "p95_ms": 816.604},
+    "local_snapshot": {"median_ms": 295.858, "p95_ms": 582.477},
+    "loopback_provider": {"median_ms": 296.033, "p95_ms": 723.59}
+  }
+}

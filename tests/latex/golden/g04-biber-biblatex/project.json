@@ -1,0 +1,11 @@
+{
+  "id": "g04-biber-biblatex",
+  "compiler": "pdflatex",
+  "main": "main.tex",
+  "backend": "biber",
+  "packages": ["biblatex"],
+  "contains": ["References"],
+  "pages_min": 1,
+  "purpose": "bibliography-biber",
+  "description": "biblatex with the biber backend; requires the biblatex package and biber binary."
+}

@@ -1,0 +1,13 @@
+{
+  "version": "1.0.0",
+  "registry_env": "COMPANY_AGENT_TENANT_REGISTRY",
+  "regimes": ["legacy-single-user", "registry", "unavailable"],
+  "states": ["approved", "pending", "revoked"],
+  "services": ["company.algorithm", "company.asset", "compute.cloud", "compute.hpc"],
+  "line_fields": ["subject", "service", "state", "expires_epoch", "approved_by"],
+  "reasons": ["legacy", "approved", "pending", "revoked", "expired", "subject_absent", "registry_unavailable", "untrusted_subject"],
+  "subject_max_bytes": 253,
+  "approved_by_max_bytes": 64,
+  "max_lines": 1024,
+  "max_registry_bytes": 1048576
+}

@@ -1,0 +1,6270 @@
+{
+  "version": "2.0.0",
+  "handles": [
+    "asset_id",
+    "circuit_id",
+    "twin_id"
+  ],
+  "tools": [
+    {
+      "name": "company_capabilities",
+      "capability": "company.workflow",
+      "operation": "capability.list",
+      "input_handles": [],
+      "output_handles": [],
+      "description": "List company Agent capabilities.",
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "output": {
+        "type": "object",
+        "required": [
+          "preset",
+          "capabilities",
+          "identity",
+          "enablement",
+          "approvals"
+        ],
+        "properties": {
+          "preset": {
+            "type": "string",
+            "enum": [
+              "boot",
+              "lab",
+              "algo",
+              "sign"
+            ]
+          },
+          "enablement": {
+            "type": "object",
+            "required": [
+              "regime",
+              "subject",
+              "services"
+            ],
+            "properties": {
+              "regime": {
+                "type": "string",
+                "enum": [
+                  "legacy-single-user",
+                  "registry",
+                  "unavailable"
+                ],
+                "maxLength": 18
+              },
+              "subject": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 253
+              },
+              "services": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "company.algorithm": {
+                    "type": "object",
+                    "required": [
+                      "service",
+                      "enabled",
+                      "reason"
+                    ],
+                    "properties": {
+                      "service": {
+                        "type": "string",
+                        "const": "company.algorithm"
+                      },
+                      "enabled": {
+                        "type": "boolean"
+                      },
+                      "reason": {
+                        "type": "string",
+                        "enum": [
+                          "approved",
+                          "pending",
+                          "revoked",
+                          "expired",
+                          "subject_absent",
+                          "registry_unavailable",
+                          "untrusted_subject"
+                        ],
+                        "maxLength": 24
+                      },
+                      "approved_by": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 64
+                      },
+                      "expires_epoch": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  "company.asset": {
+                    "type": "object",
+                    "required": [
+                      "service",
+                      "enabled",
+                      "reason"
+                    ],
+                    "properties": {
+                      "service": {
+                        "type": "string",
+                        "const": "company.asset"
+                      },
+                      "enabled": {
+                        "type": "boolean"
+                      },
+                      "reason": {
+                        "type": "string",
+                        "enum": [
+                          "approved",
+                          "pending",
+                          "revoked",
+                          "expired",
+                          "subject_absent",
+                          "registry_unavailable",
+                          "untrusted_subject"
+                        ],
+                        "maxLength": 24
+                      },
+                      "approved_by": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 64
+                      },
+                      "expires_epoch": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  "compute.cloud": {
+                    "type": "object",
+                    "required": [
+                      "service",
+                      "enabled",
+                      "reason"
+                    ],
+                    "properties": {
+                      "service": {
+                        "type": "string",
+                        "const": "compute.cloud"
+                      },
+                      "enabled": {
+                        "type": "boolean"
+                      },
+                      "reason": {
+                        "type": "string",
+                        "enum": [
+                          "approved",
+                          "pending",
+                          "revoked",
+                          "expired",
+                          "subject_absent",
+                          "registry_unavailable",
+                          "untrusted_subject"
+                        ],
+                        "maxLength": 24
+                      },
+                      "approved_by": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 64
+                      },
+                      "expires_epoch": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  "compute.hpc": {
+                    "type": "object",
+                    "required": [
+                      "service",
+                      "enabled",
+                      "reason"
+                    ],
+                    "properties": {
+                      "service": {
+                        "type": "string",
+                        "const": "compute.hpc"
+                      },
+                      "enabled": {
+                        "type": "boolean"
+                      },
+                      "reason": {
+                        "type": "string",
+                        "enum": [
+                          "approved",
+                          "pending",
+                          "revoked",
+                          "expired",
+                          "subject_absent",
+                          "registry_unavailable",
+                          "untrusted_subject"
+                        ],
+                        "maxLength": 24
+                      },
+                      "approved_by": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 64
+                      },
+                      "expires_epoch": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                }
+              }
+            },
+            "additionalProperties": false
+          },
+          "identity": {
+            "type": "object",
+            "required": [
+              "subject",
+              "subject_source",
+              "profile"
+            ],
+            "properties": {
+              "subject": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 253
+              },
+              "subject_source": {
+                "type": "string",
+                "enum": [
+                  "trusted",
+                  "derived",
+                  "untrusted"
+                ],
+                "maxLength": 12
+              },
+              "profile": {
+                "type": "string",
+                "enum": [
+                  "company-agent",
+                  "company-agent-minimal",
+                  "unknown"
+                ]
+              }
+            },
+            "additionalProperties": false
+          },
+          "approvals": {
+            "type": "array",
+            "maxItems": 32,
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            }
+          },
+          "capabilities": {
+            "type": "array",
+            "maxItems": 32,
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "kind",
+                "provider",
+                "contract_version",
+                "tools",
+                "visible_tools",
+                "provider_state",
+                "approval",
+                "evidence"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128
+                },
+                "kind": {
+                  "type": "string",
+                  "enum": [
+                    "platform",
+                    "simulator",
+                    "compiler",
+                    "device",
+                    "compute",
+                    "cloud",
+                    "knowledge",
+                    "workflow",
+                    "document",
+                    "plan",
+                    "portal"
+                  ]
+                },
+                "provider": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128
+                },
+                "contract_version": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128
+                },
+                "tools": {
+                  "type": "array",
+                  "maxItems": 32,
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128
+                  }
+                },
+                "visible_tools": {
+                  "type": "array",
+                  "maxItems": 32,
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128
+                  }
+                },
+                "provider_state": {
+                  "type": "string",
+                  "enum": [
+                    "local",
+                    "unconfigured",
+                    "configured_unverified"
+                  ]
+                },
+                "approval": {
+                  "type": "string",
+                  "enum": [
+                    "none",
+                    "human"
+                  ]
+                },
+                "evidence": {
+                  "type": "object",
+                  "required": [
+                    "state",
+                    "tool",
+                    "request_id",
+                    "age_seconds",
+                    "digest_match"
+                  ],
+                  "properties": {
+                    "state": {
+                      "type": "string",
+                      "enum": [
+                        "unavailable",
+                        "none",
+                        "ok",
+                        "failure",
+                        "stale"
+                      ]
+                    },
+                    "tool": {
+                      "type": "string",
+                      "minLength": 0,
+                      "maxLength": 128
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "minLength": 0,
+                      "maxLength": 45
+                    },
+                    "age_seconds": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991
+                    },
+                    "digest_match": {
+                      "type": "string",
+                      "enum": [
+                        "unavailable",
+                        "current",
+                        "stale"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "company_knowledge_search",
+      "capability": "company.knowledge",
+      "operation": "knowledge.search",
+      "input_handles": [],
+      "output_handles": [],
+      "description": "Search authorized company knowledge with source metadata.",
+      "parameters": {
+        "type": "object",
+        "required": [
+          "query"
+        ],
+        "properties": {
+          "query": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000
+          }
+        },
+        "additionalProperties": false
+      },
+      "output": {
+        "type": "object",
+        "required": [
+          "query",
+          "hits",
+          "scan",
+          "trust"
+        ],
+        "properties": {
+          "trust": {
+            "type": "string",
+            "const": "untrusted_reference_data"
+          },
+          "scan": {
+            "type": "object",
+            "required": [
+              "complete",
+              "reasons",
+              "entries",
+              "files",
+              "bytes"
+            ],
+            "properties": {
+              "complete": {
+                "type": "boolean"
+              },
+              "reasons": {
+                "type": "array",
+                "maxItems": 8,
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "entry_budget",
+                    "file_budget",
+                    "byte_budget",
+                    "depth_limit",
+                    "oversized_file",
+                    "read_error",
+                    "changed_file",
+                    "metadata_limit",
+                    "unregistered",
+                    "unapproved",
+                    "revoked",
+                    "expired",
+                    "stale_hash",
+                    "audience_filtered",
+                    "registry_invalid"
+                  ]
+                }
+              },
+              "entries": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 20000
+              },
+              "files": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 10000
+              },
+              "bytes": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 16000001
+              }
+            },
+            "additionalProperties": false
+          },
+          "query": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000
+          },
+          "hits": {
+            "type": "array",
+            "maxItems": 8,
+            "items": {
+              "type": "object",
+              "required": [
+                "source",
+                "title",
+                "version",
+                "snippet",
+                "score"
+              ],
+              "properties": {
+                "source": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 512
+                },
+                "title": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 256
+                },
+                "version": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128
+                },
+                "snippet": {
+                  "type": "string",
+                  "maxLength": 600
+                },
+                "score": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 32
+                }
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "company_workflow_validate",
+      "capability": "company.workflow",
+      "operation": "workflow.validate",
+      "input_handles": [],
+      "output_handles": [],
+      "description": "Validate a structured capability workflow without executing it.",
+      "parameters": {
+        "type": "object",
+        "required": [
+          "steps"
+        ],
+        "properties": {
+          "inputs": {
+            "type": "array",
+            "maxItems": 32,
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "handle",
+                "value"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$",
+                  "maxLength": 64
+                },
+                "handle": {
+                  "type": "string",
+                  "enum": [
+                    "asset_id",
+                    "circuit_id",
+                    "twin_id"
+                  ]
+                },
+                "value": {
+                  "type": "string",
+                  "pattern": "^(asset_|circ_|twin_)[A-Za-z0-9_-]+$",
+                  "maxLength": 256
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "steps": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 64,
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "capability",
+                "tool"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128
+                },
+                "capability": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128
+                },
+                "tool": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128
+                },
+                "needs": {
+                  "type": "array",
+                  "maxItems": 3,
+                  "uniqueItems": true,
+                  "items": {
+                    "type": "string",
+                    "enum": [
+                      "asset_id",
+                      "circuit_id",
+                      "twin_id"
+                    ]
+                  }
+                },
+                "produces": {
+                  "type": "array",
+                  "maxItems": 3,
+                  "uniqueItems": true,
+                  "items": {
+                    "type": "string",
+                    "enum": [
+                      "asset_id",
+                      "circuit_id",
+                      "twin_id"
+                    ]
+                  }
+                },
+                "approval": {
+                  "type": "string",
+                  "enum": [
+                    "none",
+                    "human"
+                  ]
+                },
+                "bindings": {
+                  "type": "object",
+                  "properties": {
+                    "asset_id": {
+                      "type": "object",
+                      "required": [
+                        "output"
+                      ],
+                      "properties": {
+                        "input": {
+                          "type": "string",
+                          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$",
+                          "maxLength": 64
+                        },
+                        "step": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 128
+                        },
+                        "output": {
+                          "type": "string",
+                          "const": "asset_id"
+                        }
+                      },
+                      "additionalProperties": false
+                    },
+                    "circuit_id": {
+                      "type": "object",
+                      "required": [
+                        "output"
+                      ],
+                      "properties": {
+                        "input": {
+                          "type": "string",
+                          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$",
+                          "maxLength": 64
+                        },
+                        "step": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 128
+                        },
+                        "output": {
+                          "type": "string",
+                          "const": "circuit_id"
+                        }
+                      },
+                      "additionalProperties": false
+                    },
+                    "twin_id": {
+                      "type": "object",
+                      "required": [
+                        "output"
+                      ],
+                      "properties": {
+                        "input": {
+                          "type": "string",
+                          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$",
+                          "maxLength": 64
+                        },
+                        "step": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 128
+                        },
+                        "output": {
+                          "type": "string",
+                          "const": "twin_id"
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "arguments": {
+                  "type": "object",
+                  "properties": {},
+                  "maxProperties": 64,
+                  "additionalProperties": true
+                }
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "output": {
+        "type": "object",
+        "required": [
+          "valid",
+          "validation_scope",
+          "steps",
+          "produces"
+        ],
+        "properties": {
+          "validation_scope": {
+            "type": "string",
+            "const": "structure_and_arguments_only"
+          },
+          "valid": {
+            "type": "boolean",
+            "const": true
+          },
+          "steps": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 64,
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "capability",
+                "tool",
+                "needs",
+                "produces",
+                "approval",
+                "bindings"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128
+                },
+                "capability": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128
+                },
+                "tool": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128
+                },
+                "needs": {
+                  "type": "array",
+                  "maxItems": 3,
+                  "items": {
+                    "type": "string",
+                    "enum": [
+                      "asset_id",
+                      "circuit_id",
+                      "twin_id"
+                    ]
+                  }
+                },
+                "produces": {
+                  "type": "array",
+                  "maxItems": 3,
+                  "items": {
+                    "type": "string",
+                    "enum": [
+                      "asset_id",
+                      "circuit_id",
+                      "twin_id"
+                    ]
+                  }
+                },
+                "approval": {
+                  "type": "string",
+                  "enum": [
+                    "none",
+                    "human"
+                  ]
+                },
+                "bindings": {
+                  "type": "object",
+                  "properties": {
+                    "asset_id": {
+                      "type": "object",
+                      "required": [
+                        "output"
+                      ],
+                      "properties": {
+                        "input": {
+                          "type": "string",
+                          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$",
+                          "maxLength": 64
+                        },
+                        "step": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 128
+                        },
+                        "output": {
+                          "type": "string",
+                          "const": "asset_id"
+                        }
+                      },
+                      "additionalProperties": false
+                    },
+                    "circuit_id": {
+                      "type": "object",
+                      "required": [
+                        "output"
+                      ],
+                      "properties": {
+                        "input": {
+                          "type": "string",
+                          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$",
+                          "maxLength": 64
+                        },
+                        "step": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 128
+                        },
+                        "output": {
+                          "type": "string",
+                          "const": "circuit_id"
+                        }
+                      },
+                      "additionalProperties": false
+                    },
+                    "twin_id": {
+                      "type": "object",
+                      "required": [
+                        "output"
+                      ],
+                      "properties": {
+                        "input": {
+                          "type": "string",
+                          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$",
+                          "maxLength": 64
+                        },
+                        "step": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 128
+                        },
+                        "output": {
+                          "type": "string",
+                          "const": "twin_id"
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "produces": {
+            "type": "array",
+            "maxItems": 3,
+            "items": {
+              "type": "string",
+              "enum": [
+                "asset_id",
+                "circuit_id",
+                "twin_id"
+              ]
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "company_analysis_render",
+      "capability": "company.workflow",
+      "operation": "analysis.render",
+      "input_handles": [],
+      "output_handles": [],
+      "description": "Apply a managed analysis template to a metrics table or shot delivery record. Inputs are operator-supplied snapshots; a managed template derives an authorized summary, unit audit and declarative chart descriptors without external scripts, full circuit bodies or save-side exposures.",
+      "parameters": {
+        "type": "object",
+        "required": [
+          "template"
+        ],
+        "properties": {
+          "template": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "metrics": {
+            "type": "object",
+            "required": [
+              "schema_version",
+              "items"
+            ],
+            "properties": {
+              "schema_version": {
+                "type": "string",
+                "const": "scientific-metrics/1.0"
+              },
+              "items": {
+                "type": "array",
+                "minItems": 0,
+                "maxItems": 64,
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "name",
+                    "kind",
+                    "value",
+                    "unit"
+                  ],
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z0-9][A-Za-z0-9_ -]{0,239}$",
+                      "maxLength": 240
+                    },
+                    "kind": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$",
+                      "maxLength": 64
+                    },
+                    "value": {
+                      "type": "number"
+                    },
+                    "unit": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z][A-Za-z0-9_/*^.-]{0,63}$",
+                      "maxLength": 64
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            },
+            "additionalProperties": false
+          },
+          "shots": {
+            "type": "object",
+            "required": [
+              "requested",
+              "actual"
+            ],
+            "properties": {
+              "requested": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 1000000
+              },
+              "actual": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1000000
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      "output": {
+        "type": "object",
+        "required": [
+          "template",
+          "status",
+          "audit",
+          "charts"
+        ],
+        "properties": {
+          "template": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "complete",
+              "flagged"
+            ]
+          },
+          "charts": {
+            "type": "array",
+            "maxItems": 8,
+            "items": {
+              "type": "object",
+              "required": [
+                "kind",
+                "unit",
+                "items"
+              ],
+              "properties": {
+                "kind": {
+                  "type": "string",
+                  "enum": [
+                    "bar"
+                  ]
+                },
+                "unit": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 64
+                },
+                "items": {
+                  "type": "array",
+                  "maxItems": 16,
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "name",
+                      "value"
+                    ],
+                    "properties": {
+                      "name": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 240
+                      },
+                      "value": {
+                        "type": "number"
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "audit": {
+            "type": "object",
+            "required": [
+              "complete",
+              "items",
+              "reasons",
+              "units"
+            ],
+            "properties": {
+              "complete": {
+                "type": "boolean"
+              },
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1000000
+              },
+              "reasons": {
+                "type": "array",
+                "maxItems": 8,
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "empty",
+                    "duplicate_name",
+                    "invalid_unit",
+                    "range_violation",
+                    "underdelivery",
+                    "overdelivery",
+                    "chart_budget"
+                  ]
+                }
+              },
+              "units": {
+                "type": "array",
+                "maxItems": 16,
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 64
+                }
+              },
+              "min_value": {
+                "type": "number"
+              },
+              "max_value": {
+                "type": "number"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "quantum_algorithm_catalog",
+      "capability": "company.algorithm",
+      "operation": "algorithm.catalog",
+      "input_handles": [],
+      "output_handles": [],
+      "description": "Discover the current uniqon component catalog. Identifiers are platform component_id values; discovery does not authorize execution.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 32
+          },
+          "cursor": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          }
+        },
+        "additionalProperties": false
+      },
+      "output": {
+        "type": "object",
+        "required": [
+          "catalog_version",
+          "provider",
+          "algorithms",
+          "complete"
+        ],
+        "properties": {
+          "catalog_version": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "provider": {
+            "type": "string",
+            "const": "uniqon"
+          },
+          "algorithms": {
+            "type": "array",
+            "maxItems": 32,
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "version",
+                "maturity",
+                "runnable",
+                "description",
+                "parameters"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "pattern": "^[a-z][a-z0-9_.-]{0,127}$",
+                  "maxLength": 128
+                },
+                "version": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 64
+                },
+                "kind": {
+                  "type": "string",
+                  "pattern": "^[a-z][a-z0-9_.-]{0,63}$",
+                  "maxLength": 64
+                },
+                "maturity": {
+                  "type": "string",
+                  "enum": [
+                    "reference",
+                    "experimental",
+                    "production"
+                  ]
+                },
+                "runnable": {
+                  "type": "boolean"
+                },
+                "description": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 512
+                },
+                "input_schema": {
+                  "type": "object",
+                  "properties": {},
+                  "maxProperties": 16,
+                  "additionalProperties": true
+                },
+                "parameters": {
+                  "type": "array",
+                  "maxItems": 32,
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "name",
+                      "type",
+                      "required",
+                      "description"
+                    ],
+                    "properties": {
+                      "name": {
+                        "type": "string",
+                        "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,127}$",
+                        "maxLength": 128
+                      },
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "string",
+                          "integer",
+                          "number",
+                          "boolean",
+                          "object",
+                          "array"
+                        ]
+                      },
+                      "required": {
+                        "type": "boolean"
+                      },
+                      "description": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "default": {
+                        "type": "string",
+                        "maxLength": 256
+                      },
+                      "choices": {
+                        "type": "array",
+                        "maxItems": 32,
+                        "uniqueItems": true,
+                        "items": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 128
+                        }
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "complete": {
+            "type": "boolean"
+          },
+          "next_cursor": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "quantum_algorithm_run",
+      "capability": "company.algorithm",
+      "operation": "algorithm.run",
+      "input_handles": [],
+      "output_handles": [
+        "asset_id",
+        "circuit_id"
+      ],
+      "description": "Run one uniqon component_id through algorithm.run. The identifier must come from the current platform catalog and be runnable.",
+      "parameters": {
+        "type": "object",
+        "required": [
+          "algorithm",
+          "catalog_version",
+          "component_version"
+        ],
+        "properties": {
+          "algorithm": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_.-]{0,127}$",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "component_version": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          },
+          "catalog_version": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "parameters": {
+            "type": "object",
+            "properties": {},
+            "maxProperties": 64,
+            "additionalProperties": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "output": {
+        "type": "object",
+        "required": [
+          "asset_id"
+        ],
+        "properties": {
+          "asset_id": {
+            "type": "string",
+            "pattern": "^asset_[A-Za-z0-9_-]+$",
+            "maxLength": 256
+          },
+          "circuit_id": {
+            "type": "string",
+            "pattern": "^circ_[A-Za-z0-9_-]+$",
+            "maxLength": 256
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "queued",
+              "running",
+              "completed",
+              "failed",
+              "ready",
+              "available"
+            ]
+          },
+          "summary": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "queued",
+                  "running",
+                  "completed",
+                  "failed"
+                ]
+              },
+              "duration_ms": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1000000000
+              },
+              "qubits": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 1000000
+              },
+              "gate_count": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1000000000
+              },
+              "metrics": {
+                "type": "object",
+                "required": [
+                  "schema_version",
+                  "items"
+                ],
+                "properties": {
+                  "schema_version": {
+                    "type": "string",
+                    "const": "scientific-metrics/1.0"
+                  },
+                  "items": {
+                    "type": "array",
+                    "maxItems": 8,
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "name",
+                        "kind",
+                        "value",
+                        "unit"
+                      ],
+                      "properties": {
+                        "name": {
+                          "type": "string",
+                          "pattern": "^[a-z][a-z0-9_]{0,63}$",
+                          "maxLength": 64
+                        },
+                        "kind": {
+                          "type": "string",
+                          "enum": [
+                            "objective",
+                            "uncertainty",
+                            "probability",
+                            "count"
+                          ]
+                        },
+                        "value": {
+                          "type": "number",
+                          "minimum": -1000000000000,
+                          "maximum": 1000000000000
+                        },
+                        "unit": {
+                          "type": "string",
+                          "enum": [
+                            "dimensionless",
+                            "hartree",
+                            "eV",
+                            "second",
+                            "count"
+                          ]
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "maxProperties": 8,
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "quantum_asset_list",
+      "capability": "company.asset",
+      "operation": "asset.list",
+      "input_handles": [],
+      "output_handles": [],
+      "description": "List up to 32 short company platform assets; assets[].asset_id references existing assets.",
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "output": {
+        "type": "object",
+        "required": [
+          "assets"
+        ],
+        "properties": {
+          "assets": {
+            "type": "array",
+            "maxItems": 32,
+            "items": {
+              "type": "object",
+              "required": [
+                "asset_id"
+              ],
+              "properties": {
+                "asset_id": {
+                  "type": "string",
+                  "pattern": "^asset_[A-Za-z0-9_-]+$",
+                  "maxLength": 256
+                },
+                "kind": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128
+                },
+                "label": {
+                  "type": "string",
+                  "maxLength": 256
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "queued",
+                    "running",
+                    "completed",
+                    "failed",
+                    "ready",
+                    "available"
+                  ]
+                }
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "quantum_asset_get",
+      "capability": "company.asset",
+      "operation": "asset.get",
+      "input_handles": [
+        "asset_id"
+      ],
+      "output_handles": [],
+      "description": "Get a short scientific asset result.",
+      "parameters": {
+        "type": "object",
+        "required": [
+          "asset_id"
+        ],
+        "properties": {
+          "asset_id": {
+            "type": "string",
+            "pattern": "^asset_[A-Za-z0-9_-]+$",
+            "minLength": 1,
+            "maxLength": 256
+          }
+        },
+        "additionalProperties": false
+      },
+      "output": {
+        "type": "object",
+        "required": [
+          "summary"
+        ],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "queued",
+              "running",
+              "completed",
+              "failed",
+              "ready",
+              "available"
+            ]
+          },
+          "summary": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "queued",
+                  "running",
+                  "completed",
+                  "failed"
+                ]
+              },
+              "duration_ms": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1000000000
+              },
+              "metrics": {
+                "type": "object",
+                "required": [
+                  "schema_version",
+                  "items"
+                ],
+                "properties": {
+                  "schema_version": {
+                    "type": "string",
+                    "const": "scientific-metrics/1.0"
+                  },
+                  "items": {
+                    "type": "array",
+                    "maxItems": 8,
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "name",
+                        "kind",
+                        "value",
+                        "unit"
+                      ],
+                      "properties": {
+                        "name": {
+                          "type": "string",
+                          "pattern": "^[a-z][a-z0-9_]{0,63}$",
+                          "maxLength": 64
+                        },
+                        "kind": {
+                          "type": "string",
+                          "enum": [
+                            "objective",
+                            "uncertainty",
+                            "probability",
+                            "count"
+                          ]
+                        },
+                        "value": {
+                          "type": "number",
+                          "minimum": -1000000000000,
+                          "maximum": 1000000000000
+                        },
+                        "unit": {
+                          "type": "string",
+                          "enum": [
+                            "dimensionless",
+                            "hartree",
+                            "eV",
+                            "second",
+                            "count"
+                          ]
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "maxProperties": 8,
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "quantum_asset_metrics",
+      "capability": "company.asset",
+      "operation": "asset.metrics",
+      "input_handles": [
+        "asset_id"
+      ],
+      "output_handles": [],
+      "description": "Fetch the current platform metrics table snapshot of a managed asset. Read-only; the table feeds managed analysis templates without exposing full result bodies.",
+      "parameters": {
+        "type": "object",
+        "required": [
+          "asset_id"
+        ],
+        "properties": {
+          "asset_id": {
+            "type": "string",
+            "pattern": "^asset_[A-Za-z0-9_-]+$",
+            "minLength": 1,
+            "maxLength": 256
+          }
+        },
+        "additionalProperties": false
+      },
+      "output": {
+        "type": "object",
+        "required": [
+          "summary"
+        ],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "queued",
+              "running",
+              "completed",
+              "failed",
+              "ready",
+              "available"
+            ]
+          },
+          "summary": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "queued",
+                  "running",
+                  "completed",
+                  "failed"
+                ]
+              },
+              "duration_ms": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1000000000
+              },
+              "metrics": {
+                "type": "object",
+                "required": [
+                  "schema_version",
+                  "items"
+                ],
+                "properties": {
+                  "schema_version": {
+                    "type": "string",
+                    "const": "scientific-metrics/1.0"
+                  },
+                  "items": {
+                    "type": "array",
+                    "maxItems": 8,
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "name",
+                        "kind",
+                        "value",
+                        "unit"
+                      ],
+                      "properties": {
+                        "name": {
+                          "type": "string",
+                          "pattern": "^[a-z][a-z0-9_]{0,63}$",
+                          "maxLength": 64
+                        },
+                        "kind": {
+                          "type": "string",
+                          "enum": [
+                            "objective",
+                            "uncertainty",
+                            "probability",
+                            "count"
+                          ]
+                        },
+                        "value": {
+                          "type": "number",
+                          "minimum": -1000000000000,
+                          "maximum": 1000000000000
+                        },
+                        "unit": {
+                          "type": "string",
+                          "enum": [
+                            "dimensionless",
+                            "hartree",
+                            "eV",
+                            "second",
+                            "count"
+                          ]
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "maxProperties": 8,
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "quantum_circuit_export",
+      "capability": "company.asset",
+      "operation": "circuit.export",
+      "input_handles": [
+        "asset_id"
+      ],
+      "output_handles": [
+        "circuit_id"
+      ],
+      "description": "Export a registered circuit handle from a company asset.",
+      "parameters": {
+        "type": "object",
+        "required": [
+          "asset_id"
+        ],
+        "properties": {
+          "asset_id": {
+            "type": "string",
+            "pattern": "^asset_[A-Za-z0-9_-]+$",
+            "minLength": 1,
+            "maxLength": 256
+          }
+        },
+        "additionalProperties": false
+      },
+      "output": {
+        "type": "object",
+        "required": [
+          "circuit_id"
+        ],
+        "properties": {
+          "circuit_id": {
+            "type": "string",
+            "pattern": "^circ_[A-Za-z0-9_-]+$",
+            "maxLength": 256
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "queued",
+              "running",
+              "completed",
+              "failed",
+              "ready",
+              "available"
+            ]
+          },
+          "summary": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "queued",
+                  "running",
+                  "completed",
+                  "failed"
+                ]
+              },
+              "duration_ms": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1000000000
+              },
+              "qubits": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 1000000
+              },
+              "gate_count": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1000000000
+              },
+              "metrics": {
+                "type": "object",
+                "required": [
+                  "schema_version",
+                  "items"
+                ],
+                "properties": {
+                  "schema_version": {
+                    "type": "string",
+                    "const": "scientific-metrics/1.0"
+                  },
+                  "items": {
+                    "type": "array",
+                    "maxItems": 8,
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "name",
+                        "kind",
+                        "value",
+                        "unit"
+                      ],
+                      "properties": {
+                        "name": {
+                          "type": "string",
+                          "pattern": "^[a-z][a-z0-9_]{0,63}$",
+                          "maxLength": 64
+                        },
+                        "kind": {
+                          "type": "string",
+                          "enum": [
+                            "objective",
+                            "uncertainty",
+                            "probability",
+                            "count"
+                          ]
+                        },
+                        "value": {
+                          "type": "number",
+                          "minimum": -1000000000000,
+                          "maximum": 1000000000000
+                        },
+                        "unit": {
+                          "type": "string",
+                          "enum": [
+                            "dimensionless",
+                            "hartree",
+                            "eV",
+                            "second",
+                            "count"
+                          ]
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "maxProperties": 8,
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "quantum_simulate",
+      "capability": "quantum.simulation",
+      "operation": "circuit.simulate",
+      "input_handles": [
+        "circuit_id"
+      ],
+      "output_handles": [],
+      "description": "Run a configured independent simulator. Never returns twin_id.",
+      "parameters": {
+        "type": "object",
+        "required": [
+          "circuit_id",
+          "shots"
+        ],
+        "properties": {
+          "circuit_id": {
+            "type": "string",
+            "pattern": "^circ_[A-Za-z0-9_-]+$",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "shots": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1000000
+          }
+        },
+        "additionalProperties": false
+      },
+      "output": {
+        "type": "object",
+        "required": [
+          "provenance"
+        ],
+        "properties": {
+          "provenance": {
+            "type": "string",
+            "const": "independent-simulator"
+          },
+          "shots_actual": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1000000
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "queued",
+              "running",
+              "completed",
+              "failed",
+              "ready",
+              "available"
+            ]
+          },
+          "summary": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "queued",
+                  "running",
+                  "completed",
+                  "failed"
+                ]
+              },
+              "duration_ms": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1000000000
+              }
+            },
+            "maxProperties": 8,
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "quantum_compile_estimate",
+      "capability": "quantum.compilation",
+      "operation": "circuit.compile-estimate",
+      "input_handles": [
+        "circuit_id"
+      ],
+      "output_handles": [],
+      "description": "Run a configured independent compiler estimate.",
+      "parameters": {
+        "type": "object",
+        "required": [
+          "circuit_id"
+        ],
+        "properties": {
+          "circuit_id": {
+            "type": "string",
+            "pattern": "^circ_[A-Za-z0-9_-]+$",
+            "minLength": 1,
+            "maxLength": 256
+          }
+        },
+        "additionalProperties": false
+      },
+      "output": {
+        "type": "object",
+        "required": [
+          "provenance",
+          "makespan_ns"
+        ],
+        "properties": {
+          "provenance": {
+            "type": "string",
+            "const": "independent-compiler"
+          },
+          "makespan_ns": {
+            "type": "number",
+            "minimum": 0
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "queued",
+              "running",
+              "completed",
+              "failed",
+              "ready",
+              "available"
+            ]
+          },
+          "summary": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "queued",
+                  "running",
+                  "completed",
+                  "failed"
+                ]
+              },
+              "duration_ms": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1000000000
+              },
+              "gate_count": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1000000000
+              },
+              "depth": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1000000000
+              }
+            },
+            "maxProperties": 8,
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "quantum_device_identity",
+      "capability": "quantum.device",
+      "operation": "device.identity",
+      "input_handles": [],
+      "output_handles": [],
+      "description": "Read device identity without issuing twin_id.",
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "output": {
+        "type": "object",
+        "required": [
+          "provider"
+        ],
+        "properties": {
+          "provider": {
+            "type": "string",
+            "const": "ionstack-twinrun"
+          },
+          "device": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "queued",
+              "running",
+              "completed",
+              "failed",
+              "ready",
+              "available"
+            ]
+          },
+          "summary": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "queued",
+                  "running",
+                  "completed",
+                  "failed"
+                ]
+              },
+              "duration_ms": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1000000000
+              }
+            },
+            "maxProperties": 8,
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "quantum_cloud_devices",
+      "capability": "compute.cloud",
+      "operation": "cloud.devices",
+      "input_handles": [],
+      "output_handles": [],
+      "description": "Query live UQC cloud devices through the official SDK. This is separate from the company algorithm catalog; no algorithm registration is required for this read-only query.",
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "output": {
+        "type": "object",
+        "required": [
+          "provider",
+          "devices"
+        ],
+        "properties": {
+          "provider": {
+            "type": "string",
+            "const": "uqc-cloud"
+          },
+          "devices": {
+            "type": "array",
+            "maxItems": 32,
+            "items": {
+              "type": "object",
+              "required": [
+                "name",
+                "description",
+                "state",
+                "kind",
+                "qubits",
+                "max_shots"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128
+                },
+                "description": {
+                  "type": "string",
+                  "maxLength": 256
+                },
+                "state": {
+                  "type": "string",
+                  "maxLength": 32
+                },
+                "kind": {
+                  "type": "string",
+                  "enum": [
+                    "simulator",
+                    "hardware",
+                    "unknown"
+                  ]
+                },
+                "qubits": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 1000000
+                },
+                "max_shots": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 1000000
+                }
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "quantum_cloud_submit",
+      "capability": "compute.cloud",
+      "operation": "cloud.submit",
+      "input_handles": [],
+      "output_handles": [],
+      "description": "After human approval, submit a static OpenQASM 3 file inside the current workspace to a live UQC simulator. The adapter compiles the supported standard gates h, x, y, z, s, sdg, t, tdg, sx, sxdg, rz, p, u1, u2, u3, cx, cz and swap into the SDK basis rx, ry and rzz; native rx, ry and rzz are also accepted. Unsupported dynamic constructs or gates are rejected before network dispatch. measure and barrier are preserved; shots must be a multiple of 100 (100-1000). Accepts a file path, not a registered circuit_id: a user-created circuit does not require a runnable algorithm catalog entry. Never submits to hardware or returns circuit bodies. cloud_task is a remote receipt, not a company handle. Never retry automatically after an uncertain submission. Approval flows through the session's per-call ask channel at invocation time; make the tool call when the task warrants it and the channel handles the approval instead of waiting outside the session.",
+      "parameters": {
+        "type": "object",
+        "required": [
+          "program_path",
+          "target",
+          "shots"
+        ],
+        "properties": {
+          "program_path": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512
+          },
+          "target": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_.-]{1,128}$",
+            "maxLength": 128
+          },
+          "shots": {
+            "type": "integer",
+            "minimum": 100,
+            "maximum": 1000
+          }
+        },
+        "additionalProperties": false
+      },
+      "output": {
+        "type": "object",
+        "required": [
+          "provider",
+          "cloud_task",
+          "target",
+          "state",
+          "shots"
+        ],
+        "properties": {
+          "provider": {
+            "type": "string",
+            "const": "uqc-cloud"
+          },
+          "cloud_task": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_.:-]{1,128}$",
+            "maxLength": 128
+          },
+          "target": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "state": {
+            "type": "string",
+            "const": "submitted"
+          },
+          "shots": {
+            "type": "integer",
+            "minimum": 100,
+            "maximum": 1000
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "quantum_cloud_status",
+      "capability": "compute.cloud",
+      "operation": "cloud.status",
+      "input_handles": [],
+      "output_handles": [],
+      "description": "Query one UQC cloud task by its actual remote receipt. Returns a short state only, never bitstrings or full scientific results. The SDK has no task-history listing endpoint.",
+      "parameters": {
+        "type": "object",
+        "required": [
+          "cloud_task"
+        ],
+        "properties": {
+          "cloud_task": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_.:-]{1,128}$",
+            "maxLength": 128
+          }
+        },
+        "additionalProperties": false
+      },
+      "output": {
+        "type": "object",
+        "required": [
+          "provider",
+          "cloud_task",
+          "state"
+        ],
+        "properties": {
+          "provider": {
+            "type": "string",
+            "const": "uqc-cloud"
+          },
+          "cloud_task": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_.:-]{1,128}$",
+            "maxLength": 128
+          },
+          "state": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "quantum_cloud_result",
+      "capability": "compute.cloud",
+      "operation": "cloud.result",
+      "input_handles": [],
+      "output_handles": [],
+      "description": "Reclaim a completed UQC simulator task result by its actual receipt as a bounded analysis summary: total shots and the at-most-eight most probable basis states as scientific-metrics probabilities. Full raw counts stay on the cloud platform web page; the platform SDK cannot cancel in-flight simulator tasks.",
+      "parameters": {
+        "type": "object",
+        "required": [
+          "cloud_task"
+        ],
+        "properties": {
+          "cloud_task": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_.:-]{1,128}$",
+            "maxLength": 128
+          }
+        },
+        "additionalProperties": false
+      },
+      "output": {
+        "type": "object",
+        "required": [
+          "provider",
+          "cloud_task",
+          "state",
+          "summary"
+        ],
+        "properties": {
+          "provider": {
+            "type": "string",
+            "const": "uqc-cloud"
+          },
+          "cloud_task": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_.:-]{1,128}$",
+            "maxLength": 128
+          },
+          "state": {
+            "type": "string",
+            "const": "completed"
+          },
+          "summary": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "const": "completed"
+              },
+              "duration_ms": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1000000000
+              },
+              "shots": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 1000000000
+              },
+              "metrics": {
+                "type": "object",
+                "required": [
+                  "schema_version",
+                  "items"
+                ],
+                "properties": {
+                  "schema_version": {
+                    "type": "string",
+                    "const": "scientific-metrics/1.0"
+                  },
+                  "items": {
+                    "type": "array",
+                    "maxItems": 8,
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "name",
+                        "kind",
+                        "value",
+                        "unit"
+                      ],
+                      "properties": {
+                        "name": {
+                          "type": "string",
+                          "pattern": "^[a-z][a-z0-9_]{0,63}$",
+                          "maxLength": 64
+                        },
+                        "kind": {
+                          "type": "string",
+                          "enum": [
+                            "objective",
+                            "uncertainty",
+                            "probability",
+                            "count"
+                          ]
+                        },
+                        "value": {
+                          "type": "number",
+                          "minimum": -1000000000000,
+                          "maximum": 1000000000000
+                        },
+                        "unit": {
+                          "type": "string",
+                          "enum": [
+                            "dimensionless",
+                            "hartree",
+                            "eV",
+                            "second",
+                            "count"
+                          ]
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "maxProperties": 8,
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "hpc_queue",
+      "capability": "compute.hpc",
+      "operation": "hpc.queue",
+      "input_handles": [],
+      "output_handles": [],
+      "description": "Probe the authorized SLURM queue over the SSH gateway. Returns short queue rows only; never returns twin_id.",
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "output": {
+        "type": "object",
+        "required": [
+          "provider"
+        ],
+        "properties": {
+          "provider": {
+            "type": "string",
+            "const": "hpc-slurm-ssh"
+          },
+          "jobs": {
+            "type": "array",
+            "maxItems": 16,
+            "items": {
+              "type": "object",
+              "required": [
+                "slurm_number",
+                "name",
+                "state"
+              ],
+              "properties": {
+                "slurm_number": {
+                  "type": "string",
+                  "maxLength": 32
+                },
+                "name": {
+                  "type": "string",
+                  "maxLength": 128
+                },
+                "partition": {
+                  "type": "string",
+                  "maxLength": 64
+                },
+                "state": {
+                  "type": "string",
+                  "maxLength": 32
+                },
+                "nodes": {
+                  "type": "string",
+                  "maxLength": 16
+                },
+                "elapsed": {
+                  "type": "string",
+                  "maxLength": 16
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "queued",
+              "running",
+              "completed",
+              "failed",
+              "ready",
+              "available"
+            ]
+          },
+          "summary": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "queued",
+                  "running",
+                  "completed",
+                  "failed"
+                ]
+              },
+              "duration_ms": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1000000000
+              }
+            },
+            "maxProperties": 8,
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "hpc_submit",
+      "capability": "compute.hpc",
+      "operation": "hpc.submit",
+      "input_handles": [],
+      "output_handles": [],
+      "description": "Submit one batch job to the authorized SLURM gateway over SSH. Returns a short submission receipt; slurm_number is not a company handle. Approval flows through the session's per-call ask channel at invocation time; make the tool call when the task warrants it and the channel handles the approval instead of waiting outside the session.",
+      "parameters": {
+        "type": "object",
+        "required": [
+          "job_name",
+          "script"
+        ],
+        "properties": {
+          "job_name": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_.-]{1,128}$",
+            "maxLength": 128
+          },
+          "script": {
+            "type": "string",
+            "pattern": "^/[A-Za-z0-9_./-]{1,255}$",
+            "maxLength": 256,
+            "description": "Absolute POSIX path to a batch script that already exists on the authorized HPC gateway; default to a path under the per-account staging root from hpc_resources.staging_root (e.g. <staging_root>/demo.sh). Relative paths, ~ paths, Windows drive paths, spaces and inline script text are rejected. Verify the file first with hpc_script_check."
+          },
+          "partition": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_.-]{1,64}$",
+            "maxLength": 64
+          },
+          "nodes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 64
+          },
+          "walltime": {
+            "type": "string",
+            "pattern": "^[0-9]{1,3}:[0-9]{2}:[0-9]{2}$",
+            "maxLength": 11
+          }
+        },
+        "additionalProperties": false
+      },
+      "output": {
+        "type": "object",
+        "required": [
+          "provider",
+          "slurm_number",
+          "job_name",
+          "state"
+        ],
+        "properties": {
+          "provider": {
+            "type": "string",
+            "const": "hpc-slurm-ssh"
+          },
+          "slurm_number": {
+            "type": "string",
+            "maxLength": 32
+          },
+          "job_name": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "partition": {
+            "type": "string",
+            "maxLength": 64
+          },
+          "state": {
+            "type": "string",
+            "maxLength": 32
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "queued",
+              "running",
+              "completed",
+              "failed",
+              "ready",
+              "available"
+            ]
+          },
+          "summary": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "queued",
+                  "running",
+                  "completed",
+                  "failed"
+                ]
+              },
+              "duration_ms": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1000000000
+              }
+            },
+            "maxProperties": 8,
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "hpc_job_status",
+      "capability": "compute.hpc",
+      "operation": "hpc.job-status",
+      "input_handles": [],
+      "output_handles": [],
+      "description": "Reconcile one submitted SLURM job by number over the SSH gateway: live queue first, then accounting history. Returns one short row or an explicit not-found observation; never returns twin_id.",
+      "parameters": {
+        "type": "object",
+        "required": [
+          "slurm_number"
+        ],
+        "properties": {
+          "slurm_number": {
+            "type": "string",
+            "pattern": "^[0-9]{1,32}$",
+            "maxLength": 32
+          }
+        },
+        "additionalProperties": false
+      },
+      "output": {
+        "type": "object",
+        "required": [
+          "provider",
+          "slurm_number",
+          "state",
+          "source"
+        ],
+        "properties": {
+          "provider": {
+            "type": "string",
+            "const": "hpc-slurm-ssh"
+          },
+          "slurm_number": {
+            "type": "string",
+            "maxLength": 32
+          },
+          "state": {
+            "type": "string",
+            "maxLength": 32
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "partition": {
+            "type": "string",
+            "maxLength": 64
+          },
+          "nodes": {
+            "type": "string",
+            "maxLength": 16
+          },
+          "elapsed": {
+            "type": "string",
+            "maxLength": 16
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "queue",
+              "history",
+              "none"
+            ]
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "hpc_script_check",
+      "capability": "compute.hpc",
+      "operation": "hpc.script-exists",
+      "input_handles": [],
+      "output_handles": [],
+      "description": "Read-only gateway probe: verify that one absolute POSIX script path already exists on the authorized HPC gateway before submitting. Returns the checked observation; never runs the script and never returns twin_id.",
+      "parameters": {
+        "type": "object",
+        "required": [
+          "script"
+        ],
+        "properties": {
+          "script": {
+            "type": "string",
+            "pattern": "^/[A-Za-z0-9_./-]{1,255}$",
+            "maxLength": 256,
+            "description": "Absolute POSIX candidate script path on the authorized HPC gateway; default to the per-account staging root from hpc_resources.staging_root (e.g. <staging_root>/demo.sh); no ~, relative or Windows paths, no spaces."
+          }
+        },
+        "additionalProperties": false
+      },
+      "output": {
+        "type": "object",
+        "required": [
+          "provider",
+          "script",
+          "exists"
+        ],
+        "properties": {
+          "provider": {
+            "type": "string",
+            "const": "hpc-slurm-ssh"
+          },
+          "script": {
+            "type": "string",
+            "maxLength": 256
+          },
+          "exists": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "hpc_resources",
+      "capability": "compute.hpc",
+      "operation": "hpc.resources",
+      "input_handles": [],
+      "output_handles": [],
+      "description": "Read-only gateway probe: one short cluster inventory row per partition (node counts by state and core allocation/idle summary from sinfo), plus staging_root, the writable per-account staging directory derived from the SSH login account (always its home directory plus /company_agent). All upload, directory-create, submit and fetch paths default under staging_root; no job rows, no user quota claims, never returns twin_id.",
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "output": {
+        "type": "object",
+        "required": [
+          "provider",
+          "partitions",
+          "staging_root"
+        ],
+        "properties": {
+          "provider": {
+            "type": "string",
+            "const": "hpc-slurm-ssh"
+          },
+          "partitions": {
+            "type": "array",
+            "maxItems": 16,
+            "items": {
+              "type": "object",
+              "required": [
+                "partition",
+                "nodes_total"
+              ],
+              "properties": {
+                "partition": {
+                  "type": "string",
+                  "maxLength": 64
+                },
+                "availability": {
+                  "type": "string",
+                  "maxLength": 32
+                },
+                "nodes_total": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 1000000
+                },
+                "nodes_by_state": {
+                  "type": "string",
+                  "maxLength": 64
+                },
+                "cores_allocated": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 1000000
+                },
+                "cores_idle": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 1000000
+                },
+                "cores_other": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 1000000
+                },
+                "cores_total": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 1000000
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "staging_root": {
+            "type": "string",
+            "pattern": "^/[A-Za-z0-9_./-]{2,255}$",
+            "maxLength": 256,
+            "description": "Writable per-account staging directory on the gateway, derived from the SSH login account's home directory (home + /company_agent); use it as the base for all upload, script, fetch and directory-create paths."
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "hpc_file_list",
+      "capability": "compute.hpc",
+      "operation": "hpc.file-list",
+      "input_handles": [],
+      "output_handles": [],
+      "description": "Read-only gateway probe: list regular files under one absolute POSIX directory on the authorized HPC gateway (depth one, at most 32 entries). Directories are not listed; no job rows; never returns twin_id.",
+      "parameters": {
+        "type": "object",
+        "required": [
+          "path"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "pattern": "^/[A-Za-z0-9_./-]{1,255}$",
+            "maxLength": 256,
+            "description": "Absolute POSIX directory on the authorized HPC gateway; default to the per-account staging root from hpc_resources.staging_root (e.g. <staging_root>); no ~, relative or Windows paths, no path traversal."
+          }
+        },
+        "additionalProperties": false
+      },
+      "output": {
+        "type": "object",
+        "required": [
+          "provider",
+          "path",
+          "entries"
+        ],
+        "properties": {
+          "provider": {
+            "type": "string",
+            "const": "hpc-slurm-ssh"
+          },
+          "path": {
+            "type": "string",
+            "maxLength": 256
+          },
+          "entries": {
+            "type": "array",
+            "maxItems": 32,
+            "items": {
+              "type": "object",
+              "required": [
+                "name",
+                "bytes",
+                "mtime"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "maxLength": 128
+                },
+                "bytes": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 1000000000
+                },
+                "mtime": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 4000000000
+                }
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "hpc_file_fetch",
+      "capability": "compute.hpc",
+      "operation": "hpc.file-fetch",
+      "input_handles": [],
+      "output_handles": [],
+      "description": "Read-only download: copy one regular UTF-8 text file (at most 48,000 bytes) from the authorized HPC gateway into the active DSH workspace under gateway/<basename>, and return only a bounded receipt (bytes and location). File content never enters the model context; never returns twin_id.",
+      "parameters": {
+        "type": "object",
+        "required": [
+          "path"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "pattern": "^/[A-Za-z0-9_./-]{1,255}$",
+            "maxLength": 256,
+            "description": "Absolute POSIX file path on the authorized HPC gateway under the per-account staging root from hpc_resources.staging_root (e.g. <staging_root>/slurm-5010.out); no ~, relative or Windows paths, no path traversal."
+          }
+        },
+        "additionalProperties": false
+      },
+      "output": {
+        "type": "object",
+        "required": [
+          "provider",
+          "gateway_path",
+          "saved_to",
+          "bytes"
+        ],
+        "properties": {
+          "provider": {
+            "type": "string",
+            "const": "hpc-slurm-ssh"
+          },
+          "gateway_path": {
+            "type": "string",
+            "maxLength": 256
+          },
+          "saved_to": {
+            "type": "string",
+            "maxLength": 256
+          },
+          "bytes": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1000000
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "hpc_stage_file",
+      "capability": "compute.hpc",
+      "operation": "hpc.stage-file",
+      "input_handles": [],
+      "output_handles": [],
+      "description": "Controlled upload: copy one regular UTF-8 text file (at most 48,000 bytes) from the active DSH workspace to one absolute POSIX path on the authorized HPC gateway, creating or overwriting that single file only. Requires human approval; refuses to touch an existing gateway file unless overwrite is true; never returns twin_id. Approval flows through the session's per-call ask channel at invocation time; make the tool call when the task warrants it and the channel handles the approval instead of waiting outside the session.",
+      "parameters": {
+        "type": "object",
+        "required": [
+          "workspace_path",
+          "gateway_path"
+        ],
+        "properties": {
+          "workspace_path": {
+            "type": "string",
+            "pattern": "^[^/].{0,254}$",
+            "maxLength": 256,
+            "description": "File inside the active DSH workspace, relative to the workspace root (e.g. jobs/demo.sh); no ~, no absolute paths, no traversal."
+          },
+          "gateway_path": {
+            "type": "string",
+            "pattern": "^/[A-Za-z0-9_./-]{1,255}$",
+            "maxLength": 256,
+            "description": "Absolute POSIX destination file path on the authorized HPC gateway inside the writable per-account staging root from hpc_resources.staging_root (e.g. <staging_root>/demo.sh); no ~, relative or Windows paths, no path traversal."
+          },
+          "overwrite": {
+            "type": "boolean",
+            "default": false
+          }
+        },
+        "additionalProperties": false
+      },
+      "output": {
+        "type": "object",
+        "required": [
+          "provider",
+          "gateway_path",
+          "written",
+          "mode"
+        ],
+        "properties": {
+          "provider": {
+            "type": "string",
+            "const": "hpc-slurm-ssh"
+          },
+          "gateway_path": {
+            "type": "string",
+            "maxLength": 256
+          },
+          "written": {
+            "type": "boolean"
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "created",
+              "overwritten",
+              "skipped_exists"
+            ]
+          },
+          "bytes": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1000000
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "hpc_job_cancel",
+      "capability": "compute.hpc",
+      "operation": "hpc.job-cancel",
+      "input_handles": [],
+      "output_handles": [],
+      "description": "Cancel one queued or running SLURM job by number over the SSH gateway (scancel). Requires human approval; returns a short receipt; automatic retries remain zero; never returns twin_id. Approval flows through the session's per-call ask channel at invocation time; make the tool call when the task warrants it and the channel handles the approval instead of waiting outside the session.",
+      "parameters": {
+        "type": "object",
+        "required": [
+          "slurm_number"
+        ],
+        "properties": {
+          "slurm_number": {
+            "type": "string",
+            "pattern": "^[0-9]{1,32}$",
+            "maxLength": 32
+          }
+        },
+        "additionalProperties": false
+      },
+      "output": {
+        "type": "object",
+        "required": [
+          "provider",
+          "slurm_number",
+          "cancelled"
+        ],
+        "properties": {
+          "provider": {
+            "type": "string",
+            "const": "hpc-slurm-ssh"
+          },
+          "slurm_number": {
+            "type": "string",
+            "maxLength": 32
+          },
+          "cancelled": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "hpc_dir_create",
+      "capability": "compute.hpc",
+      "operation": "hpc.dir-create",
+      "input_handles": [],
+      "output_handles": [],
+      "description": "Create one directory on the authorized HPC gateway (mkdir -p) under a user-accessible absolute path. Requires human approval; an already existing directory returns an honest exists receipt touch guard: never deletes; never returns twin_id.",
+      "parameters": {
+        "type": "object",
+        "required": [
+          "path"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "pattern": "^/[A-Za-z0-9_./-]{1,255}$",
+            "maxLength": 256,
+            "description": "Absolute POSIX directory to create on the authorized HPC gateway under the per-account staging root from hpc_resources.staging_root (e.g. <staging_root>/runs); no ~, relative or Windows paths, no path traversal."
+          }
+        },
+        "additionalProperties": false
+      },
+      "output": {
+        "type": "object",
+        "required": [
+          "provider",
+          "path",
+          "created",
+          "mode"
+        ],
+        "properties": {
+          "provider": {
+            "type": "string",
+            "const": "hpc-slurm-ssh"
+          },
+          "path": {
+            "type": "string",
+            "maxLength": 256
+          },
+          "created": {
+            "type": "boolean"
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "created",
+              "exists"
+            ]
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "hpc_file_remove",
+      "capability": "compute.hpc",
+      "operation": "hpc.file-remove",
+      "input_handles": [],
+      "output_handles": [],
+      "description": "Remove one regular file on the authorized HPC gateway (bounded rm of a single absolute path). Requires human approval; refuses directories, wildcard paths and a missing file (honest skip receipt); never returns twin_id.",
+      "parameters": {
+        "type": "object",
+        "required": [
+          "path"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "pattern": "^/[A-Za-z0-9_./-]{1,255}$",
+            "maxLength": 256,
+            "description": "Absolute POSIX file path on the authorized HPC gateway under the per-account staging root from hpc_resources.staging_root (e.g. <staging_root>/demo.sh); no ~, relative or Windows paths, no path traversal."
+          }
+        },
+        "additionalProperties": false
+      },
+      "output": {
+        "type": "object",
+        "required": [
+          "provider",
+          "path",
+          "removed",
+          "mode"
+        ],
+        "properties": {
+          "provider": {
+            "type": "string",
+            "const": "hpc-slurm-ssh"
+          },
+          "path": {
+            "type": "string",
+            "maxLength": 256
+          },
+          "removed": {
+            "type": "boolean"
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "removed",
+              "skipped_missing"
+            ]
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "quantum_device_run",
+      "capability": "quantum.device",
+      "operation": "device.run",
+      "input_handles": [
+        "circuit_id"
+      ],
+      "output_handles": [
+        "twin_id"
+      ],
+      "description": "Execute an approved ionstack TwinRun. Only this tool may return twin_id.",
+      "parameters": {
+        "type": "object",
+        "required": [
+          "circuit_id",
+          "shots"
+        ],
+        "properties": {
+          "circuit_id": {
+            "type": "string",
+            "pattern": "^circ_[A-Za-z0-9_-]+$",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "shots": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1000000
+          }
+        },
+        "additionalProperties": false
+      },
+      "output": {
+        "type": "object",
+        "required": [
+          "twin_id",
+          "provenance"
+        ],
+        "properties": {
+          "twin_id": {
+            "type": "string",
+            "pattern": "^twin_[A-Za-z0-9_-]+$",
+            "maxLength": 256
+          },
+          "provenance": {
+            "type": "string",
+            "const": "qccd-twin"
+          },
+          "shots_actual": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1000000
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "queued",
+              "running",
+              "completed",
+              "failed",
+              "ready",
+              "available"
+            ]
+          },
+          "summary": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "queued",
+                  "running",
+                  "completed",
+                  "failed"
+                ]
+              },
+              "duration_ms": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1000000000
+              }
+            },
+            "maxProperties": 8,
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "company_latex_structure",
+      "capability": "company.latex",
+      "operation": "latex.structure",
+      "input_handles": [],
+      "output_handles": [],
+      "description": "Read-only summary of one LaTeX project inside the DSH workspace: main file detection, bounded file inventory (tex/bib/graphics/class/other within cap), and whether the scan hit the cap. No content, no PDF, never returns quantum handles.",
+      "parameters": {
+        "type": "object",
+        "required": [
+          "project"
+        ],
+        "properties": {
+          "project": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_](?:[A-Za-z0-9_.-]*[A-Za-z0-9_-])?$",
+            "maxLength": 128,
+            "description": "Project directory name inside the DSH workspace root."
+          }
+        },
+        "additionalProperties": false
+      },
+      "output": {
+        "type": "object",
+        "required": [
+          "project",
+          "main_file",
+          "files",
+          "complete"
+        ],
+        "properties": {
+          "project": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_](?:[A-Za-z0-9_.-]*[A-Za-z0-9_-])?$",
+            "maxLength": 128,
+            "description": "Project directory name inside the DSH workspace root."
+          },
+          "main_file": {
+            "type": "string",
+            "maxLength": 256,
+            "description": "Detected main .tex file, or empty string when undetected."
+          },
+          "files": {
+            "type": "array",
+            "maxItems": 96,
+            "items": {
+              "type": "object",
+              "required": [
+                "path",
+                "bytes",
+                "kind"
+              ],
+              "properties": {
+                "path": {
+                  "type": "string",
+                  "maxLength": 256
+                },
+                "bytes": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 50000000
+                },
+                "kind": {
+                  "type": "string",
+                  "enum": [
+                    "tex",
+                    "bib",
+                    "graphics",
+                    "class",
+                    "other"
+                  ]
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "complete": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "company_latex_read",
+      "capability": "company.latex",
+      "operation": "latex.read",
+      "input_handles": [],
+      "output_handles": [],
+      "description": "Read a bounded window (at most 120 lines) of one UTF-8 LaTeX source file together with its content version. The window is the model-side context; it never includes whole documents or build artifacts.",
+      "parameters": {
+        "type": "object",
+        "required": [
+          "project",
+          "path"
+        ],
+        "properties": {
+          "project": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_](?:[A-Za-z0-9_.-]*[A-Za-z0-9_-])?$",
+            "maxLength": 128,
+            "description": "Project directory name inside the DSH workspace root."
+          },
+          "path": {
+            "type": "string",
+            "pattern": "^(?!.*(?:^|/)\\.\\.(?:/|$))[A-Za-z0-9_.-]+(?:/[A-Za-z0-9_.-]+)*\\.(?:tex|bib|cls|sty|bst)$",
+            "maxLength": 256,
+            "description": "Relative file inside the project (tex/bib/cls/sty/bst only)."
+          },
+          "start_line": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1000000,
+            "description": "1-based first line; defaults to the top of the file."
+          },
+          "line_count": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 120,
+            "description": "Window size in lines; defaults to 40."
+          }
+        },
+        "additionalProperties": false
+      },
+      "output": {
+        "type": "object",
+        "required": [
+          "project",
+          "path",
+          "version",
+          "start_line",
+          "lines",
+          "truncated"
+        ],
+        "properties": {
+          "project": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_](?:[A-Za-z0-9_.-]*[A-Za-z0-9_-])?$",
+            "maxLength": 128,
+            "description": "Project directory name inside the DSH workspace root."
+          },
+          "path": {
+            "type": "string",
+            "maxLength": 256
+          },
+          "version": {
+            "type": "string",
+            "pattern": "^sha256:[0-9a-f]{64}$",
+            "description": "File content version (sha256)."
+          },
+          "start_line": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1000000
+          },
+          "lines": {
+            "type": "array",
+            "maxItems": 120,
+            "items": {
+              "type": "object",
+              "required": [
+                "line",
+                "text"
+              ],
+              "properties": {
+                "line": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 1000000
+                },
+                "text": {
+                  "type": "string",
+                  "maxLength": 240
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "truncated": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "company_latex_edit",
+      "capability": "company.latex",
+      "operation": "latex.edit",
+      "input_handles": [],
+      "output_handles": [],
+      "description": "Human-approved exact-anchor edit of one source file: replacements apply only when base_version matches the current content version, all-or-nothing per file, atomic replacement, and the result echoes the new content version. Version conflicts and stale or ambiguous anchors fail without writing.",
+      "parameters": {
+        "type": "object",
+        "required": [
+          "project",
+          "path",
+          "base_version",
+          "edits"
+        ],
+        "properties": {
+          "project": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_](?:[A-Za-z0-9_.-]*[A-Za-z0-9_-])?$",
+            "maxLength": 128,
+            "description": "Project directory name inside the DSH workspace root."
+          },
+          "path": {
+            "type": "string",
+            "pattern": "^(?!.*(?:^|/)\\.\\.(?:/|$))[A-Za-z0-9_.-]+(?:/[A-Za-z0-9_.-]+)*\\.(?:tex|bib|cls|sty|bst)$",
+            "maxLength": 256,
+            "description": "Relative file inside the project (tex/bib/cls/sty/bst only)."
+          },
+          "base_version": {
+            "type": "string",
+            "pattern": "^sha256:[0-9a-f]{64}$",
+            "description": "File content version (sha256)."
+          },
+          "edits": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 16,
+            "items": {
+              "type": "object",
+              "required": [
+                "quote",
+                "replacement"
+              ],
+              "properties": {
+                "quote": {
+                  "type": "string",
+                  "minLength": 8,
+                  "maxLength": 2000,
+                  "description": "Exact current text to replace."
+                },
+                "replacement": {
+                  "type": "string",
+                  "maxLength": 24000,
+                  "description": "Replacement text; empty string deletes the anchor text."
+                },
+                "occurrence": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9999,
+                  "description": "1-based occurrence to replace when the quote repeats."
+                }
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "output": {
+        "type": "object",
+        "required": [
+          "project",
+          "path",
+          "base_version",
+          "version",
+          "applied",
+          "bytes"
+        ],
+        "properties": {
+          "project": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_](?:[A-Za-z0-9_.-]*[A-Za-z0-9_-])?$",
+            "maxLength": 128,
+            "description": "Project directory name inside the DSH workspace root."
+          },
+          "path": {
+            "type": "string",
+            "maxLength": 256
+          },
+          "base_version": {
+            "type": "string",
+            "pattern": "^sha256:[0-9a-f]{64}$",
+            "description": "File content version (sha256)."
+          },
+          "version": {
+            "type": "string",
+            "pattern": "^sha256:[0-9a-f]{64}$",
+            "description": "File content version (sha256)."
+          },
+          "applied": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 16
+          },
+          "bytes": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 50000000
+          },
+          "message": {
+            "type": "string",
+            "maxLength": 200,
+            "description": "Short human-readable adapter note."
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "company_latex_batch_edit",
+      "capability": "company.latex",
+      "operation": "latex.batch-edit",
+      "input_handles": [],
+      "output_handles": [],
+      "description": "Human-approved multi-file edit batch (up to 8 files) applied per file atomically with per-file base_version guards; a conflict on any file aborts the whole batch before the first write. Returns the new content version per changed file.",
+      "parameters": {
+        "type": "object",
+        "required": [
+          "project",
+          "files"
+        ],
+        "properties": {
+          "project": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_](?:[A-Za-z0-9_.-]*[A-Za-z0-9_-])?$",
+            "maxLength": 128,
+            "description": "Project directory name inside the DSH workspace root."
+          },
+          "message": {
+            "type": "string",
+            "maxLength": 200,
+            "description": "Short human-readable adapter note."
+          },
+          "files": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 8,
+            "items": {
+              "type": "object",
+              "required": [
+                "path",
+                "base_version",
+                "edits"
+              ],
+              "properties": {
+                "path": {
+                  "type": "string",
+                  "pattern": "^(?!.*(?:^|/)\\.\\.(?:/|$))[A-Za-z0-9_.-]+(?:/[A-Za-z0-9_.-]+)*\\.(?:tex|bib|cls|sty|bst)$",
+                  "maxLength": 256,
+                  "description": "Relative file inside the project."
+                },
+                "base_version": {
+                  "type": "string",
+                  "pattern": "^sha256:[0-9a-f]{64}$",
+                  "description": "File content version (sha256)."
+                },
+                "edits": {
+                  "type": "array",
+                  "minItems": 1,
+                  "maxItems": 16,
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "quote",
+                      "replacement"
+                    ],
+                    "properties": {
+                      "quote": {
+                        "type": "string",
+                        "minLength": 8,
+                        "maxLength": 2000,
+                        "description": "Exact current text to replace."
+                      },
+                      "replacement": {
+                        "type": "string",
+                        "maxLength": 24000,
+                        "description": "Replacement text; empty string deletes the anchor text."
+                      },
+                      "occurrence": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 9999,
+                        "description": "1-based occurrence to replace when the quote repeats."
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                }
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "output": {
+        "type": "object",
+        "required": [
+          "project",
+          "applied_files",
+          "results"
+        ],
+        "properties": {
+          "project": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_](?:[A-Za-z0-9_.-]*[A-Za-z0-9_-])?$",
+            "maxLength": 128,
+            "description": "Project directory name inside the DSH workspace root."
+          },
+          "applied_files": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 8
+          },
+          "results": {
+            "type": "array",
+            "maxItems": 8,
+            "items": {
+              "type": "object",
+              "required": [
+                "path",
+                "base_version",
+                "version",
+                "applied",
+                "bytes"
+              ],
+              "properties": {
+                "path": {
+                  "type": "string",
+                  "maxLength": 256
+                },
+                "base_version": {
+                  "type": "string",
+                  "pattern": "^sha256:[0-9a-f]{64}$",
+                  "description": "File content version (sha256)."
+                },
+                "version": {
+                  "type": "string",
+                  "pattern": "^sha256:[0-9a-f]{64}$",
+                  "description": "File content version (sha256)."
+                },
+                "applied": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 16
+                },
+                "bytes": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 50000000
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "message": {
+            "type": "string",
+            "maxLength": 200,
+            "description": "Short human-readable adapter note."
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "company_latex_check",
+      "capability": "company.latex",
+      "operation": "latex.check",
+      "input_handles": [],
+      "output_handles": [],
+      "description": "Read-only static checks over one LaTeX project (bounded scan): unmatched begin/end environment pairs, references to labels that do not exist in the project, citations missing from the project bibliographies, and input targets that are missing. Findings are bounded diagnostics; this does not replace compiling.",
+      "parameters": {
+        "type": "object",
+        "required": [
+          "project"
+        ],
+        "properties": {
+          "project": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_](?:[A-Za-z0-9_.-]*[A-Za-z0-9_-])?$",
+            "maxLength": 128,
+            "description": "Project directory name inside the DSH workspace root."
+          }
+        },
+        "additionalProperties": false
+      },
+      "output": {
+        "type": "object",
+        "required": [
+          "project",
+          "findings",
+          "files_scanned",
+          "complete"
+        ],
+        "properties": {
+          "project": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_](?:[A-Za-z0-9_.-]*[A-Za-z0-9_-])?$",
+            "maxLength": 128,
+            "description": "Project directory name inside the DSH workspace root."
+          },
+          "findings": {
+            "type": "array",
+            "maxItems": 32,
+            "items": {
+              "type": "object",
+              "required": [
+                "file",
+                "line",
+                "code",
+                "message"
+              ],
+              "properties": {
+                "file": {
+                  "type": "string",
+                  "maxLength": 256
+                },
+                "line": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 1000000
+                },
+                "code": {
+                  "type": "string",
+                  "enum": [
+                    "env_pair",
+                    "ref_target",
+                    "cite_key",
+                    "input_missing"
+                  ]
+                },
+                "message": {
+                  "type": "string",
+                  "maxLength": 200
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "files_scanned": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 500
+          },
+          "complete": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "company_latex_compile",
+      "capability": "company.latex",
+      "operation": "latex.compile",
+      "input_handles": [],
+      "output_handles": [],
+      "description": "Compile one LaTeX project with a fixed engine (pdflatex/xelatex/lualatex) without shell escape, in a per-compile build directory under the project. Returns bounded status: page count when produced, up to 8 parsed errors (file/line/text), warning count, duration and the relative artifact path. PDF content never enters the model context.",
+      "parameters": {
+        "type": "object",
+        "required": [
+          "project"
+        ],
+        "properties": {
+          "project": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_](?:[A-Za-z0-9_.-]*[A-Za-z0-9_-])?$",
+            "maxLength": 128,
+            "description": "Project directory name inside the DSH workspace root."
+          },
+          "engine": {
+            "type": "string",
+            "enum": [
+              "pdflatex",
+              "xelatex",
+              "lualatex"
+            ],
+            "description": "Compiler engine; defaults to pdflatex."
+          },
+          "main": {
+            "type": "string",
+            "pattern": "^(?!.*(?:^|/)\\.\\.(?:/|$))[A-Za-z0-9_.-]+(?:/[A-Za-z0-9_.-]+)*\\.(?:tex|bib|cls|sty|bst)$",
+            "maxLength": 256,
+            "description": "Main .tex file; defaults to automatic detection."
+          },
+          "timeout_seconds": {
+            "type": "integer",
+            "minimum": 5,
+            "maximum": 90,
+            "description": "Per-pass upper bound in seconds."
+          }
+        },
+        "additionalProperties": false
+      },
+      "output": {
+        "type": "object",
+        "required": [
+          "project",
+          "main",
+          "engine",
+          "status",
+          "artifact",
+          "duration_ms"
+        ],
+        "properties": {
+          "project": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_](?:[A-Za-z0-9_.-]*[A-Za-z0-9_-])?$",
+            "maxLength": 128,
+            "description": "Project directory name inside the DSH workspace root."
+          },
+          "main": {
+            "type": "string",
+            "maxLength": 256
+          },
+          "engine": {
+            "type": "string",
+            "enum": [
+              "pdflatex",
+              "xelatex",
+              "lualatex"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "success",
+              "failure"
+            ]
+          },
+          "pages": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100000
+          },
+          "errors": {
+            "type": "array",
+            "maxItems": 8,
+            "items": {
+              "type": "object",
+              "required": [
+                "file",
+                "line",
+                "text"
+              ],
+              "properties": {
+                "file": {
+                  "type": "string",
+                  "maxLength": 256
+                },
+                "line": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 1000000
+                },
+                "text": {
+                  "type": "string",
+                  "maxLength": 200
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "warnings": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 10000
+          },
+          "artifact": {
+            "type": "string",
+            "maxLength": 256
+          },
+          "duration_ms": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1000000
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "company_latex_diff",
+      "capability": "company.latex",
+      "operation": "latex.diff",
+      "input_handles": [],
+      "output_handles": [],
+      "description": "Compare managed LaTeX sources of one workspace project against the latest local checkpoint: bounded per-file line change counts with a short first-change preview. Requires an existing checkpoint; never reads repository content.",
+      "parameters": {
+        "type": "object",
+        "required": [
+          "project"
+        ],
+        "properties": {
+          "project": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_](?:[A-Za-z0-9_.-]*[A-Za-z0-9_-])?$",
+            "maxLength": 128,
+            "description": "Project directory name inside the DSH workspace root."
+          },
+          "path": {
+            "type": "string",
+            "pattern": "^(?!.*(?:^|/)\\.\\.(?:/|$))[A-Za-z0-9_.-]+(?:/[A-Za-z0-9_.-]+)*\\.(?:tex|bib|cls|sty|bst)$",
+            "maxLength": 256,
+            "description": "Single managed source to compare instead of the whole project."
+          }
+        },
+        "additionalProperties": false
+      },
+      "output": {
+        "type": "object",
+        "required": [
+          "project",
+          "checkpoint",
+          "files",
+          "added",
+          "removed",
+          "complete"
+        ],
+        "properties": {
+          "project": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_](?:[A-Za-z0-9_.-]*[A-Za-z0-9_-])?$",
+            "maxLength": 128
+          },
+          "checkpoint": {
+            "type": "string",
+            "minLength": 6,
+            "maxLength": 64
+          },
+          "added": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1000000
+          },
+          "removed": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1000000
+          },
+          "files": {
+            "type": "array",
+            "maxItems": 32,
+            "items": {
+              "type": "object",
+              "required": [
+                "path",
+                "added",
+                "removed",
+                "preview"
+              ],
+              "properties": {
+                "path": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 256
+                },
+                "added": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 1000000
+                },
+                "removed": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 1000000
+                },
+                "preview": {
+                  "type": "string",
+                  "maxLength": 200
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "complete": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "company_latex_checkpoint",
+      "capability": "company.latex",
+      "operation": "latex.checkpoint",
+      "input_handles": [],
+      "output_handles": [],
+      "description": "Capture a bounded local snapshot of the managed LaTeX sources of one workspace project (tex/bib/cls/sty/bst, up to 12 checkpoints). Snapshots live inside the project and never leave the workspace.",
+      "parameters": {
+        "type": "object",
+        "required": [
+          "project"
+        ],
+        "properties": {
+          "project": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_](?:[A-Za-z0-9_.-]*[A-Za-z0-9_-])?$",
+            "maxLength": 128,
+            "description": "Project directory name inside the DSH workspace root."
+          },
+          "note": {
+            "type": "string",
+            "maxLength": 200,
+            "description": "Short human-readable adapter note."
+          }
+        },
+        "additionalProperties": false
+      },
+      "output": {
+        "type": "object",
+        "required": [
+          "project",
+          "checkpoint",
+          "files",
+          "bytes"
+        ],
+        "properties": {
+          "project": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_](?:[A-Za-z0-9_.-]*[A-Za-z0-9_-])?$",
+            "maxLength": 128
+          },
+          "checkpoint": {
+            "type": "string",
+            "minLength": 6,
+            "maxLength": 64
+          },
+          "files": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 960
+          },
+          "bytes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 50000000
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "company_latex_revert",
+      "capability": "company.latex",
+      "operation": "latex.revert",
+      "input_handles": [],
+      "output_handles": [],
+      "description": "Restore managed LaTeX sources of one workspace project from an existing local checkpoint (bounded atomic rewrite; files created after the checkpoint are kept). Deleting project files stays manual.",
+      "parameters": {
+        "type": "object",
+        "required": [
+          "project",
+          "target"
+        ],
+        "properties": {
+          "project": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_](?:[A-Za-z0-9_.-]*[A-Za-z0-9_-])?$",
+            "maxLength": 128,
+            "description": "Project directory name inside the DSH workspace root."
+          },
+          "target": {
+            "type": "string",
+            "minLength": 6,
+            "maxLength": 64,
+            "pattern": "^[A-Za-z0-9_-]{6,64}$",
+            "description": "Checkpoint id to restore."
+          }
+        },
+        "additionalProperties": false
+      },
+      "output": {
+        "type": "object",
+        "required": [
+          "project",
+          "checkpoint",
+          "restored",
+          "changed"
+        ],
+        "properties": {
+          "project": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_](?:[A-Za-z0-9_.-]*[A-Za-z0-9_-])?$",
+            "maxLength": 128
+          },
+          "checkpoint": {
+            "type": "string",
+            "minLength": 6,
+            "maxLength": 64
+          },
+          "restored": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 960
+          },
+          "changed": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 960
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "company_latex_pull",
+      "capability": "company.latex",
+      "operation": "latex.pull",
+      "input_handles": [],
+      "output_handles": [],
+      "description": "Pull one configured GitLab repository snapshot into the bounded workspace project (fail-closed client; managed suffixes only, snapshot archive capped, traversal and symlinks rejected, existing files replaced atomically).",
+      "parameters": {
+        "type": "object",
+        "required": [
+          "project",
+          "repo"
+        ],
+        "properties": {
+          "project": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_](?:[A-Za-z0-9_.-]*[A-Za-z0-9_-])?$",
+            "maxLength": 128,
+            "description": "Project directory name inside the DSH workspace root."
+          },
+          "repo": {
+            "type": "string",
+            "pattern": "^(?!.*(?:^|/)\\.\\.(?:/|$))[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}(?:/[A-Za-z0-9_][A-Za-z0-9_.-]{0,127})*$",
+            "maxLength": 256,
+            "description": "GitLab path_with_namespace that must stay inside the plan hub allowlist when one is configured."
+          }
+        },
+        "additionalProperties": false
+      },
+      "output": {
+        "type": "object",
+        "required": [
+          "project",
+          "repo",
+          "files",
+          "bytes",
+          "complete"
+        ],
+        "properties": {
+          "project": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_](?:[A-Za-z0-9_.-]*[A-Za-z0-9_-])?$",
+            "maxLength": 128
+          },
+          "repo": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "files": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 300
+          },
+          "bytes": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 50000000
+          },
+          "complete": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "company_latex_push",
+      "capability": "company.latex",
+      "operation": "latex.push",
+      "input_handles": [],
+      "output_handles": [],
+      "description": "Push the managed LaTeX sources of one workspace project to a configured GitLab repository as one commit (create/update only; deletes stay manual); requires human approval and stays inside the allowlist.",
+      "parameters": {
+        "type": "object",
+        "required": [
+          "project",
+          "repo",
+          "message"
+        ],
+        "properties": {
+          "project": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_](?:[A-Za-z0-9_.-]*[A-Za-z0-9_-])?$",
+            "maxLength": 128,
+            "description": "Project directory name inside the DSH workspace root."
+          },
+          "repo": {
+            "type": "string",
+            "pattern": "^(?!.*(?:^|/)\\.\\.(?:/|$))[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}(?:/[A-Za-z0-9_][A-Za-z0-9_.-]{0,127})*$",
+            "maxLength": 256,
+            "description": "GitLab path_with_namespace that must stay inside the plan hub allowlist when one is configured."
+          },
+          "message": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 400,
+            "description": "Short commit message."
+          },
+          "branch": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "pattern": "^(?!-)(?!.*\\.lock$)[A-Za-z0-9._/\\-]{1,128}$",
+            "description": "Target branch, defaults to main."
+          }
+        },
+        "additionalProperties": false
+      },
+      "output": {
+        "type": "object",
+        "required": [
+          "project",
+          "repo",
+          "branch",
+          "commit_sha",
+          "changes"
+        ],
+        "properties": {
+          "project": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_](?:[A-Za-z0-9_.-]*[A-Za-z0-9_-])?$",
+            "maxLength": 128
+          },
+          "repo": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "branch": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "commit_sha": {
+            "type": "string",
+            "minLength": 7,
+            "maxLength": 64
+          },
+          "changes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 300
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "company_latex_overleaf_pull",
+      "capability": "company.latex",
+      "operation": "latex.overleaf_pull",
+      "input_handles": [],
+      "output_handles": [],
+      "description": "Pull one self-hosted Overleaf project snapshot through its Git bridge into the bounded workspace project (fail-closed client; managed suffixes only, shallow clone capped, traversal and symlinks rejected, existing files replaced atomically, local files differing from the online snapshot are reported and must be backed up via force, no token ever written to disk or results).",
+      "parameters": {
+        "type": "object",
+        "required": [
+          "project",
+          "project_id"
+        ],
+        "properties": {
+          "project": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_](?:[A-Za-z0-9_.-]*[A-Za-z0-9_-])?$",
+            "maxLength": 128,
+            "description": "Project directory name inside the DSH workspace root."
+          },
+          "project_id": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{12,64}$",
+            "maxLength": 64,
+            "description": "Self-hosted Overleaf project id (hex); the Git bridge clone URL is derived from the configured Overleaf base URL and must stay inside the optional project allowlist."
+          },
+          "force": {
+            "type": "boolean",
+            "description": "Allow overwriting locally modified managed files; a workspace snapshot holding their pre-pull content is created first and identified by the check dialogue."
+          }
+        },
+        "additionalProperties": false
+      },
+      "output": {
+        "type": "object",
+        "required": [
+          "project",
+          "project_id",
+          "files",
+          "bytes",
+          "complete"
+        ],
+        "properties": {
+          "project": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_](?:[A-Za-z0-9_.-]*[A-Za-z0-9_-])?$",
+            "maxLength": 128
+          },
+          "project_id": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{12,64}$",
+            "maxLength": 64
+          },
+          "files": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 300
+          },
+          "bytes": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 50000000
+          },
+          "complete": {
+            "type": "boolean"
+          },
+          "overwritten": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 300,
+            "description": "Count of existing managed files whose local content differed from the online snapshot and was replaced; always reported."
+          },
+          "checkpoint": {
+            "type": "string",
+            "pattern": "^chk-[0-9]{14}-[0-9a-f]{6}$",
+            "maxLength": 25,
+            "description": "Workspace snapshot id holding the pre-pull content of the overwritten files; present only for an overwrite."
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "company_latex_overleaf_push",
+      "capability": "company.latex",
+      "operation": "latex.overleaf_push",
+      "input_handles": [],
+      "output_handles": [],
+      "description": "Push the managed LaTeX sources of one workspace project to a self-hosted Overleaf project through its Git bridge as one commit on top of the current online head (create/update only; deletes stay manual; requires human approval and stays inside the optional project allowlist).",
+      "parameters": {
+        "type": "object",
+        "required": [
+          "project",
+          "project_id",
+          "message"
+        ],
+        "properties": {
+          "project": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_](?:[A-Za-z0-9_.-]*[A-Za-z0-9_-])?$",
+            "maxLength": 128,
+            "description": "Project directory name inside the DSH workspace root."
+          },
+          "project_id": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{12,64}$",
+            "maxLength": 64,
+            "description": "Self-hosted Overleaf project id (hex); the Git bridge push URL is derived from the configured Overleaf base URL and must stay inside the optional project allowlist."
+          },
+          "message": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 400,
+            "pattern": "\\S",
+            "description": "Short commit message."
+          },
+          "branch": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "pattern": "^(?!-)(?!.*\\.lock$)[A-Za-z0-9._/\\-]{1,128}$",
+            "description": "Target branch, defaults to main."
+          }
+        },
+        "additionalProperties": false
+      },
+      "output": {
+        "type": "object",
+        "required": [
+          "project",
+          "project_id",
+          "branch",
+          "commit_sha",
+          "changes"
+        ],
+        "properties": {
+          "project": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_](?:[A-Za-z0-9_.-]*[A-Za-z0-9_-])?$",
+            "maxLength": 128
+          },
+          "project_id": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{12,64}$",
+            "maxLength": 64
+          },
+          "branch": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "commit_sha": {
+            "type": "string",
+            "minLength": 7,
+            "maxLength": 64
+          },
+          "changes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 300
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "company_latex_overleaf_status",
+      "capability": "company.latex",
+      "operation": "latex.overleaf_status",
+      "input_handles": [],
+      "output_handles": [],
+      "description": "Compare the managed LaTeX sources of one workspace project against the current online head of a self-hosted Overleaf project through its Git bridge (read-only; clones shallow to a temp directory, no workspace or online file is ever changed, no token written to disk or results).",
+      "parameters": {
+        "type": "object",
+        "required": [
+          "project",
+          "project_id"
+        ],
+        "properties": {
+          "project": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_](?:[A-Za-z0-9_.-]*[A-Za-z0-9_-])?$",
+            "maxLength": 128,
+            "description": "Project directory name inside the DSH workspace root."
+          },
+          "project_id": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{12,64}$",
+            "maxLength": 64,
+            "description": "Self-hosted Overleaf project id (hex); the Git bridge clone URL is derived from the configured Overleaf base URL and must stay inside the optional project allowlist."
+          },
+          "branch": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "pattern": "^(?!-)(?!.*\\.lock$)[A-Za-z0-9._/\\-]{1,128}$",
+            "description": "Target branch, defaults to main."
+          }
+        },
+        "additionalProperties": false
+      },
+      "output": {
+        "type": "object",
+        "required": [
+          "project",
+          "project_id",
+          "branch",
+          "online_head",
+          "local_managed",
+          "online_managed",
+          "differences",
+          "total"
+        ],
+        "properties": {
+          "project": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_](?:[A-Za-z0-9_.-]*[A-Za-z0-9_-])?$",
+            "maxLength": 128
+          },
+          "project_id": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{12,64}$",
+            "maxLength": 64
+          },
+          "branch": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "online_head": {
+            "type": "string",
+            "minLength": 7,
+            "maxLength": 64
+          },
+          "local_managed": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 300
+          },
+          "online_managed": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 300
+          },
+          "differences": {
+            "type": "array",
+            "maxItems": 20,
+            "items": {
+              "type": "object",
+              "required": [
+                "path",
+                "difference"
+              ],
+              "properties": {
+                "path": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 256
+                },
+                "difference": {
+                  "type": "string",
+                  "enum": [
+                    "modified",
+                    "local-only",
+                    "online-only"
+                  ]
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 300
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "company_latex_issue_note",
+      "capability": "company.latex",
+      "operation": "latex.issue_note",
+      "input_handles": [],
+      "output_handles": [],
+      "description": "Attach one compiled LaTeX PDF build artifact of a bounded workspace project to a plan-hub GitLab issue as a human-approved comment (upload is bounded and binary-safe; the artifact must live inside .latex-build, nothing is deleted, the transport reuses the plan hub client, and no credential is ever written to results).",
+      "parameters": {
+        "type": "object",
+        "required": [
+          "project",
+          "repo",
+          "issue_iid",
+          "artifact",
+          "note"
+        ],
+        "properties": {
+          "project": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_](?:[A-Za-z0-9_.-]*[A-Za-z0-9_-])?$",
+            "maxLength": 128,
+            "description": "Project directory name inside the DSH workspace root."
+          },
+          "repo": {
+            "type": "string",
+            "pattern": "^(?!.*(?:^|/)\\.\\.(?:/|$))[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}(?:/[A-Za-z0-9_][A-Za-z0-9_.-]{0,127})*$",
+            "maxLength": 256,
+            "description": "Plan-hub GitLab repository path_with_namespace; must stay inside the optional project allowlist."
+          },
+          "issue_iid": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9999999,
+            "description": "Target issue iid on the plan-hub GitLab instance."
+          },
+          "artifact": {
+            "type": "string",
+            "pattern": "^(?!.*(?:^|/)\\.\\.(?:/|^|/$))\\.latex-build/[A-Za-z0-9_.-]+(?:/[A-Za-z0-9_.-]+)*\\.pdf$",
+            "maxLength": 200,
+            "description": "Relative build artifact path inside the workspace project (must live under .latex-build and name one produced PDF)."
+          },
+          "note": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 400,
+            "pattern": "\\S",
+            "description": "Short comment text shown above the attachment link."
+          }
+        },
+        "additionalProperties": false
+      },
+      "output": {
+        "type": "object",
+        "required": [
+          "project",
+          "repo",
+          "issue_iid",
+          "note_id",
+          "attachment"
+        ],
+        "properties": {
+          "project": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_](?:[A-Za-z0-9_.-]*[A-Za-z0-9_-])?$",
+            "maxLength": 128
+          },
+          "repo": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "issue_iid": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9999999
+          },
+          "note_id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 999999999
+          },
+          "attachment": {
+            "type": "string",
+            "pattern": "^/[A-Za-z0-9._/-]{1,260}$",
+            "maxLength": 261,
+            "description": "Bounded relative upload link (never an absolute URL) as returned by the plan hub."
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "company_plan_projects",
+      "capability": "company.plan",
+      "operation": "plan.projects",
+      "input_handles": [],
+      "output_handles": [],
+      "description": "List the bounded plan-hub project inventory on the configured GitLab instance: id, path, name, default branch and visibility only. No issue bodies, no merge content, never returns quantum handles. Reads are fail-closed when the GitLab integration is not configured.",
+      "parameters": {
+        "type": "object",
+        "required": [],
+        "properties": {},
+        "additionalProperties": false
+      },
+      "output": {
+        "type": "object",
+        "required": [
+          "projects",
+          "complete",
+          "allowlisted"
+        ],
+        "properties": {
+          "projects": {
+            "type": "array",
+            "maxItems": 24,
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "path",
+                "name",
+                "default_branch",
+                "visibility"
+              ],
+              "properties": {
+                "id": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 2147483647
+                },
+                "path": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 256
+                },
+                "name": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 256
+                },
+                "default_branch": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128
+                },
+                "visibility": {
+                  "type": "string",
+                  "enum": [
+                    "private",
+                    "internal",
+                    "public"
+                  ]
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "complete": {
+            "type": "boolean"
+          },
+          "allowlisted": {
+            "type": "boolean",
+            "description": "True when a COMPANY_AGENT_GITLAB_PROJECT_ALLOWLIST restricted this answer and the writes gate."
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "company_plan_issues",
+      "capability": "company.plan",
+      "operation": "plan.issues",
+      "input_handles": [],
+      "output_handles": [],
+      "description": "List bounded plan-hub issues of one GitLab project: iid, title, state, labels, assignee count and update timestamp only. No issue bodies. Responses are capped at 24 rows with a completeness flag; the label filter is optional.",
+      "parameters": {
+        "type": "object",
+        "required": [
+          "project"
+        ],
+        "properties": {
+          "project": {
+            "type": "string",
+            "pattern": "^(?!.*(?:^|/)\\.\\.(?:/|$))[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}(?:/[A-Za-z0-9_][A-Za-z0-9_.-]{0,127})*$",
+            "maxLength": 256,
+            "description": "GitLab path_with_namespace that is entered in the plan hub allowlist or visible to the token."
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "opened",
+              "closed",
+              "all"
+            ],
+            "default": "opened"
+          },
+          "label": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "pattern": "^[^,\\r\\n]{1,64}$"
+          }
+        },
+        "additionalProperties": false
+      },
+      "output": {
+        "type": "object",
+        "required": [
+          "project",
+          "issues",
+          "complete"
+        ],
+        "properties": {
+          "project": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "issues": {
+            "type": "array",
+            "maxItems": 24,
+            "items": {
+              "type": "object",
+              "required": [
+                "iid",
+                "title",
+                "state",
+                "labels",
+                "assignees",
+                "updated_at"
+              ],
+              "properties": {
+                "iid": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 2147483647
+                },
+                "title": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 255
+                },
+                "state": {
+                  "type": "string",
+                  "enum": [
+                    "opened",
+                    "closed"
+                  ]
+                },
+                "labels": {
+                  "type": "array",
+                  "maxItems": 10,
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64
+                  }
+                },
+                "assignees": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 999
+                },
+                "updated_at": {
+                  "type": "string",
+                  "minLength": 0,
+                  "maxLength": 32
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "complete": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "company_plan_issue_get",
+      "capability": "company.plan",
+      "operation": "plan.issue-get",
+      "input_handles": [],
+      "output_handles": [],
+      "description": "Read one bounded plan-hub issue for drafting and review context: the description is returned clipped to 4000 UTF-8 bytes, plus author, labels and comment count. No repository content, no quantum handles.",
+      "parameters": {
+        "type": "object",
+        "required": [
+          "project",
+          "iid"
+        ],
+        "properties": {
+          "project": {
+            "type": "string",
+            "pattern": "^(?!.*(?:^|/)\\.\\.(?:/|$))[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}(?:/[A-Za-z0-9_][A-Za-z0-9_.-]{0,127})*$",
+            "maxLength": 256,
+            "description": "GitLab path_with_namespace that is entered in the plan hub allowlist or visible to the token."
+          },
+          "iid": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483647
+          }
+        },
+        "additionalProperties": false
+      },
+      "output": {
+        "type": "object",
+        "required": [
+          "project",
+          "iid",
+          "title",
+          "state",
+          "description",
+          "author",
+          "labels",
+          "comments",
+          "created_at",
+          "updated_at"
+        ],
+        "properties": {
+          "project": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "iid": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483647
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "opened",
+              "closed"
+            ]
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 4000
+          },
+          "author": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "labels": {
+            "type": "array",
+            "maxItems": 10,
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            }
+          },
+          "comments": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1000000
+          },
+          "created_at": {
+            "type": "string",
+            "minLength": 0,
+            "maxLength": 32
+          },
+          "updated_at": {
+            "type": "string",
+            "minLength": 0,
+            "maxLength": 32
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "company_plan_issue_create",
+      "capability": "company.plan",
+      "operation": "plan.issue-create",
+      "input_handles": [],
+      "output_handles": [],
+      "description": "Create one plan-hub issue on a GitLab project after human approval: bounded title, description and labels. The project must be inside the configured plan hub allowlist when one is set; the created issue is returned without any extra content.",
+      "parameters": {
+        "type": "object",
+        "required": [
+          "project",
+          "title"
+        ],
+        "properties": {
+          "project": {
+            "type": "string",
+            "pattern": "^(?!.*(?:^|/)\\.\\.(?:/|$))[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}(?:/[A-Za-z0-9_][A-Za-z0-9_.-]{0,127})*$",
+            "maxLength": 256,
+            "description": "GitLab path_with_namespace that is entered in the plan hub allowlist or visible to the token."
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255
+          },
+          "description": {
+            "type": "string",
+            "minLength": 0,
+            "maxLength": 4000,
+            "default": ""
+          },
+          "labels": {
+            "type": "array",
+            "maxItems": 10,
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64,
+              "pattern": "^[^,\\r\\n]{1,64}$"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "output": {
+        "type": "object",
+        "required": [
+          "project",
+          "iid",
+          "title",
+          "state"
+        ],
+        "properties": {
+          "project": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "iid": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483647
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255
+          },
+          "state": {
+            "type": "string",
+            "const": "opened"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "company_plan_mrs",
+      "capability": "company.plan",
+      "operation": "plan.mrs",
+      "input_handles": [],
+      "output_handles": [],
+      "description": "List bounded plan-hub merge requests of one GitLab project for review state only: iid, title, state, branches, draft flag, head sha and update timestamp. No diffs, no repository bodies.",
+      "parameters": {
+        "type": "object",
+        "required": [
+          "project"
+        ],
+        "properties": {
+          "project": {
+            "type": "string",
+            "pattern": "^(?!.*(?:^|/)\\.\\.(?:/|$))[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}(?:/[A-Za-z0-9_][A-Za-z0-9_.-]{0,127})*$",
+            "maxLength": 256,
+            "description": "GitLab path_with_namespace that is entered in the plan hub allowlist or visible to the token."
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "opened",
+              "closed",
+              "merged",
+              "all"
+            ],
+            "default": "opened"
+          }
+        },
+        "additionalProperties": false
+      },
+      "output": {
+        "type": "object",
+        "required": [
+          "project",
+          "mrs",
+          "complete"
+        ],
+        "properties": {
+          "project": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "mrs": {
+            "type": "array",
+            "maxItems": 24,
+            "items": {
+              "type": "object",
+              "required": [
+                "iid",
+                "title",
+                "state",
+                "source_branch",
+                "target_branch",
+                "draft",
+                "sha",
+                "updated_at"
+              ],
+              "properties": {
+                "iid": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 2147483647
+                },
+                "title": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 255
+                },
+                "state": {
+                  "type": "string",
+                  "enum": [
+                    "opened",
+                    "closed",
+                    "merged"
+                  ]
+                },
+                "source_branch": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128
+                },
+                "target_branch": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128
+                },
+                "draft": {
+                  "type": "boolean"
+                },
+                "sha": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 40
+                },
+                "updated_at": {
+                  "type": "string",
+                  "minLength": 0,
+                  "maxLength": 32
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "complete": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "company_plan_note_create",
+      "capability": "company.plan",
+      "operation": "plan.note-create",
+      "input_handles": [],
+      "output_handles": [],
+      "description": "Post one bounded review comment (max 4000 UTF-8 bytes) to a plan-hub issue or merge request after human approval: only the created note id comes back. The project must stay inside the configured allowlist when one is set.",
+      "parameters": {
+        "type": "object",
+        "required": [
+          "target",
+          "project",
+          "iid",
+          "body"
+        ],
+        "properties": {
+          "target": {
+            "type": "string",
+            "enum": [
+              "issue",
+              "merge_request"
+            ]
+          },
+          "project": {
+            "type": "string",
+            "pattern": "^(?!.*(?:^|/)\\.\\.(?:/|$))[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}(?:/[A-Za-z0-9_][A-Za-z0-9_.-]{0,127})*$",
+            "maxLength": 256,
+            "description": "GitLab path_with_namespace that is entered in the plan hub allowlist or visible to the token."
+          },
+          "iid": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483647
+          },
+          "body": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4000
+          }
+        },
+        "additionalProperties": false
+      },
+      "output": {
+        "type": "object",
+        "required": [
+          "project",
+          "target",
+          "iid",
+          "note_id"
+        ],
+        "properties": {
+          "project": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "target": {
+            "type": "string",
+            "enum": [
+              "issue",
+              "merge_request"
+            ]
+          },
+          "iid": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483647
+          },
+          "note_id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483647
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "company_plan_issue_write",
+      "capability": "company.plan",
+      "operation": "plan.issue-write",
+      "input_handles": [],
+      "output_handles": [],
+      "description": "Update one plan-hub issue after human approval: bounded title or description rewrite, issue state close/reopen and label set. At least one field must be provided and only the resulting bounded summary comes back; the project must stay inside the configured allowlist when one is set.",
+      "parameters": {
+        "type": "object",
+        "required": [
+          "project",
+          "iid"
+        ],
+        "properties": {
+          "project": {
+            "type": "string",
+            "pattern": "^(?!.*(?:^|/)\\.\\.(?:/|$))[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}(?:/[A-Za-z0-9_][A-Za-z0-9_.-]{0,127})*$",
+            "maxLength": 256,
+            "description": "GitLab path_with_namespace inside the plan hub allowlist."
+          },
+          "iid": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483647
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255
+          },
+          "description": {
+            "type": "string",
+            "minLength": 0,
+            "maxLength": 4000
+          },
+          "state_event": {
+            "type": "string",
+            "enum": [
+              "close",
+              "reopen"
+            ]
+          },
+          "labels": {
+            "type": "array",
+            "maxItems": 10,
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64,
+              "pattern": "^[^,\\r\\n]{1,64}$"
+            }
+          },
+          "milestone_id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483647
+          }
+        },
+        "additionalProperties": false
+      },
+      "output": {
+        "type": "object",
+        "required": [
+          "project",
+          "iid",
+          "title",
+          "state",
+          "labels"
+        ],
+        "properties": {
+          "project": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "iid": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483647
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "opened",
+              "closed"
+            ]
+          },
+          "labels": {
+            "type": "array",
+            "maxItems": 10,
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "company_fetch",
+      "capability": "company.knowledge",
+      "operation": "web.fetch",
+      "input_handles": [],
+      "output_handles": [],
+      "description": "Managed web page fetch through the operator-configured host allowlist. Disabled unless COMPANY_AGENT_FETCH_ALLOWLIST names the destination host; one request per call made directly to the allowlist-verified public address with certificate identity pinned to the requested hostname, never following redirects, accepting only text/plain and text/html; returns a short untrusted reference excerpt with page title, budget-completeness markers and deterministic bounded injection-signal reasons.",
+      "parameters": {
+        "type": "object",
+        "required": [
+          "url"
+        ],
+        "properties": {
+          "url": {
+            "type": "string",
+            "pattern": "^https?://",
+            "minLength": 1,
+            "maxLength": 2048,
+            "description": "Absolute http or https URL of the destination page."
+          }
+        },
+        "additionalProperties": false
+      },
+      "output": {
+        "type": "object",
+        "required": [
+          "url",
+          "status",
+          "http_status",
+          "content_type",
+          "body_bytes",
+          "bytes",
+          "truncated",
+          "scan",
+          "signals",
+          "trust",
+          "title",
+          "text"
+        ],
+        "properties": {
+          "url": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "status": {
+            "type": "string",
+            "const": "fetched"
+          },
+          "http_status": {
+            "type": "integer",
+            "minimum": 200,
+            "maximum": 599
+          },
+          "content_type": {
+            "type": "string",
+            "enum": [
+              "text/plain",
+              "text/html"
+            ]
+          },
+          "body_bytes": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1000000
+          },
+          "bytes": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 20000
+          },
+          "truncated": {
+            "type": "boolean"
+          },
+          "scan": {
+            "type": "object",
+            "required": [
+              "complete",
+              "reasons"
+            ],
+            "properties": {
+              "complete": {
+                "type": "boolean"
+              },
+              "reasons": {
+                "type": "array",
+                "maxItems": 8,
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "body_budget",
+                    "byte_budget"
+                  ]
+                }
+              }
+            },
+            "additionalProperties": false
+          },
+          "trust": {
+            "type": "string",
+            "const": "untrusted_reference_data"
+          },
+          "signals": {
+            "type": "object",
+            "required": [
+              "fired",
+              "reasons"
+            ],
+            "properties": {
+              "fired": {
+                "type": "boolean"
+              },
+              "reasons": {
+                "type": "array",
+                "maxItems": 8,
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "override_language",
+                    "tool_invocation_directive",
+                    "credential_disclosure",
+                    "role_identity_claim"
+                  ]
+                }
+              }
+            },
+            "additionalProperties": false
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 256
+          },
+          "text": {
+            "type": "string",
+            "maxLength": 20000
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "company_table_profile",
+      "capability": "company.workflow",
+      "operation": "table.profile",
+      "input_handles": [],
+      "output_handles": [],
+      "description": "Profile a bounded operator-supplied CSV snapshot (up to 64 data rows, 16 columns, 6000 bytes) into typed columns and finite numeric summaries; data-quality findings are flagged as integrity reasons, no execution and no external calls.",
+      "parameters": {
+        "type": "object",
+        "required": [
+          "table"
+        ],
+        "properties": {
+          "table": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 6000,
+            "description": "CSV text including the header row; operator-supplied data, never instructions."
+          },
+          "delimiter": {
+            "type": "string",
+            "enum": [
+              ",",
+              ";",
+              "|",
+              "\t"
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "output": {
+        "type": "object",
+        "required": [
+          "rows",
+          "columns",
+          "numeric",
+          "integrity"
+        ],
+        "properties": {
+          "rows": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 64
+          },
+          "columns": {
+            "type": "array",
+            "maxItems": 16,
+            "items": {
+              "type": "object",
+              "required": [
+                "name",
+                "kind",
+                "complete"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 64
+                },
+                "kind": {
+                  "type": "string",
+                  "enum": [
+                    "numeric",
+                    "text"
+                  ]
+                },
+                "complete": {
+                  "type": "boolean"
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "numeric": {
+            "type": "array",
+            "maxItems": 16,
+            "items": {
+              "type": "object",
+              "required": [
+                "name",
+                "count",
+                "min",
+                "max",
+                "mean"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 64
+                },
+                "count": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 64
+                },
+                "min": {
+                  "type": "number"
+                },
+                "max": {
+                  "type": "number"
+                },
+                "mean": {
+                  "type": "number"
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "integrity": {
+            "type": "object",
+            "required": [
+              "complete",
+              "reasons"
+            ],
+            "properties": {
+              "complete": {
+                "type": "boolean"
+              },
+              "reasons": {
+                "type": "array",
+                "maxItems": 8,
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "row_budget",
+                    "column_budget",
+                    "cell_budget",
+                    "column_mismatch",
+                    "duplicate_header"
+                  ]
+                }
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "company_workspace_reference",
+      "capability": "company.workflow",
+      "operation": "workspace.reference",
+      "input_handles": [],
+      "output_handles": [],
+      "description": "Bind a bounded reference metadata record for exactly one file inside the mounted workspace root (COMPANY_AGENT_TOOL_WORKSPACE): sha256, byte size, line count and a text/binary classification; metadata-only, never returns file content and always fails closed outside the root.",
+      "parameters": {
+        "type": "object",
+        "required": [
+          "path"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9._/][A-Za-z0-9 ._/]{0,255}$",
+            "description": "Workspace-relative POSIX path of one file; no .. segments, no absolute paths."
+          }
+        },
+        "additionalProperties": false
+      },
+      "output": {
+        "type": "object",
+        "required": [
+          "path",
+          "sha256",
+          "bytes",
+          "lines",
+          "kind",
+          "truncated",
+          "trust"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$",
+            "maxLength": 64
+          },
+          "bytes": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 16000000
+          },
+          "lines": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1000000
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "text",
+              "binary"
+            ]
+          },
+          "truncated": {
+            "type": "boolean"
+          },
+          "trust": {
+            "type": "string",
+            "const": "untrusted_reference_data"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "company_plan_milestones",
+      "capability": "company.plan",
+      "operation": "plan.milestones",
+      "input_handles": [],
+      "output_handles": [],
+      "description": "List bounded plan-hub milestones of one GitLab project for schedule context only: id, title, state and the calendar start/due dates. No issue bodies and no repository content.",
+      "parameters": {
+        "type": "object",
+        "required": [
+          "project"
+        ],
+        "properties": {
+          "project": {
+            "type": "string",
+            "pattern": "^(?!.*(?:^|/)\\.\\.(?:/|$))[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}(?:/[A-Za-z0-9_][A-Za-z0-9_.-]{0,127})*$",
+            "maxLength": 256,
+            "description": "GitLab path_with_namespace inside the plan hub allowlist."
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "active",
+              "closed",
+              "all"
+            ],
+            "default": "active"
+          }
+        },
+        "additionalProperties": false
+      },
+      "output": {
+        "type": "object",
+        "required": [
+          "project",
+          "milestones",
+          "complete"
+        ],
+        "properties": {
+          "project": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "milestones": {
+            "type": "array",
+            "maxItems": 24,
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "title",
+                "state",
+                "start_date",
+                "due_date"
+              ],
+              "properties": {
+                "id": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 2147483647
+                },
+                "title": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 255
+                },
+                "state": {
+                  "type": "string",
+                  "enum": [
+                    "active",
+                    "closed"
+                  ]
+                },
+                "start_date": {
+                  "type": "string",
+                  "minLength": 0,
+                  "maxLength": 10
+                },
+                "due_date": {
+                  "type": "string",
+                  "minLength": 0,
+                  "maxLength": 10
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "complete": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "company_plan_milestone_create",
+      "capability": "company.plan",
+      "operation": "plan.milestone-create",
+      "input_handles": [],
+      "output_handles": [],
+      "description": "Create one plan-hub milestone after human approval: bounded title plus optional calendar start/due dates in YYYY-MM-DD form. Only the created milestone summary comes back; the project must stay inside the configured allowlist when one is set.",
+      "parameters": {
+        "type": "object",
+        "required": [
+          "project",
+          "title"
+        ],
+        "properties": {
+          "project": {
+            "type": "string",
+            "pattern": "^(?!.*(?:^|/)\\.\\.(?:/|$))[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}(?:/[A-Za-z0-9_][A-Za-z0-9_.-]{0,127})*$",
+            "maxLength": 256,
+            "description": "GitLab path_with_namespace inside the plan hub allowlist."
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255
+          },
+          "start_date": {
+            "type": "string",
+            "pattern": "^(?:19[89][0-9]|20[0-9][0-9])-(?:0[1-9]|1[0-2])-(?:0[1-9]|[12][0-9]|3[01])$",
+            "description": "Calendar date in YYYY-MM-DD form."
+          },
+          "due_date": {
+            "type": "string",
+            "pattern": "^(?:19[89][0-9]|20[0-9][0-9])-(?:0[1-9]|1[0-2])-(?:0[1-9]|[12][0-9]|3[01])$",
+            "description": "Calendar date in YYYY-MM-DD form."
+          }
+        },
+        "additionalProperties": false
+      },
+      "output": {
+        "type": "object",
+        "required": [
+          "project",
+          "id",
+          "title",
+          "state"
+        ],
+        "properties": {
+          "project": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483647
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255
+          },
+          "state": {
+            "type": "string",
+            "const": "active"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "company_portal_open",
+      "capability": "company.portal",
+      "operation": "portal.open",
+      "input_handles": [],
+      "output_handles": [],
+      "description": "Deliver the workspace-facing open action for one company platform page (cloud or HPC), as a same-origin relative route only; the workspace shell decides how to navigate. No network dispatch, no credentials, no page content, and no absolute URLs; unknown kinds fail closed.",
+      "parameters": {
+        "type": "object",
+        "required": [
+          "kind"
+        ],
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "cloud",
+              "hpc"
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "output": {
+        "type": "object",
+        "required": [
+          "ok",
+          "kind",
+          "route",
+          "note"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "const": true
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "cloud",
+              "hpc"
+            ]
+          },
+          "route": {
+            "type": "string",
+            "pattern": "^/company-workspace/portal/(cloud|hpc)/$",
+            "maxLength": 48
+          },
+          "note": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "company_office_create",
+      "capability": "company.office",
+      "operation": "office.create",
+      "input_handles": [],
+      "output_handles": [],
+      "description": "Bounded single-file artifact creation inside a project directory of the mounted workspace (COMPANY_AGENT_TOOL_WORKSPACE), the write-side complement of company_office_analyze: writes .docx (WordprocessingML headings/paragraphs), .xlsx (multiple capped sheets), .xmind (XMind 8 content.xml package that WPS mind map and XMind open), .mm (FreeMind XML) and .txt/.md from a structured content object. Standard library only, atomic temp+replace write whose sha256 is re-verified by re-read; existing files refuse unless overwrite=true, cap overshoot (2000 blocks, 32 sheets, 5000 rows, 512 nodes, text budgets) refuses instead of truncating; no OCR, no conversion, no template execution, no external calls, no quantum handles.",
+      "parameters": {
+        "type": "object",
+        "required": [
+          "project",
+          "path",
+          "content"
+        ],
+        "properties": {
+          "project": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_](?:[A-Za-z0-9_.-]*[A-Za-z0-9_-])?$",
+            "maxLength": 128,
+            "description": "Project directory inside the mounted workspace root; created on first write; must be a direct child directory of it."
+          },
+          "path": {
+            "type": "string",
+            "pattern": "^[^\\\\:*?\"<>|\\u0000-\\u001f]{1,256}$",
+            "description": "Output file path relative to the project directory; must end in .docx, .xlsx, .xmind, .mm, .txt or .md; forward slashes only, no .. segments, no absolute paths."
+          },
+          "content": {
+            "type": "object",
+            "properties": {},
+            "additionalProperties": true,
+            "description": "Structured payload keyed by output kind: docx -> {blocks:[{kind:heading|paragraph,text:string,level:1..6}]}; xlsx -> {sheets:[{name:string,rows:[[{string|number|boolean|null}]]}]}; xmind/mm -> {root:{title:string,children:[node...]}}; txt/md -> {text:string}. The adapter validates each shape and refuses overshoot."
+          },
+          "overwrite": {
+            "type": "boolean",
+            "default": false,
+            "description": "Replace an existing file; absent/false refuses with an explicit error."
+          }
+        },
+        "additionalProperties": false
+      },
+      "output": {
+        "type": "object",
+        "required": [
+          "created",
+          "kind",
+          "path",
+          "bytes",
+          "sha256",
+          "overwrote"
+        ],
+        "properties": {
+          "created": {
+            "type": "boolean",
+            "description": "Always true on success."
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "docx",
+              "xlsx",
+              "xmind",
+              "mindmap",
+              "text"
+            ]
+          },
+          "path": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "bytes": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 20000000
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$",
+            "maxLength": 64
+          },
+          "overwrote": {
+            "type": "boolean",
+            "description": "True when overwrite replaced an existing file."
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "company_office_analyze",
+      "capability": "company.office",
+      "operation": "office.analyze",
+      "input_handles": [],
+      "output_handles": [],
+      "description": "Read-only text ingestion for one file inside a project directory of the mounted workspace (COMPANY_AGENT_TOOL_WORKSPACE): docx paragraph text (paragraph-number anchors), xlsx per-sheet bounded previews (32 sheets, 5000 rows per sheet, explicit row omission), pdf text-layer pages (page anchors) and .txt/.md lines. 20MB file cap, result-budget paging via offset, always returns sha256/bytes and explicit truncated flags; .doc/.xls/.ppt, images and unknown suffixes fail closed honestly; no OCR, no conversion, no execution, no external calls, no quantum handles.",
+      "parameters": {
+        "type": "object",
+        "required": [
+          "project",
+          "path"
+        ],
+        "properties": {
+          "project": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_](?:[A-Za-z0-9_.-]*[A-Za-z0-9_-])?$",
+            "maxLength": 128,
+            "description": "Project directory inside the mounted workspace root; must be a direct child directory of it."
+          },
+          "path": {
+            "type": "string",
+            "pattern": "^[^\\\\:*?\"<>|\\u0000-\\u001f]{1,256}$",
+            "description": "File path relative to the project directory; forward slashes only, no .. segments, no absolute paths."
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 99000000,
+            "default": 0,
+            "description": "Unit index to resume from: docx paragraph, xlsx sheet, pdf page or text line; independently 1-based item indexes are reported per item."
+          }
+        },
+        "additionalProperties": false
+      },
+      "output": {
+        "type": "object",
+        "required": [
+          "kind",
+          "path",
+          "sha256",
+          "bytes",
+          "total_units",
+          "offset",
+          "items",
+          "truncated",
+          "trust"
+        ],
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "docx",
+              "xlsx",
+              "pdf",
+              "text"
+            ]
+          },
+          "path": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$",
+            "maxLength": 64
+          },
+          "bytes": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 20000000
+          },
+          "total_units": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 99000000
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 99000000
+          },
+          "items": {
+            "type": "array",
+            "maxItems": 256,
+            "items": {
+              "type": "object",
+              "required": [
+                "index",
+                "text"
+              ],
+              "properties": {
+                "index": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 99000001
+                },
+                "label": {
+                  "type": "string",
+                  "maxLength": 128
+                },
+                "text": {
+                  "type": "string",
+                  "maxLength": 4000
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "truncated": {
+            "type": "boolean"
+          },
+          "trust": {
+            "type": "string",
+            "const": "untrusted_reference_data"
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  ],
+  "managed_builtins": {
+    "description": "Managed DSH-native workspace tools. They are registered by the DSH base bundle, never routed through company-agent invoke, expose no provider operation and no scientific handle, and their result bytes fall under the results.json budget (output_content.scope is all_tools).",
+    "tools": [
+      {
+        "name": "read",
+        "source": "dsh-native",
+        "package": "@deepseek-ai/dsh-tool-fs",
+        "description": "Read a workspace-gated UTF-8 file with line numbers and pagination.",
+        "presets": [
+          "boot",
+          "lab",
+          "algo",
+          "sign"
+        ]
+      },
+      {
+        "name": "read_image",
+        "source": "dsh-native",
+        "package": "@deepseek-ai/dsh-tool-fs",
+        "description": "Read a workspace-gated PNG/JPEG/WebP/GIF file as a bounded attachment reference.",
+        "presets": [
+          "boot",
+          "lab",
+          "algo",
+          "sign"
+        ]
+      },
+      {
+        "name": "write",
+        "source": "dsh-native",
+        "package": "@deepseek-ai/dsh-tool-fs",
+        "description": "Create or atomically replace a workspace-gated UTF-8 file (read-before-write enforced by the mounted observation policy).",
+        "presets": [
+          "boot",
+          "lab",
+          "algo",
+          "sign"
+        ]
+      },
+      {
+        "name": "edit",
+        "source": "dsh-native",
+        "package": "@deepseek-ai/dsh-tool-fs",
+        "description": "Literal text replacement inside a workspace-gated file (read-before-edit and staleness enforced by the mounted observation policy).",
+        "presets": [
+          "boot",
+          "lab",
+          "algo",
+          "sign"
+        ]
+      },
+      {
+        "name": "glob",
+        "source": "dsh-native",
+        "package": "@deepseek-ai/dsh-tool-fs-search",
+        "description": "Workspace-gated filename pattern discovery.",
+        "presets": [
+          "boot",
+          "lab",
+          "algo",
+          "sign"
+        ]
+      },
+      {
+        "name": "grep",
+        "source": "dsh-native",
+        "package": "@deepseek-ai/dsh-tool-fs-search",
+        "description": "Workspace-gated content search over UTF-8 files.",
+        "presets": [
+          "boot",
+          "lab",
+          "algo",
+          "sign"
+        ]
+      },
+      {
+        "name": "web_search",
+        "source": "dsh-native",
+        "package": "@deepseek-ai/dsh-tool-web",
+        "description": "Auxiliary model-backed web search over external pages, returned as untrusted reference data with cited URLs; the credential is the shared managed model key. Generic unmanaged web fetching stays disabled: the only managed external page reader is company_fetch through its operator-configured allowlist.",
+        "presets": [
+          "boot",
+          "lab",
+          "algo",
+          "sign"
+        ]
+      }
+    ],
+    "excluded_from_managed_list": [
+      {
+        "name": "str_replace_editor",
+        "reason": "Overlaps tool-fs edit semantics; skipped to keep one edit path (recorded in the runbook)."
+      },
+      {
+        "name": "bash / pwsh",
+        "reason": "Command execution stays out of the managed组合 for this milestone; no shell preset is opened."
+      }
+    ]
+  }
+}

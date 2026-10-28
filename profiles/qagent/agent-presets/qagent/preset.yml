@@ -1,2 +1,0 @@
-name: Qagent
-description: 只用 host 组合里的公司工具。不要再挂 dsh-persona（deployment:persona 已在 profile 注册）。

@@ -1,41 +1,27 @@
-# Qagent 填坑宪法
+# Company Agent 开发规则
 
-合同在 `contracts/`。实现在 `src/qagent/adapters/`。评测在 `contracts/eval/`。dsh 插件只转调 `invoke()`。
+## 真源
 
-## Read First
-
-1. 本页
-2. `INTERFACES.md`
-3. `handbooks/orange-book.md`
-4. `contracts/policy.json` 与 `contracts/presets.json`
-
-## 任务路由
-
-| 任务 | 路径 | 第一步 |
-|------|------|--------|
-| 造包 | `qagent-minimal` + `boot` | 确认 Twin 插件不在产物里 |
-| 评测 | `python -m qagent.entrypoints.eval_cli` | 断言字段，不改工具名 |
-| 上机 | `lab`/`sign` + ask | 先看许可单 / `GET /api/asks` 与健康四灯，未批则停 |
-| 排错 | `GET /api/errors` + `handbooks/errors.md` | 不要把 S-TWIN-03 当原因 |
+1. `contracts/`：工具、能力、provider、策略和 preset。
+2. `src/company_agent/`：合同内核和南向适配器。
+3. `packages/`：DSH 插件，只注册工具并转调 `company-agent invoke`。
+4. `profiles/`：DSH 组合，不包含业务逻辑。
+5. `tests/`：目标架构门禁。
 
 ## 硬规则
 
-1. **禁止 import** `qdata` / `ionstack` / `qchem` / `qiskit`。围栏在 `services/boundaries.py`。接线用 REST / CLI / 合同 store。
-2. **不改工具名。** 改 schema 必须同时改评测与政策行。
-3. **不自研 loop。** 插件只 `apply(ctx)` 注册工具 / 政策 / 事件。
-4. **失败闭合。** 政策抛错 = deny。没有规则 = deny。
-5. **短输出。** 工具返回 id + summary + 字段。禁止 bitstrings / Pauli 全文 / CAL。
-6. **上机不进官方 Codex never。** `ionstack_twin_run` 只活在 dsh 合同工具 + ask。
-7. **B3/QEM 是字段。** 未过不得写 `quantum_wins`。
-8. **Aer 不得复制签收 `twin_id`。**
-9. 生产不挂 `cordis_define` / `dangerously-bypass` / 通用出网 MCP。
+- DSH 是唯一 Agent Runtime；禁止新增模型循环、会话循环或工具循环。
+- 不直接 import `company_quantum_platform` 或任何科学算法包。
+- 算法名单只来自 `company-quantum-platform` 的 `algorithm.catalog`；标识是平台 `component_id`，禁止在 Agent 代码或知识库固化算法列表。
+- 句柄只有 `asset_id`、`circuit_id`、`twin_id`。
+- 只有 `quantum_device_run` 且 provider 为 `ionstack-twinrun` 时可返回 `twin_id`。
+- `quantum_device_run` 在 `lab` / `sign` 必须 ask，在 `boot` / `algo` 必须 deny。
+- 官方 Codex 使用 `permissionMode: never` 和 `inheritsParentContext: false`；只注册宿主 provider，不挂载模型可见的 Codex 委派工具，因此无法获得设备工具。
+- 生产 profile 关闭 DSH 内置 preset 和用户可写 preset 根，只允许项目管理的 system-trust `company-agent` 组合，禁止创建或切到带 shell 的编码 preset 绕过审批。
+- 未知工具、未知 preset、缺失 provider、坏信封全部失败闭合。
+- 工具结果必须短；禁止 CAL、shuttle、bitstrings、Pauli 全文、密钥和完整电路正文。
+- 修改工具 schema 时同步合同测试和 DSH 注册。
 
-## 层
+## 开发顺序
 
-- `contracts/` — 真源
-- `src/qagent/models/` — 句柄、Protocol、政策枚举
-- `src/qagent/adapters/` — 已接线端口
-- `src/qagent/services/` — `decide` / `invoke` / 围栏 / eval
-- `packages/` — dsh 插件，`execute` 只调 `invoke()`
-- `profiles/` — 组合，不写逻辑。`qagent-minimal` 是第一阶段（无 Twin 插件）。
-- `contracts/handoff/` — 3080↔3081 固定 schema，只带三个句柄。
+先改合同，再改 Python adapter，再改 DSH 插件，最后改测试。不得为通过旧测试恢复旧工具名。

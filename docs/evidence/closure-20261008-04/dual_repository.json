@@ -1,0 +1,23 @@
+{
+  "command": [
+    "/tmp/company-agent-dev/bin/python",
+    "-m",
+    "pytest",
+    "-q",
+    "--tb=short",
+    "-m",
+    "platform_compatibility",
+    "tests/test_platform_compatibility.py"
+  ],
+  "counts": {
+    "passed": 1
+  },
+  "cwd": "/mnt/d/Yaozheng/sunhl4-qagent",
+  "elapsed_ms": 3196,
+  "ended_at": "2026-10-08T14:48:15.726684+00:00",
+  "exit_code": 0,
+  "gate": "dual_repository",
+  "log_sha256": "sha256:075fa070f28e86ceddb46b176ba433dba5d7390621e62108f2de4d76b04b39bf",
+  "started_at": "2026-10-08T14:48:12.530789+00:00",
+  "status": "passed"
+}

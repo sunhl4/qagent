@@ -1,8 +1,7 @@
 {
-  "name": "qagent",
+  "name": "@unitqc/company-agent-workspace",
   "private": true,
   "type": "module",
-  "version": "0.0.0",
-  "description": "Qagent contract runtime — fill slots, do not invent a loop",
-  "workspaces": ["packages/*"]
+  "version": "0.1.0-dev.0",
+  "workspaces": ["packages/*", "profiles/*"]
 }

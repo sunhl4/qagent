@@ -1,0 +1,11 @@
+{
+  "id": "g03-bibtex-classic",
+  "compiler": "pdflatex",
+  "main": "main.tex",
+  "backend": "bibtex",
+  "packages": [],
+  "contains": ["References"],
+  "pages_min": 1,
+  "purpose": "bibliography-bibtex",
+  "description": "Classic BibTeX baseline: two citations settle through references.bib after reruns."
+}

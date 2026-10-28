@@ -1,0 +1,11 @@
+{
+  "format": "company-agent-local-closure/1",
+  "status": "failed",
+  "scope": "preflight_only_no_gates_executed",
+  "reason": "recorder_referenced_missing_platform_mypy_ini",
+  "correction": "platform_mypy_configuration_is_in_pyproject_toml_already_in_inventory",
+  "gates": [],
+  "release_accepted": false,
+  "production_authorized": false,
+  "external_acceptance": "blocked"
+}

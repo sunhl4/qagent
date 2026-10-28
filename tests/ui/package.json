@@ -1,0 +1,17 @@
+{
+  "name": "@unitqc/workspace-design-tests",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "test": "node --test workspace-prototype.test.mjs layout-model.test.mjs shell-host.test.mjs receipt-contract.test.mjs",
+    "test:browser": "node workspace-browser.mjs",
+    "test:native": "node native-dsh-browser.mjs",
+    "test:models": "node models-browser.mjs"
+  },
+  "devDependencies": {
+    "jsdom": "26.1.0"
+  }
+}

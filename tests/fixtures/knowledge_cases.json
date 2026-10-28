@@ -1,0 +1,36 @@
+{
+  "version": "1.0",
+  "description": "固定合成中文检索回归集；不代表真实用户分布。",
+  "documents": {
+    "approval.md": "设备执行必须经过人工批准。每次执行需要新的批准，拒绝后不得运行。quantum_device_run 仅在 lab 和 sign 提出请求。",
+    "simulation.md": "独立模拟器负责电路模拟验证。quantum_simulate 返回 independent-simulator 来源，不能返回 twin_id。模拟 shots 必须是正整数。",
+    "compiler.md": "编译估算使用独立编译器 quantum_compile_estimate。makespan_ns 表示纳秒，depth 表示电路深度。",
+    "algorithm.md": "公司量子算法由 uniqon 提供。先用 quantum_algorithm_catalog 发现当前 component_id，只对 runnable 为 true 的标识调用 quantum_algorithm_run。算法名单不以知识库为准。",
+    "export.md": "电路导出 quantum_circuit_export 接收资产 asset_id 并返回注册电路 circuit_id。电路正文不得进入工具结果。",
+    "branches.md": "多分支工作流使用 bindings 指定上游步骤与输出。同类句柄来源不唯一时必须显式引用。静态校验不执行计划。",
+    "knowledge.md": "知识检索返回来源 source 和内容版本 SHA-256。scan.complete 为 false 表示资料未被完整扫描。最多返回八条命中。",
+    "timeout.md": "设备超时或取消等待后执行结果可能未知。使用 request_id 联系服务运维核对，客户端不得自动重试。",
+    "secrets.md": "短结果限制禁止密钥、完整电路和科学正文。summary 仅包含封闭字段，未知字段整体失败。",
+    "assets.md": "资产查询 quantum_asset_get 用于读取已有资产概要。资产列表 quantum_asset_list 最多返回三十二条引用。",
+    "presets.md": "最小运行组合只允许 boot 和 algo。生产配置关闭用户可写 preset 根，不允许 shell 工具。",
+    "identity.md": "设备身份 quantum_device_identity 返回 provider ionstack-twinrun，身份查询不执行设备，也不得返回 twin_id。"
+  },
+  "cases": [
+    {"query": "设备执行为什么每次都要审批", "relevant": ["approval.md"], "tag": "natural_chinese"},
+    {"query": "电路仿真由谁负责", "relevant": ["simulation.md"], "tag": "synonym"},
+    {"query": "quantum_simulate 的来源是什么", "relevant": ["simulation.md"], "tag": "mixed"},
+    {"query": "编译估算的 makespan_ns 单位是什么", "relevant": ["compiler.md"], "tag": "mixed"},
+    {"query": "公司量子算法怎么调用", "relevant": ["algorithm.md"], "tag": "unspaced"},
+    {"query": "怎样从资产导出电路", "relevant": ["export.md"], "tag": "natural_chinese"},
+    {"query": "多个分支如何绑定上游步骤", "relevant": ["branches.md"], "tag": "natural_chinese"},
+    {"query": "知识检索的内容版本如何追溯", "relevant": ["knowledge.md"], "tag": "unspaced"},
+    {"query": "设备超时后可以自动重试吗", "relevant": ["timeout.md"], "tag": "natural_chinese"},
+    {"query": "summary 未知字段", "relevant": ["secrets.md"], "tag": "mixed"},
+    {"query": "quantum_asset_list", "relevant": ["assets.md"], "tag": "exact_identifier"},
+    {"query": "最小运行组合允许哪些 preset", "relevant": ["presets.md"], "tag": "mixed"},
+    {"query": "查询设备身份会执行任务吗", "relevant": ["identity.md"], "tag": "natural_chinese"},
+    {"query": "量子算法 量子算法", "relevant": ["algorithm.md"], "tag": "duplicate"},
+    {"query": "超导拓扑纠错阈值", "relevant": [], "tag": "empty"},
+    {"query": "../../etc/passwd", "relevant": [], "tag": "malicious_path"}
+  ]
+}

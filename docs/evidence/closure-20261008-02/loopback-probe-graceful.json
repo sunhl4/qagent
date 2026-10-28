@@ -1,0 +1,842 @@
+[
+  {
+    "mode": "close",
+    "client": "urllib",
+    "size": 2000,
+    "attempt": 0,
+    "received": 2000
+  },
+  {
+    "mode": "close",
+    "client": "urllib",
+    "size": 2000,
+    "attempt": 1,
+    "received": 2000
+  },
+  {
+    "mode": "close",
+    "client": "urllib",
+    "size": 2000,
+    "attempt": 2,
+    "received": 2000
+  },
+  {
+    "mode": "close",
+    "client": "urllib",
+    "size": 8050,
+    "attempt": 0,
+    "error": "ConnectionResetError"
+  },
+  {
+    "mode": "close",
+    "client": "urllib",
+    "size": 8050,
+    "attempt": 1,
+    "error": "ConnectionResetError"
+  },
+  {
+    "mode": "close",
+    "client": "urllib",
+    "size": 8050,
+    "attempt": 2,
+    "error": "ConnectionResetError"
+  },
+  {
+    "mode": "close",
+    "client": "urllib",
+    "size": 32000,
+    "attempt": 0,
+    "received": 32000
+  },
+  {
+    "mode": "close",
+    "client": "urllib",
+    "size": 32000,
+    "attempt": 1,
+    "error": "ConnectionResetError"
+  },
+  {
+    "mode": "close",
+    "client": "urllib",
+    "size": 32000,
+    "attempt": 2,
+    "received": 32000
+  },
+  {
+    "mode": "close",
+    "client": "urllib",
+    "size": 64000,
+    "attempt": 0,
+    "received": 64000
+  },
+  {
+    "mode": "close",
+    "client": "urllib",
+    "size": 64000,
+    "attempt": 1,
+    "received": 64000
+  },
+  {
+    "mode": "close",
+    "client": "urllib",
+    "size": 64000,
+    "attempt": 2,
+    "received": 64000
+  },
+  {
+    "mode": "close",
+    "client": "http_client",
+    "size": 2000,
+    "attempt": 0,
+    "received": 2000
+  },
+  {
+    "mode": "close",
+    "client": "http_client",
+    "size": 2000,
+    "attempt": 1,
+    "received": 2000
+  },
+  {
+    "mode": "close",
+    "client": "http_client",
+    "size": 2000,
+    "attempt": 2,
+    "received": 2000
+  },
+  {
+    "mode": "close",
+    "client": "http_client",
+    "size": 8050,
+    "attempt": 0,
+    "received": 8050
+  },
+  {
+    "mode": "close",
+    "client": "http_client",
+    "size": 8050,
+    "attempt": 1,
+    "received": 8050
+  },
+  {
+    "mode": "close",
+    "client": "http_client",
+    "size": 8050,
+    "attempt": 2,
+    "received": 8050
+  },
+  {
+    "mode": "close",
+    "client": "http_client",
+    "size": 32000,
+    "attempt": 0,
+    "error": "ConnectionResetError"
+  },
+  {
+    "mode": "close",
+    "client": "http_client",
+    "size": 32000,
+    "attempt": 1,
+    "received": 32000
+  },
+  {
+    "mode": "close",
+    "client": "http_client",
+    "size": 32000,
+    "attempt": 2,
+    "received": 32000
+  },
+  {
+    "mode": "close",
+    "client": "http_client",
+    "size": 64000,
+    "attempt": 0,
+    "received": 64000
+  },
+  {
+    "mode": "close",
+    "client": "http_client",
+    "size": 64000,
+    "attempt": 1,
+    "received": 64000
+  },
+  {
+    "mode": "close",
+    "client": "http_client",
+    "size": 64000,
+    "attempt": 2,
+    "received": 64000
+  },
+  {
+    "mode": "keepalive",
+    "client": "urllib",
+    "size": 2000,
+    "attempt": 0,
+    "received": 2000
+  },
+  {
+    "mode": "keepalive",
+    "client": "urllib",
+    "size": 2000,
+    "attempt": 1,
+    "received": 2000
+  },
+  {
+    "mode": "keepalive",
+    "client": "urllib",
+    "size": 2000,
+    "attempt": 2,
+    "received": 2000
+  },
+  {
+    "mode": "keepalive",
+    "client": "urllib",
+    "size": 8050,
+    "attempt": 0,
+    "received": 8050
+  },
+  {
+    "mode": "keepalive",
+    "client": "urllib",
+    "size": 8050,
+    "attempt": 1,
+    "received": 8050
+  },
+  {
+    "mode": "keepalive",
+    "client": "urllib",
+    "size": 8050,
+    "attempt": 2,
+    "received": 8050
+  },
+  {
+    "mode": "keepalive",
+    "client": "urllib",
+    "size": 32000,
+    "attempt": 0,
+    "received": 32000
+  },
+  {
+    "mode": "keepalive",
+    "client": "urllib",
+    "size": 32000,
+    "attempt": 1,
+    "received": 32000
+  },
+  {
+    "mode": "keepalive",
+    "client": "urllib",
+    "size": 32000,
+    "attempt": 2,
+    "received": 32000
+  },
+  {
+    "mode": "keepalive",
+    "client": "urllib",
+    "size": 64000,
+    "attempt": 0,
+    "received": 64000
+  },
+  {
+    "mode": "keepalive",
+    "client": "urllib",
+    "size": 64000,
+    "attempt": 1,
+    "received": 64000
+  },
+  {
+    "mode": "keepalive",
+    "client": "urllib",
+    "size": 64000,
+    "attempt": 2,
+    "received": 64000
+  },
+  {
+    "mode": "keepalive",
+    "client": "http_client",
+    "size": 2000,
+    "attempt": 0,
+    "received": 2000
+  },
+  {
+    "mode": "keepalive",
+    "client": "http_client",
+    "size": 2000,
+    "attempt": 1,
+    "received": 2000
+  },
+  {
+    "mode": "keepalive",
+    "client": "http_client",
+    "size": 2000,
+    "attempt": 2,
+    "received": 2000
+  },
+  {
+    "mode": "keepalive",
+    "client": "http_client",
+    "size": 8050,
+    "attempt": 0,
+    "received": 8050
+  },
+  {
+    "mode": "keepalive",
+    "client": "http_client",
+    "size": 8050,
+    "attempt": 1,
+    "received": 8050
+  },
+  {
+    "mode": "keepalive",
+    "client": "http_client",
+    "size": 8050,
+    "attempt": 2,
+    "received": 8050
+  },
+  {
+    "mode": "keepalive",
+    "client": "http_client",
+    "size": 32000,
+    "attempt": 0,
+    "received": 32000
+  },
+  {
+    "mode": "keepalive",
+    "client": "http_client",
+    "size": 32000,
+    "attempt": 1,
+    "received": 32000
+  },
+  {
+    "mode": "keepalive",
+    "client": "http_client",
+    "size": 32000,
+    "attempt": 2,
+    "received": 32000
+  },
+  {
+    "mode": "keepalive",
+    "client": "http_client",
+    "size": 64000,
+    "attempt": 0,
+    "received": 64000
+  },
+  {
+    "mode": "keepalive",
+    "client": "http_client",
+    "size": 64000,
+    "attempt": 1,
+    "received": 64000
+  },
+  {
+    "mode": "keepalive",
+    "client": "http_client",
+    "size": 64000,
+    "attempt": 2,
+    "received": 64000
+  },
+  {
+    "mode": "halfclose",
+    "client": "urllib",
+    "size": 2000,
+    "attempt": 0,
+    "received": 2000
+  },
+  {
+    "mode": "halfclose",
+    "client": "urllib",
+    "size": 2000,
+    "attempt": 1,
+    "received": 2000
+  },
+  {
+    "mode": "halfclose",
+    "client": "urllib",
+    "size": 2000,
+    "attempt": 2,
+    "received": 2000
+  },
+  {
+    "mode": "halfclose",
+    "client": "urllib",
+    "size": 8050,
+    "attempt": 0,
+    "error": "ConnectionResetError"
+  },
+  {
+    "mode": "halfclose",
+    "client": "urllib",
+    "size": 8050,
+    "attempt": 1,
+    "error": "ConnectionResetError"
+  },
+  {
+    "mode": "halfclose",
+    "client": "urllib",
+    "size": 8050,
+    "attempt": 2,
+    "received": 8050
+  },
+  {
+    "mode": "halfclose",
+    "client": "urllib",
+    "size": 32000,
+    "attempt": 0,
+    "error": "ConnectionResetError"
+  },
+  {
+    "mode": "halfclose",
+    "client": "urllib",
+    "size": 32000,
+    "attempt": 1,
+    "received": 32000
+  },
+  {
+    "mode": "halfclose",
+    "client": "urllib",
+    "size": 32000,
+    "attempt": 2,
+    "received": 32000
+  },
+  {
+    "mode": "halfclose",
+    "client": "urllib",
+    "size": 64000,
+    "attempt": 0,
+    "received": 64000
+  },
+  {
+    "mode": "halfclose",
+    "client": "urllib",
+    "size": 64000,
+    "attempt": 1,
+    "received": 64000
+  },
+  {
+    "mode": "halfclose",
+    "client": "urllib",
+    "size": 64000,
+    "attempt": 2,
+    "received": 64000
+  },
+  {
+    "mode": "halfclose",
+    "client": "http_client",
+    "size": 2000,
+    "attempt": 0,
+    "received": 2000
+  },
+  {
+    "mode": "halfclose",
+    "client": "http_client",
+    "size": 2000,
+    "attempt": 1,
+    "received": 2000
+  },
+  {
+    "mode": "halfclose",
+    "client": "http_client",
+    "size": 2000,
+    "attempt": 2,
+    "received": 2000
+  },
+  {
+    "mode": "halfclose",
+    "client": "http_client",
+    "size": 8050,
+    "attempt": 0,
+    "error": "ConnectionResetError"
+  },
+  {
+    "mode": "halfclose",
+    "client": "http_client",
+    "size": 8050,
+    "attempt": 1,
+    "received": 8050
+  },
+  {
+    "mode": "halfclose",
+    "client": "http_client",
+    "size": 8050,
+    "attempt": 2,
+    "received": 8050
+  },
+  {
+    "mode": "halfclose",
+    "client": "http_client",
+    "size": 32000,
+    "attempt": 0,
+    "error": "ConnectionResetError"
+  },
+  {
+    "mode": "halfclose",
+    "client": "http_client",
+    "size": 32000,
+    "attempt": 1,
+    "error": "ConnectionResetError"
+  },
+  {
+    "mode": "halfclose",
+    "client": "http_client",
+    "size": 32000,
+    "attempt": 2,
+    "received": 32000
+  },
+  {
+    "mode": "halfclose",
+    "client": "http_client",
+    "size": 64000,
+    "attempt": 0,
+    "received": 64000
+  },
+  {
+    "mode": "halfclose",
+    "client": "http_client",
+    "size": 64000,
+    "attempt": 1,
+    "error": "ConnectionResetError"
+  },
+  {
+    "mode": "halfclose",
+    "client": "http_client",
+    "size": 64000,
+    "attempt": 2,
+    "received": 64000
+  },
+  {
+    "mode": "combined",
+    "client": "urllib",
+    "size": 2000,
+    "attempt": 0,
+    "received": 2000
+  },
+  {
+    "mode": "combined",
+    "client": "urllib",
+    "size": 2000,
+    "attempt": 1,
+    "received": 2000
+  },
+  {
+    "mode": "combined",
+    "client": "urllib",
+    "size": 2000,
+    "attempt": 2,
+    "received": 2000
+  },
+  {
+    "mode": "combined",
+    "client": "urllib",
+    "size": 8050,
+    "attempt": 0,
+    "received": 8050
+  },
+  {
+    "mode": "combined",
+    "client": "urllib",
+    "size": 8050,
+    "attempt": 1,
+    "received": 8050
+  },
+  {
+    "mode": "combined",
+    "client": "urllib",
+    "size": 8050,
+    "attempt": 2,
+    "received": 8050
+  },
+  {
+    "mode": "combined",
+    "client": "urllib",
+    "size": 32000,
+    "attempt": 0,
+    "received": 32000
+  },
+  {
+    "mode": "combined",
+    "client": "urllib",
+    "size": 32000,
+    "attempt": 1,
+    "received": 32000
+  },
+  {
+    "mode": "combined",
+    "client": "urllib",
+    "size": 32000,
+    "attempt": 2,
+    "received": 32000
+  },
+  {
+    "mode": "combined",
+    "client": "urllib",
+    "size": 64000,
+    "attempt": 0,
+    "error": "ConnectionResetError"
+  },
+  {
+    "mode": "combined",
+    "client": "urllib",
+    "size": 64000,
+    "attempt": 1,
+    "error": "ConnectionResetError"
+  },
+  {
+    "mode": "combined",
+    "client": "urllib",
+    "size": 64000,
+    "attempt": 2,
+    "error": "ConnectionResetError"
+  },
+  {
+    "mode": "combined",
+    "client": "http_client",
+    "size": 2000,
+    "attempt": 0,
+    "received": 2000
+  },
+  {
+    "mode": "combined",
+    "client": "http_client",
+    "size": 2000,
+    "attempt": 1,
+    "received": 2000
+  },
+  {
+    "mode": "combined",
+    "client": "http_client",
+    "size": 2000,
+    "attempt": 2,
+    "received": 2000
+  },
+  {
+    "mode": "combined",
+    "client": "http_client",
+    "size": 8050,
+    "attempt": 0,
+    "received": 8050
+  },
+  {
+    "mode": "combined",
+    "client": "http_client",
+    "size": 8050,
+    "attempt": 1,
+    "received": 8050
+  },
+  {
+    "mode": "combined",
+    "client": "http_client",
+    "size": 8050,
+    "attempt": 2,
+    "received": 8050
+  },
+  {
+    "mode": "combined",
+    "client": "http_client",
+    "size": 32000,
+    "attempt": 0,
+    "received": 32000
+  },
+  {
+    "mode": "combined",
+    "client": "http_client",
+    "size": 32000,
+    "attempt": 1,
+    "received": 32000
+  },
+  {
+    "mode": "combined",
+    "client": "http_client",
+    "size": 32000,
+    "attempt": 2,
+    "received": 32000
+  },
+  {
+    "mode": "combined",
+    "client": "http_client",
+    "size": 64000,
+    "attempt": 0,
+    "error": "ConnectionResetError"
+  },
+  {
+    "mode": "combined",
+    "client": "http_client",
+    "size": 64000,
+    "attempt": 1,
+    "error": "ConnectionResetError"
+  },
+  {
+    "mode": "combined",
+    "client": "http_client",
+    "size": 64000,
+    "attempt": 2,
+    "error": "ConnectionResetError"
+  },
+  {
+    "mode": "graceful",
+    "client": "urllib",
+    "size": 2000,
+    "attempt": 0,
+    "received": 2000
+  },
+  {
+    "mode": "graceful",
+    "client": "urllib",
+    "size": 2000,
+    "attempt": 1,
+    "received": 2000
+  },
+  {
+    "mode": "graceful",
+    "client": "urllib",
+    "size": 2000,
+    "attempt": 2,
+    "received": 2000
+  },
+  {
+    "mode": "graceful",
+    "client": "urllib",
+    "size": 8050,
+    "attempt": 0,
+    "received": 8050
+  },
+  {
+    "mode": "graceful",
+    "client": "urllib",
+    "size": 8050,
+    "attempt": 1,
+    "received": 8050
+  },
+  {
+    "mode": "graceful",
+    "client": "urllib",
+    "size": 8050,
+    "attempt": 2,
+    "received": 8050
+  },
+  {
+    "mode": "graceful",
+    "client": "urllib",
+    "size": 32000,
+    "attempt": 0,
+    "received": 32000
+  },
+  {
+    "mode": "graceful",
+    "client": "urllib",
+    "size": 32000,
+    "attempt": 1,
+    "received": 32000
+  },
+  {
+    "mode": "graceful",
+    "client": "urllib",
+    "size": 32000,
+    "attempt": 2,
+    "received": 32000
+  },
+  {
+    "mode": "graceful",
+    "client": "urllib",
+    "size": 64000,
+    "attempt": 0,
+    "received": 64000
+  },
+  {
+    "mode": "graceful",
+    "client": "urllib",
+    "size": 64000,
+    "attempt": 1,
+    "received": 64000
+  },
+  {
+    "mode": "graceful",
+    "client": "urllib",
+    "size": 64000,
+    "attempt": 2,
+    "received": 64000
+  },
+  {
+    "mode": "graceful",
+    "client": "http_client",
+    "size": 2000,
+    "attempt": 0,
+    "received": 2000
+  },
+  {
+    "mode": "graceful",
+    "client": "http_client",
+    "size": 2000,
+    "attempt": 1,
+    "received": 2000
+  },
+  {
+    "mode": "graceful",
+    "client": "http_client",
+    "size": 2000,
+    "attempt": 2,
+    "received": 2000
+  },
+  {
+    "mode": "graceful",
+    "client": "http_client",
+    "size": 8050,
+    "attempt": 0,
+    "received": 8050
+  },
+  {
+    "mode": "graceful",
+    "client": "http_client",
+    "size": 8050,
+    "attempt": 1,
+    "received": 8050
+  },
+  {
+    "mode": "graceful",
+    "client": "http_client",
+    "size": 8050,
+    "attempt": 2,
+    "received": 8050
+  },
+  {
+    "mode": "graceful",
+    "client": "http_client",
+    "size": 32000,
+    "attempt": 0,
+    "received": 32000
+  },
+  {
+    "mode": "graceful",
+    "client": "http_client",
+    "size": 32000,
+    "attempt": 1,
+    "received": 32000
+  },
+  {
+    "mode": "graceful",
+    "client": "http_client",
+    "size": 32000,
+    "attempt": 2,
+    "received": 32000
+  },
+  {
+    "mode": "graceful",
+    "client": "http_client",
+    "size": 64000,
+    "attempt": 0,
+    "received": 64000
+  },
+  {
+    "mode": "graceful",
+    "client": "http_client",
+    "size": 64000,
+    "attempt": 1,
+    "received": 64000
+  },
+  {
+    "mode": "graceful",
+    "client": "http_client",
+    "size": 64000,
+    "attempt": 2,
+    "received": 64000
+  }
+]

@@ -1,0 +1,191 @@
+[
+  {
+    "id":38,"repo":"microsoft/LLMLingua","commit":"5a4c78ae18ab17a98cf997e8259354e546081d64","commit_date":"2026-09-10T16:36:23-07:00","clone_path":"/tmp/oss-microsoft-LLMLingua","doc":"docs/oss-survey/reviewed/H38-llmlingua.zh-CN.md","verification":"static-source-review","license_summary":"MIT; model weights and dependencies require separate review",
+    "evidence":[
+      {"path":"llmlingua/prompt_compressor.py","start":118,"end":165,"kind":"implementation","note":"Model loading, architecture selection and remote-code trust default"},
+      {"path":"llmlingua/prompt_compressor.py","start":167,"end":216,"kind":"implementation","note":"Token loss and perplexity computation"},
+      {"path":"llmlingua/prompt_compressor.py","start":221,"end":280,"kind":"implementation","note":"Structured JSON compression and reparsing"},
+      {"path":"llmlingua/prompt_compressor.py","start":282,"end":320,"kind":"implementation","note":"Structured preservation and compression options"},
+      {"path":"tests/test_llmlingua2.py","start":43,"end":80,"kind":"test","note":"CPU model compression text and token-count assertions, not executed"},
+      {"path":"LICENSE","start":1,"end":21,"kind":"license","note":"Root MIT terms"}
+    ]
+  },
+  {
+    "id":39,"repo":"yamadashy/repomix","commit":"e696384d062f08f0246ffd2580d5a206484fc0a4","commit_date":"2026-10-18T21:26:50+09:00","clone_path":"/tmp/oss-yamadashy-repomix","doc":"docs/oss-survey/reviewed/H39-repomix.zh-CN.md","verification":"static-source-review","license_summary":"MIT grant in root LICENSE",
+    "evidence":[
+      {"path":"src/core/file/fileCollect.ts","start":9,"end":36,"kind":"implementation","note":"Bounded concurrency pool preserving input ordering"},
+      {"path":"src/core/file/fileCollect.ts","start":39,"end":64,"kind":"implementation","note":"Passes configured maximum file size to reader"},
+      {"path":"src/core/file/fileCollect.ts","start":66,"end":81,"kind":"implementation","note":"Explicit collected and skipped file results"},
+      {"path":"src/core/file/fileRead.ts","start":70,"end":95,"kind":"implementation","note":"Full read occurs before size rejection"},
+      {"path":"tests/core/file/fileCollect.test.ts","start":17,"end":81,"kind":"test","note":"Injected reader and skipped-file assertions, not executed"},
+      {"path":"LICENSE","start":1,"end":7,"kind":"license","note":"Root permission grant and notice retention"}
+    ]
+  },
+  {
+    "id":40,"repo":"mendableai/firecrawl","commit":"16d4aa9c167089d9031a311f50a27b0b41a74de5","commit_date":"2026-10-21T20:05:11-07:00","clone_path":"/tmp/oss-mendableai-firecrawl","doc":"docs/oss-survey/reviewed/H40-firecrawl.zh-CN.md","verification":"static-source-review","license_summary":"AGPL-3.0 root; selected components and service terms need separate review",
+    "evidence":[
+      {"path":"apps/api/src/scraper/scrapeURL/transformers/promptInjectionGuard.ts","start":6,"end":39,"kind":"implementation","note":"Opt-in guard and incomplete-scan warning return"},
+      {"path":"apps/api/src/scraper/scrapeURL/lib/promptInjectionGuard.ts","start":14,"end":30,"kind":"implementation","note":"Classifier defaults, overlapping chunks and concurrency"},
+      {"path":"apps/api/src/scraper/scrapeURL/lib/promptInjectionGuard.ts","start":101,"end":134,"kind":"implementation","note":"Structured classifier request and telemetry configuration"},
+      {"path":"apps/api/src/scraper/scrapeURL/lib/promptInjectionGuard.ts","start":151,"end":173,"kind":"implementation","note":"General classifier failure intentionally fails open"},
+      {"path":"apps/api/src/scraper/scrapeURL/transformers/promptInjectionGuard.test.ts","start":31,"end":90,"kind":"test","note":"Mocked no-op, detection and incomplete-scan branches, not executed"},
+      {"path":"LICENSE","start":1,"end":30,"kind":"license","note":"Root AGPL-3.0 text"}
+    ]
+  },
+  {
+    "id":41,"repo":"promptfoo/promptfoo","commit":"03844fb957487102bd21f7434a229915cee90e02","commit_date":"2026-10-22T09:49:52+08:00","clone_path":"/tmp/oss-promptfoo-promptfoo","doc":"docs/oss-survey/reviewed/H41-promptfoo.zh-CN.md","verification":"static-source-review","license_summary":"MIT-style root permission grant; additional components reviewed separately",
+    "evidence":[
+      {"path":"src/redteam/mcpToolCall.ts","start":14,"end":32,"kind":"implementation","note":"Accepted field aliases and JSON parsing"},
+      {"path":"src/redteam/mcpToolCall.ts","start":34,"end":57,"kind":"implementation","note":"Allowlisted tool name and empty-object argument fallback"},
+      {"path":"src/redteam/mcpToolCall.ts","start":60,"end":77,"kind":"implementation","note":"Ajv argument validation with object fallback schema"},
+      {"path":"src/redteam/mcpToolCall.ts","start":79,"end":88,"kind":"implementation","note":"Normalization pipeline"},
+      {"path":"test/redteam/mcpMaterialization.test.ts","start":35,"end":79,"kind":"test","note":"Tests explicitly accept aliases and invalid-argument fallback, not executed"},
+      {"path":"LICENSE","start":1,"end":14,"kind":"license","note":"Root grant and required notice"}
+    ]
+  },
+  {
+    "id":42,"repo":"UKGovernmentBEIS/inspect_ai","commit":"c2fc3d9e3ff3fdc389be2933c6e3f9824648876e","commit_date":"2026-10-21T16:41:11-04:00","clone_path":"/tmp/oss-UKGovernmentBEIS-inspect_ai","doc":"docs/oss-survey/reviewed/H42-inspect-ai.zh-CN.md","verification":"static-source-review","license_summary":"MIT root LICENSE",
+    "evidence":[
+      {"path":"src/inspect_ai/approval/_policy.py","start":33,"end":60,"kind":"implementation","note":"Formatted function-call glob matching"},
+      {"path":"src/inspect_ai/approval/_policy.py","start":62,"end":84,"kind":"implementation","note":"Ordered escalation and default rejection recording"},
+      {"path":"src/inspect_ai/approval/_policy.py","start":102,"end":127,"kind":"implementation","note":"Configuration extension fields collected into params"},
+      {"path":"src/inspect_ai/tool/_tool.py","start":183,"end":192,"kind":"implementation","note":"Parallel opt-in and byte truncation configuration"},
+      {"path":"tests/approval/test_approval.py","start":112,"end":177,"kind":"test","note":"Approval events, pattern rejection and escalation tests, not executed"},
+      {"path":"LICENSE","start":1,"end":18,"kind":"license","note":"MIT grant and notice requirements"}
+    ]
+  },
+  {
+    "id":43,"repo":"SWE-bench/SWE-bench","commit":"02e7a74ffd0b707aab73d203fe87bdc7c76afc8e","commit_date":"2026-09-02T01:50:34+00:00","clone_path":"/tmp/oss-SWE-bench-SWE-bench","doc":"docs/oss-survey/reviewed/H43-swe-bench.zh-CN.md","verification":"static-source-review","license_summary":"MIT root; benchmark datasets and dependencies separately licensed",
+    "evidence":[
+      {"path":"swebench/harness/grading.py","start":24,"end":58,"kind":"implementation","note":"Positive suite-run evidence and recorded exit marker"},
+      {"path":"swebench/harness/grading.py","start":60,"end":112,"kind":"implementation","note":"Dataset ID fallback and distinct skipped-test policies"},
+      {"path":"swebench/harness/grading.py","start":130,"end":160,"kind":"implementation","note":"Invalid logs and no-execution rejection"},
+      {"path":"swebench/harness/grading.py","start":162,"end":176,"kind":"implementation","note":"Nonzero exit contradicting passing log is rejected"},
+      {"path":"tests/test_grading_skipped.py","start":35,"end":60,"kind":"test","note":"All-skipped repairs must not score resolved, not executed"},
+      {"path":"LICENSE","start":1,"end":20,"kind":"license","note":"MIT root terms"}
+    ]
+  },
+  {
+    "id":44,"repo":"openai/simple-evals","commit":"652c89d0ca9df547706735883097e9537d40dc47","commit_date":"2026-04-22T15:16:16-07:00","clone_path":"/tmp/oss-openai-simple-evals","doc":"docs/oss-survey/reviewed/H44-simple-evals.zh-CN.md","verification":"static-source-review","license_summary":"MIT root LICENSE",
+    "evidence":[
+      {"path":"types.py","start":9,"end":27,"kind":"implementation","note":"Sampler return contract includes actual sent messages"},
+      {"path":"types.py","start":31,"end":56,"kind":"implementation","note":"Aggregate and single evaluation record types"},
+      {"path":"common.py","start":195,"end":217,"kind":"implementation","note":"Per-metric aggregation and metadata preservation"},
+      {"path":"common.py","start":220,"end":265,"kind":"implementation","note":"Batch concurrency and HTML template environment"},
+      {"path":"healthbench_eval_test.py","start":8,"end":38,"kind":"test","note":"Weighted denominator and length penalty assertions, not executed"},
+      {"path":"LICENSE","start":1,"end":18,"kind":"license","note":"MIT root grant"}
+    ]
+  },
+  {
+    "id":46,"repo":"open-webui/open-webui","commit":"91ea4e3421d1d8069f13d4a463fcb5986d94ea60","commit_date":"2026-10-16T06:46:08-05:00","clone_path":"/tmp/oss-open-webui-open-webui","doc":"docs/oss-survey/reviewed/H46-open-webui.zh-CN.md","verification":"static-source-review","license_summary":"Open WebUI License with branding restrictions and enumerated exceptions; historical materials retain prior terms","test_gap":"No direct tool/MCP behavior test identified in this static scope; filename search is not proof the repository has no tests. Tenant ACL and elicitation matrix remain unexecuted.",
+    "evidence":[
+      {"path":"backend/open_webui/utils/tools.py","start":345,"end":385,"kind":"implementation","note":"Local tool loading and resource access checks"},
+      {"path":"backend/open_webui/utils/tools.py","start":387,"end":430,"kind":"implementation","note":"Trusted dynamic module loading and reserved parameter injection"},
+      {"path":"backend/open_webui/utils/tools.py","start":460,"end":505,"kind":"implementation","note":"Inspected remote branch is OpenAPI, not all MCP paths"},
+      {"path":"backend/open_webui/utils/mcp/client.py","start":97,"end":127,"kind":"implementation","note":"Elicitation validation and cancellation behavior"},
+      {"path":"backend/open_webui/utils/mcp/client.py","start":129,"end":178,"kind":"implementation","note":"Transport lifecycle, initialization timeout and pagination"},
+      {"path":"LICENSE","start":20,"end":37,"kind":"license","note":"Branding restriction, user-count and permission exceptions"}
+    ]
+  },
+  {
+    "id":48,"repo":"CopilotKit/CopilotKit","commit":"54dddf799b9dd2be67731baba35416ef5feafa21","commit_date":"2026-10-21T22:08:10+00:00","clone_path":"/tmp/oss-CopilotKit-CopilotKit","doc":"docs/oss-survey/reviewed/H48-copilotkit.zh-CN.md","verification":"static-source-review","license_summary":"MIT root; selected package terms separately checked",
+    "evidence":[
+      {"path":"packages/core/src/core/agent-registry.ts","start":51,"end":68,"kind":"implementation","note":"Optional request, abort and failure classification"},
+      {"path":"packages/core/src/core/agent-registry.ts","start":134,"end":158,"kind":"implementation","note":"Connection generation and in-flight bookkeeping"},
+      {"path":"packages/core/src/core/run-handler.ts","start":25,"end":62,"kind":"implementation","note":"Stopping live approval versus historical cancellation and resume parameters"},
+      {"path":"packages/core/src/core/run-handler.ts","start":74,"end":90,"kind":"implementation","note":"Frontend tool execution and optional LLM follow-up"},
+      {"path":"packages/core/src/__tests__/core-agent-run-started.test.ts","start":24,"end":67,"kind":"test","note":"Actual per-thread instance notification and recursive deduplication, not executed"},
+      {"path":"LICENSE","start":1,"end":16,"kind":"license","note":"MIT root terms"}
+    ]
+  },
+  {
+    "id":49,"repo":"continuedev/continue","commit":"5522c6f44ca0ac3528b37244818fbfa39b5af470","commit_date":"2026-07-20T21:00:09-07:00","clone_path":"/tmp/oss-continuedev-continue","doc":"docs/oss-survey/reviewed/H49-continue.zh-CN.md","verification":"static-source-review","license_summary":"Apache-2.0 root LICENSE",
+    "evidence":[
+      {"path":"core/context/providers/HttpContextProvider.ts","start":18,"end":30,"kind":"implementation","note":"Only workspacePath is gated by local-host check"},
+      {"path":"core/context/providers/HttpContextProvider.ts","start":48,"end":67,"kind":"implementation","note":"POST always includes fullInput and parses JSON before mapping catch"},
+      {"path":"core/context/providers/HttpContextProvider.ts","start":69,"end":89,"kind":"implementation","note":"Context mapping and raw-response warning on mapping failure"},
+      {"path":"core/context/providers/HttpContextProvider.test.ts","start":37,"end":64,"kind":"test","note":"Context URI mapping test, not executed"},
+      {"path":"core/context/providers/HttpContextProvider.test.ts","start":66,"end":109,"kind":"test","note":"Null and missing URI expectations, not executed"},
+      {"path":"LICENSE","start":1,"end":14,"kind":"license","note":"Apache-2.0 root text"}
+    ]
+  },
+  {
+    "id":50,"repo":"ollama/ollama","commit":"efabf6bc450454dc856c1f799aac7ea865e3a4cf","commit_date":"2026-10-21T19:00:18-07:00","clone_path":"/tmp/oss-ollama-ollama","doc":"docs/oss-survey/reviewed/H50-ollama.zh-CN.md","verification":"static-source-review","license_summary":"MIT root; model weight licenses separate",
+    "evidence":[
+      {"path":"server/routes.go","start":636,"end":687,"kind":"implementation","note":"genTruncate applies to input prompt construction"},
+      {"path":"server/routes.go","start":2989,"end":3022,"kind":"implementation","note":"Chat request parsing and model-reference checks"},
+      {"path":"server/routes.go","start":3024,"end":3033,"kind":"implementation","note":"Explicit cloud model reference proxies chat request"},
+      {"path":"server/routes.go","start":3063,"end":3104,"kind":"implementation","note":"Local and remote configured model handling"},
+      {"path":"server/routes_generate_test.go","start":439,"end":496,"kind":"test","note":"Mock runner verifies historical-message truncation, not executed"},
+      {"path":"LICENSE","start":1,"end":15,"kind":"license","note":"MIT root grant"}
+    ]
+  },
+  {
+    "id":51,"repo":"ggml-org/llama.cpp","commit":"c7fc5094179bf8a9c73c18593db714f8da41a402","commit_date":"2026-10-21T18:02:50-07:00","clone_path":"/tmp/oss-ggml-org-llama.cpp","doc":"docs/oss-survey/reviewed/H51-llama-cpp.zh-CN.md","verification":"static-source-review","license_summary":"MIT root; model weights and templates require separate review",
+    "evidence":[
+      {"path":"tools/server/server-common.cpp","start":1343,"end":1364,"kind":"implementation","note":"Jinja requirement for tools and non-auto choice"},
+      {"path":"tools/server/server-common.cpp","start":1366,"end":1390,"kind":"implementation","note":"Stop, grammar and JSON-schema parameter handling"},
+      {"path":"tools/server/server-common.cpp","start":1392,"end":1408,"kind":"implementation","note":"Empty schema and messages array validation"},
+      {"path":"tools/server/tests/unit/test_tool_call.py","start":99,"end":125,"kind":"test","note":"Tool-call assertion helper; helper alone is not an executed pytest case"},
+      {"path":"tools/server/tests/unit/test_tool_call.py","start":248,"end":288,"kind":"test","note":"Executable real-model test verifies exactly one call, function name and parsed arguments; not executed"},
+      {"path":"LICENSE","start":1,"end":15,"kind":"license","note":"MIT root grant"}
+    ]
+  },
+  {
+    "id":52,"repo":"vllm-project/vllm","commit":"13058ef4d1fd7c6827de5ad70a669c6811c06ae9","commit_date":"2026-10-22T12:45:27+08:00","clone_path":"/tmp/oss-vllm-project-vllm","doc":"docs/oss-survey/reviewed/H52-vllm.zh-CN.md","verification":"static-source-review","license_summary":"Apache-2.0 root and source SPDX; model licenses separate",
+    "evidence":[
+      {"path":"vllm/entrypoints/openai/chat_completion/serving.py","start":125,"end":145,"kind":"implementation","note":"Template trust and automatic-tool constructor defaults"},
+      {"path":"vllm/entrypoints/openai/chat_completion/serving.py","start":264,"end":285,"kind":"implementation","note":"Model checks and renderer delegation"},
+      {"path":"vllm/entrypoints/openai/chat_completion/serving.py","start":307,"end":343,"kind":"implementation","note":"Parsing, request metadata and adapters"},
+      {"path":"vllm/entrypoints/openai/chat_completion/serving.py","start":345,"end":385,"kind":"implementation","note":"Per-input request identifiers and token budgets"},
+      {"path":"tests/tool_use/test_chat_completion_request_validations.py","start":10,"end":64,"kind":"test","note":"Missing and empty tools with tool_choice validation, not executed"},
+      {"path":"LICENSE","start":1,"end":14,"kind":"license","note":"Apache root terms"}
+    ]
+  },
+  {
+    "id":53,"repo":"berriai/litellm","commit":"f2118fc7670ba3fa736d9b8f4deef9077a45a720","commit_date":"2026-10-22T02:09:52+00:00","clone_path":"/tmp/oss-berriai-litellm","doc":"docs/oss-survey/reviewed/H53-litellm.zh-CN.md","verification":"static-source-review","license_summary":"MIT outside enterprise directory; enterprise/LICENSE applies within it",
+    "evidence":[
+      {"path":"litellm/proxy/hooks/model_max_budget_limiter.py","start":24,"end":54,"kind":"implementation","note":"Entity and window key namespaces"},
+      {"path":"litellm/proxy/hooks/model_max_budget_limiter.py","start":57,"end":82,"kind":"implementation","note":"Resolved configured model and shared counter-key function"},
+      {"path":"litellm/proxy/hooks/model_max_budget_limiter.py","start":84,"end":115,"kind":"implementation","note":"Time-bounded upgrade carry of legacy counters"},
+      {"path":"litellm/proxy/hooks/model_max_budget_limiter.py","start":118,"end":154,"kind":"implementation","note":"Per-model window start and invalid-budget fallback"},
+      {"path":"tests/unit/proxy/hooks/test_model_max_budget_limiter.py","start":111,"end":191,"kind":"test","note":"Post-success charging, entity isolation, collision and zero-budget tests, not executed"},
+      {"path":"LICENSE","start":1,"end":26,"kind":"license","note":"Explicit enterprise exclusion and MIT grant"}
+    ]
+  },
+  {
+    "id":54,"repo":"langfuse/langfuse","commit":"b914c2a58139bbae930af1e3aa4019883588014f","commit_date":"2026-10-21T22:24:26+00:00","clone_path":"/tmp/oss-langfuse-langfuse","doc":"docs/oss-survey/reviewed/H54-langfuse.zh-CN.md","verification":"static-source-review","license_summary":"MIT Expat outside specified ee directories; enterprise and third-party terms separate",
+    "evidence":[
+      {"path":"packages/shared/prisma/schema.prisma","start":44,"end":51,"kind":"implementation","note":"Authentication Session is not business TraceSession"},
+      {"path":"packages/shared/prisma/schema.prisma","start":595,"end":608,"kind":"implementation","note":"Business trace-session compound project key"},
+      {"path":"packages/shared/prisma/schema.prisma","start":610,"end":628,"kind":"implementation","note":"Project-scoped score configurations"},
+      {"path":"packages/shared/clickhouse/migrations/canonical/0002_observations.up.sql","start":1,"end":46,"kind":"implementation","note":"Observation schema and replacing merge semantics, not immutable audit"},
+      {"path":"web/src/__e2e__/otel-tenant-isolation.servertest.ts","start":20,"end":110,"kind":"test","note":"Project-A key ingestion isolated from B with deduplicated query, not executed"},
+      {"path":"LICENSE","start":1,"end":22,"kind":"license","note":"MIT and ee/third-party exclusions"}
+    ]
+  },
+  {
+    "id":56,"repo":"AgentOps-AI/agentops","commit":"f8e907b92dabe47232978023fdcb01e2a7d4b752","commit_date":"2026-06-25T01:25:03-07:00","clone_path":"/tmp/oss-AgentOps-AI-agentops","doc":"docs/oss-survey/reviewed/H56-agentops.zh-CN.md","verification":"static-source-review","license_summary":"MIT root LICENSE",
+    "evidence":[
+      {"path":"agentops/sdk/exporters.py","start":47,"end":78,"kind":"implementation","note":"Dynamic JWT provider and local auth-backoff state"},
+      {"path":"agentops/sdk/exporters.py","start":80,"end":103,"kind":"implementation","note":"Case-insensitive protected header filtering"},
+      {"path":"agentops/sdk/exporters.py","start":105,"end":120,"kind":"implementation","note":"Latest JWT applied after additional headers"},
+      {"path":"agentops/sdk/exporters.py","start":122,"end":176,"kind":"implementation","note":"Exporter failure result, temporary session headers and restoration"},
+      {"path":"tests/unit/sdk/test_exporters.py","start":61,"end":136,"kind":"test","note":"Mocked success and failure exception tests, not real HTTP verification"},
+      {"path":"LICENSE","start":1,"end":14,"kind":"license","note":"MIT root grant"}
+    ]
+  },
+  {
+    "id":57,"repo":"open-telemetry/semantic-conventions","commit":"0eb883be629282ae400a8063492626ff14dfb62f","commit_date":"2026-10-21T20:38:52+00:00","clone_path":"/tmp/oss-open-telemetry-semantic-conventions","doc":"docs/oss-survey/reviewed/H57-otel-semconv.zh-CN.md","verification":"static-source-review","license_summary":"Apache-2.0 in primary and GenAI companion roots",
+    "sources":[{"repo":"open-telemetry/semantic-conventions-genai","clone_path":"/tmp/oss-otel-semconv-genai","commit":"9ffc7e00c639be7712e544e3e54331e885dccf84"}],
+    "evidence":[
+      {"path":"docs/gen-ai/mcp.md","start":5,"end":11,"kind":"spec","note":"Primary repository explicitly points to migrated convention"},
+      {"source_repo":"open-telemetry/semantic-conventions-genai","path":"docs/gen-ai/mcp.md","start":43,"end":65,"kind":"spec","note":"Standard W3C context propagation through params._meta, not prompt injection"},
+      {"source_repo":"open-telemetry/semantic-conventions-genai","path":"docs/gen-ai/mcp.md","start":103,"end":113,"kind":"spec","note":"MCP parent versus HTTP ambient context and links"},
+      {"source_repo":"open-telemetry/semantic-conventions-genai","path":"docs/gen-ai/mcp.md","start":134,"end":155,"kind":"spec","note":"Conditional deduplication of outer tool span and low-cardinality naming"},
+      {"source_repo":"open-telemetry/semantic-conventions-genai","path":"docs/gen-ai/non-normative/tests/test_schemas.py","start":1,"end":54,"kind":"test","note":"Schema snapshot validation, not MCP runtime conformance"},
+      {"path":"LICENSE","start":1,"end":10,"kind":"license","note":"Primary Apache-2.0 text"},
+      {"source_repo":"open-telemetry/semantic-conventions-genai","path":"LICENSE","start":1,"end":10,"kind":"license","note":"Companion Apache-2.0 text"}
+    ]
+  }
+]

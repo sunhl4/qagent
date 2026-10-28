@@ -1,0 +1,48 @@
+\documentclass[11pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath}
+\usepackage{booktabs}
+\usepackage[hidelinks]{hyperref}
+\usepackage[a4paper,margin=25mm]{geometry}
+
+\newcommand{\labid}{golden-basic-pdflatex}
+
+\begin{document}
+\title{Golden Matrix Baseline (pdfLaTeX)}
+\author{Company Agent LaTeX Toolchain Lab}
+\date{2026-10-26}
+\maketitle
+
+\section{Purpose}
+This baseline project exercises the pdfLaTeX path: sections, cross references,
+an equation, and a table. The golden matrix compiles it without shell escape
+and compares the page count against the recorded Overleaf reference when one
+is supplied.
+
+\section{Method}\label{sec:method}
+The loss function is defined in Equation~\eqref{eq:loss}. This section uses
+Table~\ref{tab:devices} to document the devices referenced by the lab.
+
+\begin{equation}\label{eq:loss}
+  \mathcal{L} = \sum_{i=1}^{N} \bigl(f_{\theta}(x_i) - y_i\bigr)^2
+\end{equation}
+
+\begin{table}[ht]
+  \centering
+  \caption{Devices referenced by the golden lab}
+  \label{tab:devices}
+  \begin{tabular}{llr}
+    \toprule
+    Device & Region & Qubits \\
+    \midrule
+    iontrap-a & Hefei & 5 \\
+    simulator-b & Local & 5 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\section{Expected Result}
+The compiled PDF has at least one page and contains the baseline identifier
+\texttt{\labid}. Page geometry stays A4 with 25\,mm margins.
+
+\end{document}

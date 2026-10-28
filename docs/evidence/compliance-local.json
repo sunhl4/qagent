@@ -1,0 +1,358 @@
+{
+  "bound": {
+    "adapter_version": "workspace-source",
+    "contract_digest": "sha256:7f890204bb0d97766e0f3953a6fafdb2fe2fff9fbc0f8fc23bf0c638cc6ac584",
+    "dsh_pins": {
+      "deepseek_harness": "0.1.5-rc.2",
+      "dsh_node": "22.22.0",
+      "dsh_subagent_codex": "0.1.5-rc.2",
+      "openai_codex": "0.153.4",
+      "pnpm": "12.5.1",
+      "provider_protocol": "company-agent-provider/1.0"
+    },
+    "model_routes": {
+      "company_local_default": true,
+      "company_local_model": "deepseek-chat",
+      "local_model_token_configured": false,
+      "relay_token_configured": false,
+      "relay_token_value_present": false
+    },
+    "model_stack_evidence": {
+      "executed": false,
+      "reason": "no evidence path provided"
+    },
+    "python": "3.12.3",
+    "skill_registry_count": 5,
+    "skill_registry_version": "1.0.0"
+  },
+  "report": "company-agent-compliance/1.0",
+  "scenarios": [
+    {
+      "category": "normal",
+      "expect": "the supply-chain license register covers every external direct dependency",
+      "observed": {
+        "components": 11,
+        "required": 11,
+        "scopes": [
+          "contract",
+          "production_runtime",
+          "toolchain"
+        ]
+      },
+      "ok": true,
+      "scenario": "license-register-covers-direct-dependencies",
+      "session": "normal"
+    },
+    {
+      "category": "normal",
+      "expect": "every installed tree package declares an allowed license family",
+      "observed": {
+        "licenses": 6,
+        "ok": true,
+        "scanned": 84
+      },
+      "ok": true,
+      "scenario": "license-tree-scan-no-forbidden-family",
+      "session": "normal"
+    },
+    {
+      "category": "normal",
+      "expect": "identity+approvals+evidence on every row",
+      "observed": {
+        "identity_keys": [
+          "profile",
+          "subject",
+          "subject_source"
+        ],
+        "rows": 12,
+        "status": "ok"
+      },
+      "ok": true,
+      "scenario": "capability-layering-present",
+      "session": "normal"
+    },
+    {
+      "category": "normal",
+      "expect": "status complete with one bar chart per unit",
+      "observed": {
+        "charts": [
+          "count",
+          "dimensionless"
+        ],
+        "status": "ok"
+      },
+      "ok": true,
+      "scenario": "analysis-template-render",
+      "session": "normal"
+    },
+    {
+      "category": "normal",
+      "expect": "ok with untrusted trust marker",
+      "observed": {
+        "reasons": [],
+        "status": "ok",
+        "trust": "untrusted_reference_data"
+      },
+      "ok": true,
+      "scenario": "knowledge-search",
+      "session": "normal"
+    },
+    {
+      "category": "normal",
+      "expect": "a revoked admission row stops serving on the very next search",
+      "observed": {
+        "first_hit": [
+          {
+            "score": "1",
+            "snippet": "needle 撤权即时性演示段落",
+            "source": "builtin:recalled-doc.md",
+            "title": "recalled-doc",
+            "version": "sha256:d1bb12ef45794f0ee9a13c1fbc15c867af90c17687c005cb3375d5a6fb4bc133"
+          }
+        ],
+        "second_hits": 0,
+        "second_reasons": [
+          "revoked"
+        ]
+      },
+      "ok": true,
+      "scenario": "knowledge-recall-immediacy",
+      "session": "normal"
+    },
+    {
+      "category": "normal",
+      "expect": "trusted env subject reaches identity projection and durable receipts",
+      "observed": {
+        "identity": {
+          "subject": "operator@corp.example.com",
+          "subject_source": "trusted"
+        },
+        "record_subjects": [
+          "operator@corp.example.com"
+        ]
+      },
+      "ok": true,
+      "scenario": "subject-binding-trusted",
+      "session": "normal"
+    },
+    {
+      "category": "denied",
+      "expect": "misconfigured trusted subject resolves to unknown, never the OS identity",
+      "observed": {
+        "profile": "unknown",
+        "subject": "unknown@unknown",
+        "subject_source": "untrusted"
+      },
+      "ok": true,
+      "scenario": "subject-invalid-env-never-replaces-identity",
+      "session": "denied"
+    },
+    {
+      "category": "normal",
+      "expect": "approved registry line projects enabled compute.cloud for the trusted subject",
+      "observed": {
+        "compute_cloud": {
+          "approved_by": "gate-owner",
+          "enabled": true,
+          "reason": "approved",
+          "service": "compute.cloud"
+        },
+        "regime": "registry"
+      },
+      "ok": true,
+      "scenario": "tenant-registry-enablement-projection",
+      "session": "normal"
+    },
+    {
+      "category": "denied",
+      "expect": "an invalid registry yields unavailable facts, never an enabled service",
+      "observed": {
+        "enabled_states": [
+          false
+        ],
+        "regime": "unavailable"
+      },
+      "ok": true,
+      "scenario": "tenant-registry-invalid-fails-closed",
+      "session": "denied"
+    },
+    {
+      "category": "denied",
+      "expect": "unknown tool denied for every call (no cached grant)",
+      "observed": {
+        "statuses": [
+          "denied",
+          "denied"
+        ]
+      },
+      "ok": true,
+      "scenario": "unknown-tool",
+      "session": "denied"
+    },
+    {
+      "category": "denied",
+      "expect": "device execution policy denies boot",
+      "observed": "deny",
+      "ok": true,
+      "scenario": "device-decision-boot",
+      "session": "denied"
+    },
+    {
+      "category": "denied",
+      "expect": "hpc submission denied outside lab/sign",
+      "observed": "deny",
+      "ok": true,
+      "scenario": "hpc-submit-algo",
+      "session": "denied"
+    },
+    {
+      "category": "denied",
+      "expect": "invoke in boot denied without dispatch",
+      "observed": {
+        "dispatched_records": 0,
+        "status": "denied"
+      },
+      "ok": true,
+      "scenario": "device-invoke-boot",
+      "session": "denied"
+    },
+    {
+      "category": "normal",
+      "expect": "the portal open fact answers kind+route with no dispatch and zero URLs",
+      "observed": {
+        "dispatched_records": 0,
+        "payload_keys": [
+          "kind",
+          "note",
+          "ok",
+          "route"
+        ]
+      },
+      "ok": true,
+      "scenario": "portal-open-fact",
+      "session": "normal"
+    },
+    {
+      "category": "denied",
+      "expect": "unknown portal kinds fail closed with no dispatch",
+      "observed": {
+        "failed_closed": true
+      },
+      "ok": true,
+      "scenario": "portal-unknown-kind",
+      "session": "denied"
+    },
+    {
+      "category": "normal",
+      "expect": "portal navigation stays approval-free in boot (nothing is dispatched)",
+      "observed": "allow",
+      "ok": true,
+      "scenario": "portal-open-boot-allow",
+      "session": "normal"
+    },
+    {
+      "category": "denied",
+      "expect": "managed web fetch fails closed with zero network without an operator allowlist",
+      "observed": {
+        "dispatched_records": 0,
+        "error": "managed web fetch is disabled: no allowlist is configured",
+        "status": "error"
+      },
+      "ok": true,
+      "scenario": "web-fetch-allowlist-disabled",
+      "session": "denied"
+    },
+    {
+      "category": "denied",
+      "expect": "a run with no remaining termination budget is stopped before any dispatch",
+      "observed": {
+        "dispatched_records": 0,
+        "error": "termination budget exhausted (invocations)",
+        "status": "error"
+      },
+      "ok": true,
+      "scenario": "turn-budget-invocations-exhausted",
+      "session": "denied"
+    },
+    {
+      "category": "fault",
+      "expect": "error without any network dispatch",
+      "observed": {
+        "error": "COMPANY_AGENT_DEVICE_INVOKE_URL is not configured",
+        "receipts": [],
+        "status": "error"
+      },
+      "ok": true,
+      "scenario": "unconfigured-provider",
+      "session": "fault"
+    },
+    {
+      "category": "fault",
+      "expect": "unknown outcome stays recorded and flagged, no automatic replay",
+      "observed": {
+        "records": [
+          "outcome",
+          "dispatch"
+        ]
+      },
+      "ok": true,
+      "scenario": "fault-handling-closes-fail-states",
+      "session": "fault"
+    },
+    {
+      "category": "fault",
+      "expect": "structural failure closes without output",
+      "observed": {
+        "raised": true
+      },
+      "ok": true,
+      "scenario": "unknown-template",
+      "session": "fault"
+    },
+    {
+      "category": "reconciliation",
+      "expect": "marker reads unknown until platform facts",
+      "observed": {
+        "unknown": [
+          "req_33333333333333333333333333333333",
+          "req_22222222222222222222222222222222",
+          "req_11111111111111111111111111111111"
+        ]
+      },
+      "ok": true,
+      "scenario": "unresolved-dispatch-flagged",
+      "session": "reconciliation"
+    },
+    {
+      "category": "reconciliation",
+      "expect": "lost outcome stays flagged, never a silent failure",
+      "observed": 1,
+      "ok": true,
+      "scenario": "unknown-outcome-flagged",
+      "session": "reconciliation"
+    },
+    {
+      "category": "reconciliation",
+      "expect": "completed outcome clears the flag and binds the delivered business reference",
+      "observed": {
+        "refs": [
+          "job-42",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      "ok": true,
+      "scenario": "resolved-clears",
+      "session": "reconciliation"
+    }
+  ],
+  "summary": {
+    "ok": 25,
+    "total": 25
+  },
+  "task_set_sha256": "aabb07aac945ca68b72d0000d2c39f655006813e66149d4b34b579fb6e461ddd",
+  "task_set_version": "compliance-tasks-1.0"
+}

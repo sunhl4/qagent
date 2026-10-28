@@ -1,0 +1,46 @@
+{
+  "version": "2.0.0",
+  "output_content": {"scope": "all_tools", "known_credentials": "reject_echo", "reference_trust": "untrusted_reference_data", "max_safe_integer": 9007199254740991},
+  "max_result_bytes": 64000,
+  "provider_result": {
+    "max_depth": 8,
+    "max_mapping_items": 64,
+    "max_list_items": 32,
+    "max_string_bytes": 4000,
+    "forbidden_keys": [
+      "cal", "calibration", "shuttle", "bitstrings", "pauli_terms",
+      "qasm", "qasm3", "circuit", "circuit_body", "counts_full", "result_full",
+      "token", "secret", "api_key", "password", "authorization", "credential"
+    ]
+  },
+  "provider_errors": "generic_only",
+  "diagnostics": {
+    "version": "1.0",
+    "max_event_bytes": 2000,
+    "fields": ["version", "event", "tool", "operation", "request_id", "contract_digest", "elapsed_ms", "status", "error_category", "execution_state"],
+    "execution_states": ["not_dispatched", "dispatched", "completed", "unknown"],
+    "error_categories": ["none", "validation", "transport", "authentication", "remote", "invalid_result", "cancelled", "timeout", "internal"]
+  },
+  "device_execution": {"automatic_retries": 0, "request_id_is_idempotency_key": false, "uncertain_failure": "unknown"},
+  "receipts": {
+    "version": "1.2",
+    "dir_env": "COMPANY_AGENT_RECEIPT_DIR",
+    "fields": ["version", "record", "tool", "operation", "request_id", "contract_digest", "subject", "elapsed_ms", "timestamp", "status", "error_category", "execution_state", "business_ref"],
+    "records": ["dispatch", "outcome"],
+    "statuses": ["dispatched", "ok", "refused", "error"],
+    "execution_states": ["dispatched", "completed", "unknown"],
+    "binding_operations": ["cloud.submit", "device.run", "hpc.submit"],
+    "ref_rules": {
+      "cloud.submit": ["cloud_task"],
+      "hpc.submit": ["slurm_number", "job_name"],
+      "device.run": ["twin_id"]
+    },
+    "ref_max_bytes": 256,
+    "max_record_bytes": 1600,
+    "max_file_bytes": 262144,
+    "max_files": 14,
+    "evidence_max_age_seconds": 3600,
+    "subject_max_bytes": 253,
+    "trusted_subject_env": "COMPANY_AGENT_SUBJECT"
+  }
+}

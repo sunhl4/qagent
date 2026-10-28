@@ -1,0 +1,43 @@
+{
+  "commands": [
+    {
+      "command": [
+        "/tmp/company-agent-dev/bin/python",
+        "scripts/check_static.py"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "/tmp/company-agent-dev/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "--tb=short",
+        "tests/test_no_legacy.py"
+      ],
+      "exit_code": 0
+    }
+  ],
+  "documents_sha256": {
+    "/home/sunhl/.cursor/projects/mnt-d-Yaozheng-sunhl4-qagent/canvases/Q-agent-review-2026-09-28.canvas.tsx": "sha256:5e500daa87fcea387a7b528df348afb61298978ed91a2aa3614802c9483d3bb2",
+    "/home/sunhl/projects/company-quantum-platform/docs/ARCHITECTURE.md": "sha256:c40ca0073105b76a83e977816bb2d6e108b7dc96fbf898992cc05b3d3c4380db",
+    "/home/sunhl/projects/company-quantum-platform/docs/BACKLOG.md": "sha256:109be7aee4538c659d835ccf84344f105a19bb10ac8a5b9cff1c08d844bba476",
+    "/home/sunhl/projects/company-quantum-platform/docs/DECISIONS.md": "sha256:c0eaf33c9e453eccb5074f1697d91d6c5b9b3fd9a0e9382d2174904e2fbaae79",
+    "/home/sunhl/projects/company-quantum-platform/docs/PROGRESS.md": "sha256:1a04d3007735bd979094018aa4a9c55298e70413ad2aa26ade947525b57e1e4f",
+    "/home/sunhl/projects/company-quantum-platform/docs/SOURCE_INVENTORY.md": "sha256:d80136e9fae122aebc3dabd8b8dbd954134ac226c6f0710297d2a0e866d3909d",
+    "/home/sunhl/projects/company-quantum-platform/docs/STATUS.md": "sha256:4d39b4b0324b1d440dc5bdc1abcf00b5f67d89414a4c4e703386f4ef95485a3b",
+    "/home/sunhl/projects/company-quantum-platform/docs/architecture.html": "sha256:e0a846f802ee707ced67ea5e61c87c367739d4f09a4f2f36f0c1b5de0f48c29e",
+    "/mnt/d/Yaozheng/sunhl4-qagent/README.md": "sha256:7eb22fc467b8b6f8c6fa482b4a12a316c27ac9423493aebe447050c091d49fd9",
+    "/mnt/d/Yaozheng/sunhl4-qagent/docs/deployment-and-evidence.zh-CN.md": "sha256:e470e45518227fdceca7ed5cfadf3f6e045e907c5fd74623dda0d491769eae91",
+    "/mnt/d/Yaozheng/sunhl4-qagent/docs/implementation-2026-10-08.zh-CN.md": "sha256:3dd5179627c22c7ff720be899f9a11ff1b39371297fbe7b40d53ec8fbe4f24c4"
+  },
+  "ended_at": "2026-10-08T15:31:13.848272+00:00",
+  "external_acceptance": "blocked",
+  "format": "company-agent-post-delivery-check/1",
+  "inputs_still_match_final_run": true,
+  "production_authorized": false,
+  "release_accepted": false,
+  "scope": "retained_evidence_identity_samples_links_static_and_document_architecture",
+  "status": "passed"
+}

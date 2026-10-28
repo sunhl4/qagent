@@ -1,0 +1,116 @@
+- insert:
+    - id: company-agent-policy
+      name: "@unitqc/company-agent-policy"
+    - id: company-agent-core
+      name: "@unitqc/company-agent-core"
+    - id: company-agent-quantum
+      name: "@unitqc/company-agent-quantum"
+    - id: company-agent-hpc
+      name: "@unitqc/company-agent-hpc"
+    - id: company-agent-device
+      name: "@unitqc/company-agent-device"
+    - id: company-agent-latex
+      name: "@unitqc/company-agent-latex"
+    - id: company-agent-office
+      name: "@unitqc/company-agent-office"
+    - id: company-agent-plan
+      name: "@unitqc/company-agent-plan"
+
+- id: subagent-codex
+  name: "@deepseek-ai/dsh-subagent-codex"
+  config:
+    providerName: codex
+    # permissionMode: never is the upstream default for 0.1.5-rc.2 — restated
+    # here so a later DSH default change cannot silently widen approval, and
+    # pinned textually by scripts/verify_dsh_profiles.py (REQUIRED).
+    permissionMode: never
+    # inheritsParentContext is NOT a config-schema key: the provider hardcodes
+    # the capability to false (its CodexProvider class). Stating it here is
+    # declarative intent for reviewers and for the same gate pin; the real
+    # guarantee lives in the provider + the gate's FORBIDDEN tool checks.
+    inheritsParentContext: false
+
+# 受管通用工具行：web bundle 对 base 挂载的整行加 disabled，patch 层整行覆写
+# 必须显式 disabled: false 才能重新启用。配置键同步重述，避免丢默认值。
+# 只启用合同 managed_builtins 名单内的全部受管工具；不启用任何 shell 或
+# str-replace 类编辑工具（与 tool-fs edit 语义重复）。
+- id: tool-fs
+  disabled: false
+  config:
+    # 单次 read 返回上限：衔接 contracts/results.json 的输出预算。
+    readMaxBytes: 51200
+
+- id: tool-fs-search
+  disabled: false
+  config:
+    sampleOverCapGlobResults: false
+
+- id: tool-web
+  disabled: false
+  config:
+    fetch: false
+    searchTimeoutMs: 60000
+
+# 公司本地 DeepSeek 端点（openai-completions 自托管路由），默认常开：
+# 缺省无 apiKeyEnv = 免鉴权直连；本地服务要求鉴权时改为受管注入密钥环境
+# 引用（COMPANY_AGENT_LOCAL_MODEL_TOKEN）。地址不进入模型上下文。
+- id: llm-pi-ai
+  config:
+    providers:
+      company-local:
+        displayName: Company Local DeepSeek
+        api: openai-completions
+        baseURL: http://127.0.0.1:8000/v1
+        models:
+          - id: deepseek-chat
+      # 内网公司中转（openai-completions 兼容网关）。密钥经 apiKeyEnv 引用
+      # 在每请求解析。继承的环境变量优先于 DSH 凭据存储；若希望在
+      # Models 页管理密钥，需先停止注入同名 COMPANY_RELAY_API_KEY。
+      # 开发环境可由 runtime-dev.env 注入。密钥不进入合同仓或模型上下文。
+      # 模型列表来自 2026-10-22 DSH discoverModels 的完整响应，不按厂商
+      # 筛选。未披露容量的模型保留适配器缺省值，不推测其真实容量。
+      # 后续在原生 Models 页「获取可用模型」并采用新条目，无需重启。
+      company-relay:
+        displayName: Company Relay (公司中转)
+        api: openai-completions
+        baseURL: http://192.168.110.150:4000/v1
+        apiKeyEnv: COMPANY_RELAY_API_KEY
+        models:
+          - id: yaozheng-GLM-5.3-Flash
+          - id: gpt-6.1-sol
+            contextWindow: 922000
+            maxTokens: 128000
+          - id: gpt-6-astra
+            contextWindow: 922000
+            maxTokens: 128000
+          - id: gpt-6-luna
+            contextWindow: 922000
+            maxTokens: 128000
+          - id: codex-auto-review
+
+# 默认模型路由 company-local / deepseek-chat；官方 DeepSeek 适配器（llm-deepseek）
+# 保持挂载，可在 Models 页手动选用。端点不可用时诚实失败，不回退公网。
+- id: agent-default-model
+  config:
+    provider: company-local
+    model: deepseek-chat
+
+- id: skill-filesystem
+  disabled: false
+  config:
+    includeDefaultRoots: false
+    customSkillDirs:
+      - !!js process.env.COMPANY_AGENT_SKILL_ROOT
+    watch: false
+
+- id: tool-skill
+  disabled: false
+
+- id: agent-presets
+  config:
+    default: company-agent
+    roots:
+      - path: !!js process.env.COMPANY_AGENT_PRESET_ROOT
+        trust: system
+    includeShippedRoot: false
+    includeUserRoot: false

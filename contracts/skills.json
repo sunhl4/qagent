@@ -1,0 +1,108 @@
+{
+  "version": "1.0.0",
+  "skills": [
+    {
+      "name": "company-knowledge",
+      "path": "skills/company-knowledge/SKILL.md",
+      "sha256": "8e29736d838c26345c5c7d52d2679089500d305dbdeba4a4a517d73de9967a11",
+      "scripts": [],
+      "revoked": false,
+      "when": [
+        {
+          "profiles": [
+            "company-agent",
+            "company-agent-minimal"
+          ],
+          "presets": [
+            "boot",
+            "lab",
+            "algo",
+            "sign"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "company-docs-research",
+      "path": "skills/company-docs-research/SKILL.md",
+      "sha256": "4eb8ebe337cb2bb48be9267f899bb9e89acfd3da71bda5ab8c9c93f2a7a64b1f",
+      "scripts": [],
+      "revoked": false,
+      "when": [
+        {
+          "profiles": [
+            "company-agent",
+            "company-agent-minimal"
+          ],
+          "presets": [
+            "boot",
+            "lab",
+            "algo",
+            "sign"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "company-software-development",
+      "path": "skills/company-software-development/SKILL.md",
+      "sha256": "6368751556ebe0574358bf2a16d7e8ea8ab3a722555122d05b36800270e94100",
+      "scripts": [],
+      "revoked": false,
+      "when": [
+        {
+          "profiles": [
+            "company-agent-minimal"
+          ],
+          "presets": [
+            "boot",
+            "algo"
+          ]
+        },
+        {
+          "profiles": [
+            "company-agent"
+          ],
+          "presets": [
+            "algo"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "quantum-workflow",
+      "path": "skills/quantum-workflow/SKILL.md",
+      "sha256": "c44aa96199f9a9d1e805d66c1fad587158f15b9167eee603980b04db7ff1769d",
+      "scripts": [],
+      "revoked": false,
+      "when": [
+        {
+          "profiles": [
+            "company-agent"
+          ],
+          "presets": [
+            "lab",
+            "sign"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "company-plan",
+      "path": "skills/company-plan/SKILL.md",
+      "sha256": "3eda242a1ee6c42b74c53558cdb18b6c6a51459407257ae186e9e861656f7bdb",
+      "scripts": [],
+      "revoked": false,
+      "when": [
+        {
+          "profiles": [
+            "company-agent"
+          ],
+          "presets": [
+            "lab"
+          ]
+        }
+      ]
+    }
+  ]
+}

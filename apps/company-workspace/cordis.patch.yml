@@ -1,0 +1,4 @@
+# Company Agent workspace presentation and resource projection.
+- insert:
+    - id: company-workspace-shell
+      name: ./host.mjs

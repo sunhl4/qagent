@@ -1,0 +1,218 @@
+import assert from 'node:assert/strict';
+import vm from 'node:vm';
+import test from 'node:test';
+import {spawnSync} from 'node:child_process';
+import {Readable} from 'node:stream';
+import {mkdtemp, rm, writeFile} from 'node:fs/promises';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
+import http from 'node:http';
+import {Writable} from 'node:stream';
+import {apply} from '../../apps/company-workspace/host.mjs';
+
+async function host(port){
+ // Explicit per-test port: ambient COMPANY_AGENT_DSH_PORT from developer
+ // shells must never decide the trusted origin under test.
+ if(port !== undefined) process.env.COMPANY_AGENT_DSH_PORT = port;
+ const routes=new Map();let tap;
+ const ctx={effect:fn=>fn(),workspaceRegistry:{list:()=>[]},connection:{authorizeIndex:(req,res)=>{if(String(req.headers.cookie||'').split(';').some(part=>part.trim()==='fixture'))return true;res.writeHead(401);res.end();return false;}},webServer:{register:route=>{routes.set(route.path,route.handler);return()=>routes.delete(route.path);},tapIndex:fn=>{tap=fn;return()=>{};}}};
+ await apply(ctx);return{routes,tap};
+}
+function response(){return{status:0,headers:{},body:'',writeHead(status,headers={}){this.status=status;this.headers=headers;},end(body=''){this.body=body;}};}
+function streamingResponse(){
+ const chunks=[];let status=0,headers={};
+ const result=new Writable({write(chunk,_encoding,callback){chunks.push(Buffer.from(chunk));callback();}});
+ result.writeHead=(nextStatus,nextHeaders={})=>{status=nextStatus;headers=nextHeaders;};
+ const end=result.end.bind(result);result.end=body=>{if(body!==undefined)chunks.push(Buffer.from(body));end();};
+ result.result=()=>({status,headers,body:Buffer.concat(chunks).toString()});
+ return result;
+}
+
+test('access seam keeps its documented client-facing envelope',async()=>{
+ const {routes}=await host('3081');
+ const res=response();await routes.get('/company-workspace/access')({method:'GET',headers:{host:'127.0.0.1:3081',cookie:'fixture'}},res);
+ assert.equal(res.status,200);
+ const body=JSON.parse(res.body);
+ assert.deepEqual(Object.keys(body).sort(),['cloud','hpc','requests']);
+ for(const kind of ['cloud','hpc']){
+  assert.deepEqual(Object.keys(body[kind]),['open']);
+  assert.equal(typeof body[kind].open,'boolean');
+ }
+ assert.ok(Array.isArray(body.requests));
+ // Envelope is the documented access-seam contract (docs/company-workspace-access-seam.zh-CN.md):
+ // changing it is a contract-level change and must update the seam doc, the Plugins
+ // settings page consumer, and this pin together.
+ assert.match(res.headers['content-type'],/application\/json/);
+});
+
+test('UI assets require native auth and exact trusted origin',async()=>{
+ const {routes}=await host('3081');
+ for(const handler of routes.values()){
+  for(const headers of [{host:'evil.example',cookie:'fixture'},{host:'127.0.0.1:3081',origin:'https://evil.example',cookie:'fixture'},{host:'127.0.0.1:3081','sec-fetch-site':'cross-site',cookie:'fixture'}]){
+   const res=response();handler({method:'GET',headers},res);assert.equal(res.status,403);
+  }
+  const res=response();handler({method:'GET',headers:{host:'127.0.0.1:3081'}},res);assert.equal(res.status,401);
+ }
+ const res=response();routes.get('/company-workspace/content')({method:'GET',headers:{host:'127.0.0.1:3081',cookie:'fixture'}},res);
+ assert.equal(res.status,200);assert.doesNotMatch(res.body,/<iframe id="dsh-native-frame"/);assert.match(res.body,/content-embed/);
+ assert.match(res.body,/event.origin!==location.origin/);assert.match(res.body,/event.source!==parent/);
+});
+
+test('custom loopback port keeps exact Host and Origin checks',async()=>{
+ const previous=process.env.COMPANY_AGENT_DSH_PORT;
+ let routes;
+ try{
+  process.env.COMPANY_AGENT_DSH_PORT='3084';
+  ({routes}=await host('3084'));
+ }finally{
+  if(previous===undefined)delete process.env.COMPANY_AGENT_DSH_PORT;
+  else process.env.COMPANY_AGENT_DSH_PORT=previous;
+ }
+ const handler=routes.get('/company-workspace/client.js');
+ const allowed=response();
+ handler({method:'GET',headers:{host:'127.0.0.1:3084',origin:'http://127.0.0.1:3084',cookie:'fixture'}},allowed);
+ assert.equal(allowed.status,200);
+ for(const headers of [
+  {host:'127.0.0.1:3081',cookie:'fixture'},
+  {host:'127.0.0.1:3084',origin:'http://127.0.0.1:3081',cookie:'fixture'},
+  {host:'127.0.0.1:3084',origin:'https://evil.example',cookie:'fixture'},
+  {host:'127.0.0.1:3084','sec-fetch-site':'cross-site',cookie:'fixture'},
+ ]){
+  const res=response();handler({method:'GET',headers},res);assert.equal(res.status,403);
+ }
+ const unauthenticated=response();
+ handler({method:'GET',headers:{host:'127.0.0.1:3084'}},unauthenticated);
+ assert.equal(unauthenticated.status,401);
+});
+
+test('invalid configured loopback ports fail before mounting routes',async()=>{
+ const previous=process.env.COMPANY_AGENT_DSH_PORT;
+ try{
+  for(const port of ['', '0', '65536', '3084/path', 'evil.example']){
+   process.env.COMPANY_AGENT_DSH_PORT=port;
+   await assert.rejects(host(),/COMPANY_AGENT_DSH_PORT/);
+  }
+ }finally{
+  if(previous===undefined)delete process.env.COMPANY_AGENT_DSH_PORT;
+  else process.env.COMPANY_AGENT_DSH_PORT=previous;
+ }
+});
+
+test('boot composition appends the company module and preserves native entries',async()=>{
+ const {tap}=await host('3081');
+ const markup=tap('<html><head></head><body></body></html>');
+ const script=markup.match(/<script>([\s\S]*?)<\/script>/)[1];
+ const original={rev:'pinned',entries:['@deepseek-ai/dsh-client-ui-layout','@deepseek-ai/dsh-client-ui-sidebar','@deepseek-ai/dsh-client-ui-conversation','@deepseek-ai/dsh-client-ui-workspace'].map(id=>({id,url:'/plugins/'+id,rev:'native',inject:['@deepseek-ai/dsh-client-ui-layout']})),batches:[{phase:'application',url:'/plugins/native-combo',rev:'native',entries:['@deepseek-ai/dsh-client-ui-layout','@deepseek-ai/dsh-client-ui-sidebar']}],rev:'pinned'};
+ const graph=structuredClone(original);const links=[];
+ vm.runInNewContext(script,{URL,location:{href:'http://127.0.0.1:3081/'},__DSH_BOOT__:graph,document:{createElement:()=>({}),head:{append:n=>links.push(n)}}});
+ // Pure append: every native factory keeps its exact url/rev (no replacement,
+ // no filtering) and the company module rides at the end with its inject list.
+ for(const entry of original.entries){
+  const next=graph.entries.find(e=>e.id===entry.id);
+  assert.equal(next.url,'/plugins/'+entry.id);assert.equal(next.rev,'native');
+ }
+ assert.equal(graph.entries.length,original.entries.length+1);
+ const added=graph.entries.at(-1);
+ assert.equal(added.id,'@unitqc/company-workspace-ui');
+ assert.equal(added.url,'/company-workspace/client.js');
+ assert.deepEqual(added.inject.map(item=>String(item)).join(','),
+  '@deepseek-ai/dsh-client-ui-renderer,@deepseek-ai/dsh-client-ui-session,@deepseek-ai/dsh-client-ui-theme,@deepseek-ai/dsh-client-locale',
+  'the company module injects only renderer/session/theme/locale faces');
+ assert.equal(links.length,1);assert.match(graph.rev,/-company-/);
+ // native=1 composes nothing at all; and the guard is idempotent.
+ const native=structuredClone(original);vm.runInNewContext(script,{URL,location:{href:'http://127.0.0.1:3081/?native=1'},__DSH_BOOT__:native});assert.deepEqual(native,original);
+ // The presence guard also keeps a second composition pass from duplicating the module.
+ vm.runInNewContext(script,{URL,location:{href:'http://127.0.0.1:3081/'},__DSH_BOOT__:graph});
+ assert.equal(graph.entries.filter(e=>e.id==='@unitqc/company-workspace-ui').length,1,
+  'duplicate composition is rejected by the guard');
+});
+
+test('portal proxy embeds configured pages and isolates portal cookies from Agent auth',async()=>{
+ const previous={port:process.env.COMPANY_AGENT_DSH_PORT,config:process.env.UQC_WORKSPACE_CONFIG,hpc:process.env.HPC_PORTAL};
+ const upstream=http.createServer((req,res)=>{
+  if(req.url==='/'){
+   res.setHeader('content-type','text/html');res.setHeader('set-cookie','SESSIONID=portal-secret; Path=/; HttpOnly');
+   res.end('<script src="/app.js"></script><form action="/login" method="post"></form><a href="/next">next</a>');return;
+  }
+  if(req.url==='/login'&&req.method==='POST'){
+   let body='';req.on('data',chunk=>body+=chunk);req.on('end',()=>{res.setHeader('content-type','text/plain');res.end(JSON.stringify({body,cookie:req.headers.cookie||''}));});return;
+  }
+  res.statusCode=404;res.end('missing');
+ });
+ await new Promise(resolve=>upstream.listen(0,'127.0.0.1',resolve));
+ try{
+  process.env.COMPANY_AGENT_DSH_PORT='3099';process.env.UQC_WORKSPACE_CONFIG='/tmp/unitqc-proxy-test-missing.json';process.env.HPC_PORTAL=`http://127.0.0.1:${upstream.address().port}`;
+  const {routes}=await host('3099');const handler=routes.get('/company-workspace/portal/hpc');assert.ok(handler);
+  const page=streamingResponse();await handler({method:'GET',url:'/company-workspace/portal/hpc/',headers:{host:'127.0.0.1:3099',cookie:'fixture'}},page);await new Promise(resolve=>setTimeout(resolve,30));
+  const pageResult=page.result();assert.equal(pageResult.status,200);assert.match(pageResult.body,/\/company-workspace\/portal\/hpc\/app\.js/);assert.match(pageResult.body,/\/company-workspace\/portal\/hpc\/login/);assert.match(pageResult.headers['set-cookie'][0],/^UQC_PORTAL_HPC_SESSIONID=/);
+  const post=streamingResponse();const {Readable}=await import('node:stream');const request=Readable.from([Buffer.from('username=a')]);request.method='POST';request.url='/company-workspace/portal/hpc/login';request.headers={host:'127.0.0.1:3099',cookie:'fixture; dsh-auth=agent-secret; UQC_PORTAL_HPC_SESSIONID=portal-secret','content-type':'application/x-www-form-urlencoded','content-length':'10'};await handler(request,post);await new Promise(resolve=>setTimeout(resolve,30));
+  const postResult=post.result();assert.equal(postResult.status,200);const seen=JSON.parse(postResult.body);assert.equal(seen.body,'username=a');assert.equal(seen.cookie,'SESSIONID=portal-secret');
+ }finally{
+  await new Promise(resolve=>upstream.close(resolve));
+  for(const [key,value] of Object.entries(previous)){if(value===undefined)delete process.env[key];else process.env[key]=value;}
+ }
+});
+test('grant is token-only and settings never accept credentials',async()=>{
+ const envKeys=['UQC_WORKSPACE_CONFIG','COMPANY_AGENT_DSH_PORT','HPC_PORTAL','HPC_GATEWAY','HPC_JOBS_URL','HPC_TOKEN','HPC_USER','HPC_HOST','UQC_CLOUD_API_KEY','UQC_CLOUD_API_BASE_URL','UQC_CLOUD_PORTAL'];
+ const previous=Object.fromEntries(envKeys.map(key=>[key,process.env[key]]));
+ for(const key of envKeys)delete process.env[key];
+ const dir=await mkdtemp(join(tmpdir(),'unitqc-seam-grant-'));
+ // Pre-seed the admin secret so the token used below is deterministic.
+ await writeFile(join(dir,'admin-token'),'grant-test-token-42\n',{mode:0o600});
+ try{
+  process.env.COMPANY_AGENT_DSH_PORT='3098';
+  process.env.UQC_WORKSPACE_CONFIG=join(dir,'workspace.json');
+  const {routes}=await host('3098');
+  const post=(path,payload,headers={})=>{
+   const request=Readable.from([Buffer.from(JSON.stringify(payload))]);
+   request.method='POST';request.url=path;request.headers={host:'127.0.0.1:3098',cookie:'fixture','content-type':'application/json',...headers};
+   const result=streamingResponse();
+   return routes.get(path)(request,result).then(()=>new Promise(resolve=>setTimeout(()=>resolve(result.result()),20)));
+  };
+  // §2: grant sits outside the browser-session seat — a valid session cookie
+  // and no/incorrect admin token must be refused, so signed-in users cannot
+  // self-grant or inject credentials.
+  const noToken=await post('/company-workspace/access/grant',{kind:'cloud'});
+  assert.equal(noToken.status,401);assert.equal(noToken.body,'{"error":"unauthorized"}');
+  const wrongToken=await post('/company-workspace/access/grant',{kind:'cloud'},{'x-admin-token':'forged'});
+  assert.equal(wrongToken.status,401);
+  const granted=await post('/company-workspace/access/grant',{kind:'cloud',cloudKey:'sk-grant-test'},{'x-admin-token':'grant-test-token-42'});
+  assert.equal(granted.status,200);
+  const grantBody=JSON.parse(granted.body);
+  assert.deepEqual(Object.keys(grantBody).sort(),['granted','ok']);
+  assert.deepEqual(Object.keys(grantBody.granted).sort(),['kind','open','requestsUpdated']);
+  // Credentials cannot enter through the ordinary settings POST (§2:
+  // non-sensitive fields only); the grant path is the sole credential write-in.
+  const cred=await post('/company-workspace/settings',{cloudKey:'sk-should-fail'});
+  assert.equal(cred.status,400);assert.match(cred.body,/凭据由服务端统一注入/);
+  const plain=await post('/company-workspace/settings',{cloudApi:'http://127.0.0.1:8003'});
+  assert.equal(plain.status,200);
+  const plainBody=JSON.parse(plain.body);
+  // §2非敏感视图: booleans/addresses only — the credential itself and its env
+  // origin must never appear, under any ambient configuration.
+  assert.equal(plainBody.cloudKeySet,true);
+  assert.equal(plainBody.cloudApi,'http://127.0.0.1:8003');
+  assert.deepEqual(Object.keys(plainBody).sort(),['cloudApi','cloudKeySet','cloudPortal','hpcHost','hpcPortal','hpcUser','note'].sort());
+  // The granted credential itself must never be echoed back in any field.
+  assert.ok(!JSON.stringify(plainBody).includes('sk-grant-test'));
+ }finally{
+  // Async server writes (config/access ledgers) may still be settling; give
+  // them a beat, then remove the workspace dir with retries.
+  await new Promise(resolve=>setTimeout(resolve,150));
+  for(let attempt=0;attempt<5;attempt+=1){
+   try{await rm(dir,{recursive:true,force:true});break;}
+   catch(error){if(attempt===4)throw error;await new Promise(resolve=>setTimeout(resolve,120));}
+  }
+  for(const [key,value] of Object.entries(previous)){if(value===undefined)delete process.env[key];else process.env[key]=value;}
+ }
+});
+test('presentation overlay cannot activate in production or device profile',()=>{
+ const gate = /Workspace demo UI requires development with company-agent-minimal \(boot\|algo\) or company-agent \(lab\|sign\)/;
+ const result=spawnSync(process.execPath,[new URL('../../scripts/dsh-cli.mjs',import.meta.url).pathname],{env:{PATH:process.env.PATH,COMPANY_AGENT_DEPLOYMENT_MODE:'production',COMPANY_AGENT_PROFILE:'company-agent-minimal',COMPANY_AGENT_PRESET:'boot',COMPANY_AGENT_DEMO_UI:'1'},encoding:'utf8'});
+ assert.notEqual(result.status,0);assert.match(result.stderr,gate);
+ // The composed company-agent profile keeps the presentation shell in
+ // development under its approval presets (lab/sign); the gate lets it through
+ // to the next boot check instead.
+ const allowed=spawnSync(process.execPath,[new URL('../../scripts/dsh-cli.mjs',import.meta.url).pathname],{env:{PATH:process.env.PATH,COMPANY_AGENT_DEPLOYMENT_MODE:'development',COMPANY_AGENT_PROFILE:'company-agent',COMPANY_AGENT_PRESET:'lab',COMPANY_AGENT_DEMO_UI:'1'},encoding:'utf8'});
+ assert.notEqual(allowed.status,0);assert.doesNotMatch(allowed.stderr,gate);assert.match(allowed.stderr,/COMPANY_AGENT_DSH_ENTRY/);
+});

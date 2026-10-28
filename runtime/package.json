@@ -1,0 +1,14 @@
+{
+  "name": "unitqc-company-agent-runtime",
+  "private": true,
+  "dependencies": {
+    "@deepseek-ai/dsh": "0.1.5-rc.2"
+  },
+  "engines": {
+    "runtime": {
+      "name": "node",
+      "version": "22.22.0",
+      "onFail": "download"
+    }
+  }
+}

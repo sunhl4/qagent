@@ -1,0 +1,33 @@
+{
+  "task_set": "ts1-narrow-chain",
+  "version": "1.0.0",
+  "frozen_at": "2026-10-26T11:30:00+08:00",
+  "status": "frozen_for_g2_narrow_chain",
+  "scope": "P0 execution record section 3 items 1-6 with fake-platform stand-ins; real endpoint promotion equals swapping the same gates onto owner-provided endpoints",
+  "invariants_ref": "AGENTS.md hard rules; no new runtime; handles asset_id/circuit_id/twin_id only; device ask lab/sign and deny boot/algo; unknown is never retried",
+  "pass_bar": "every task passes its gate and every counterexample is denied with evidence; one failing row blocks G2",
+  "tasks": [
+    {"id": "T1", "name": "catalog discovery with component_id and cursor paging", "gate": "tests/test_platform_compatibility.py -m platform_compatibility", "criterion": "runnable entry returns id/version/runnable=true; cursor paging stable; query drift rejected"},
+    {"id": "T2", "name": "controlled algorithm.run returns asset_id and circuit_id", "gate": "tests/test_platform_compatibility.py -m platform_compatibility", "criterion": "summary metrics follow scientific-metrics/1.0; no synthetic bodies leaked into results"},
+    {"id": "T3", "name": "asset.get / asset.metrics on returned handle", "gate": "tests/test_platform_compatibility.py -m platform_compatibility", "criterion": "metrics snapshot equals run metrics; error status for foreign access"},
+    {"id": "T4", "name": "metric-summary template consumes fetched table", "gate": "tests/test_platform_compatibility.py -m platform_compatibility", "criterion": "analysis audit status complete; structural violations fail closed"},
+    {"id": "T5", "name": "quantum_simulate with QASM subset and bounded shots", "gate": "tests/test_invoke.py -k simulate", "criterion": "shots bounds enforced; request uses circuit_id handle"},
+    {"id": "T6", "name": "HPC submit/status/fetch chain against managed provider", "gate": "tests/test_hpc.py", "criterion": "slurm_number/job_name bound into business_ref on success; provider cases 101 passed on frozen day"},
+    {"id": "T7", "name": "receipts carry business_ref and survive reload", "gate": "tests/test_receipts.py -k business_ref", "criterion": "ref binds only to ok+completed outcome; reconcile exposes it"}
+  ],
+  "counterexamples": [
+    {"id": "C1", "name": "simulator cannot mint or hide twin_id", "gate": "tests/test_providers.py::test_simulator_cannot_mint_twin_id and test_simulator_cannot_hide_nested_twin_id", "expected": "denied"},
+    {"id": "C2", "name": "device run denied in boot/algo; unknown tool denied", "gate": "python3 scripts/compliance_gate.py scenarios boot-algo-deny and unknown-tool", "expected": "denied, not_dispatched"},
+    {"id": "C3", "name": "component_version/catalog_version/parameter drift rejected", "gate": "tests/test_platform_compatibility.py -m platform_compatibility", "expected": "error before dispatch"},
+    {"id": "C4", "name": "cross-tenant asset access rejected", "gate": "tests/test_platform_compatibility.py -m platform_compatibility (owner-b token)", "expected": "error, no data"},
+    {"id": "C5", "name": "unconfirmed dispatch enters unknown until resolved", "gate": "tests/test_receipts.py::test_unconfirmed_dispatch_only_is_flagged_as_unknown", "expected": "unknown flag cleared only by platform-truth resolution"},
+    {"id": "C6", "name": "invalid token and bad envelopes fail closed", "gate": "tests/test_providers.py -k envelope; tests/test_platform_compatibility.py (invalid-synthetic-token)", "expected": "error, zero egress"},
+    {"id": "C7", "name": "business_ref not bound outside a success", "gate": "tests/test_receipts.py::test_business_ref_never_binds_outside_a_binding_success", "expected": "ref empty for dispatch/refused/unknown"}
+  ],
+  "last_full_gate_run": {
+    "date": "2026-10-26",
+    "results": {"platform_compatibility": "1 passed", "targeted_subset": "78 passed", "hpc_provider": "101 passed", "full_pytest": "871 passed / 2 deselected", "compliance_gate": "13/13 ok"}
+  },
+  "not_in_scope": ["real tenant directories", "unattended device runs", "latex pull/push flows", "multi-endpoint cloud fan-out"],
+  "real_endpoint_upgrade": "promote by pointing the same gates at owner-provided endpoints; fixtures remain as fallback evidence"
+}

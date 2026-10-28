@@ -1,0 +1,72 @@
+lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
+importers:
+
+  .:
+    dependencies:
+      '@unitqc/company-agent-core':
+        specifier: file:../../packages/company-agent-core
+        version: file:../../packages/company-agent-core
+      '@unitqc/company-agent-hpc':
+        specifier: file:../../packages/company-agent-hpc
+        version: file:../../packages/company-agent-hpc
+      '@unitqc/company-agent-latex':
+        specifier: file:../../packages/company-agent-latex
+        version: file:../../packages/company-agent-latex
+      '@unitqc/company-agent-plan':
+        specifier: file:../../packages/company-agent-plan
+        version: file:../../packages/company-agent-plan
+      '@unitqc/company-agent-policy':
+        specifier: file:../../packages/company-agent-policy
+        version: file:../../packages/company-agent-policy
+      '@unitqc/company-agent-quantum':
+        specifier: file:../../packages/company-agent-quantum
+        version: file:../../packages/company-agent-quantum
+
+packages:
+
+  '@unitqc/company-agent-core@file:../../packages/company-agent-core':
+    resolution: {directory: ../../packages/company-agent-core, type: directory}
+
+  '@unitqc/company-agent-hpc@file:../../packages/company-agent-hpc':
+    resolution: {directory: ../../packages/company-agent-hpc, type: directory}
+
+  '@unitqc/company-agent-latex@file:../../packages/company-agent-latex':
+    resolution: {directory: ../../packages/company-agent-latex, type: directory}
+
+  '@unitqc/company-agent-plan@file:../../packages/company-agent-plan':
+    resolution: {directory: ../../packages/company-agent-plan, type: directory}
+
+  '@unitqc/company-agent-policy@file:../../packages/company-agent-policy':
+    resolution: {directory: ../../packages/company-agent-policy, type: directory}
+
+  '@unitqc/company-agent-quantum@file:../../packages/company-agent-quantum':
+    resolution: {directory: ../../packages/company-agent-quantum, type: directory}
+
+snapshots:
+
+  '@unitqc/company-agent-core@file:../../packages/company-agent-core': {}
+
+  '@unitqc/company-agent-hpc@file:../../packages/company-agent-hpc':
+    dependencies:
+      '@unitqc/company-agent-core': file:../../packages/company-agent-core
+
+  '@unitqc/company-agent-latex@file:../../packages/company-agent-latex':
+    dependencies:
+      '@unitqc/company-agent-core': file:../../packages/company-agent-core
+
+  '@unitqc/company-agent-plan@file:../../packages/company-agent-plan':
+    dependencies:
+      '@unitqc/company-agent-core': file:../../packages/company-agent-core
+
+  '@unitqc/company-agent-policy@file:../../packages/company-agent-policy':
+    dependencies:
+      '@unitqc/company-agent-core': file:../../packages/company-agent-core
+
+  '@unitqc/company-agent-quantum@file:../../packages/company-agent-quantum':
+    dependencies:
+      '@unitqc/company-agent-core': file:../../packages/company-agent-core

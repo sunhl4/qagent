@@ -1,0 +1,81 @@
+{
+  "version": "1.0.0",
+  "templates": [
+    {
+      "id": "metric-summary",
+      "kind": "metrics_table",
+      "metric_schema": "scientific-metrics/1.0",
+      "sources": [
+        "quantum_simulate",
+        "quantum_compile_estimate",
+        "quantum_asset_get",
+        "quantum_asset_metrics",
+        "quantum_device_run",
+        "hpc_job_status"
+      ],
+      "error_behavior": {
+        "structural": "fail_closed",
+        "domain": "flagged"
+      },
+      "outputs": {
+        "summary": true,
+        "charts": "bar_per_unit"
+      }
+    },
+    {
+      "id": "shots-audit",
+      "kind": "shots_delivery",
+      "metric_schema": "scientific-metrics/1.0",
+      "sources": [
+        "quantum_simulate",
+        "quantum_device_run"
+      ],
+      "error_behavior": {
+        "structural": "fail_closed",
+        "domain": "flagged"
+      },
+      "outputs": {
+        "summary": true,
+        "charts": "none"
+      }
+    },
+    {
+      "id": "metric-quantiles",
+      "kind": "metrics_table",
+      "metric_schema": "scientific-metrics/1.0",
+      "sources": [
+        "quantum_simulate",
+        "quantum_compile_estimate",
+        "quantum_asset_get",
+        "quantum_asset_metrics",
+        "quantum_device_run",
+        "hpc_job_status"
+      ],
+      "error_behavior": {
+        "structural": "fail_closed",
+        "domain": "flagged"
+      },
+      "outputs": {
+        "summary": true,
+        "charts": "quantiles_per_unit"
+      }
+    },
+    {
+      "id": "shots-chart",
+      "kind": "shots_delivery",
+      "metric_schema": "scientific-metrics/1.0",
+      "sources": [
+        "quantum_simulate",
+        "quantum_device_run"
+      ],
+      "error_behavior": {
+        "structural": "fail_closed",
+        "domain": "flagged"
+      },
+      "outputs": {
+        "summary": true,
+        "charts": "delivery_counts"
+      }
+    }
+  ]
+}

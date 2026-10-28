@@ -1,0 +1,34 @@
+{
+  "version": "1.0",
+  "mode": "local",
+  "status": "passed",
+  "checks": [
+    {
+      "check": "tests",
+      "status": "passed",
+      "exit_code": 0,
+      "elapsed_ms": 208663,
+      "counts": {"passed": 401}
+    },
+    {
+      "check": "static",
+      "status": "passed",
+      "exit_code": 0,
+      "elapsed_ms": 668
+    },
+    {
+      "check": "dsh_profiles",
+      "status": "passed",
+      "exit_code": 0,
+      "elapsed_ms": 214608
+    },
+    {
+      "check": "retrieval_benchmark",
+      "status": "passed",
+      "exit_code": 0,
+      "elapsed_ms": 3497
+    }
+  ],
+  "external_acceptance": "blocked",
+  "device_approval": "per_call_in_dsh_only"
+}

@@ -1,0 +1,220 @@
+{
+  "version": "1.0.0",
+  "capabilities": [
+    {
+      "id": "company.algorithm",
+      "kind": "platform",
+      "provider": "uniqon",
+      "contract_version": "company.algorithm/2.0",
+      "tools": [
+        "quantum_algorithm_catalog",
+        "quantum_algorithm_run"
+      ],
+      "handles": [
+        "asset_id",
+        "circuit_id"
+      ],
+      "approval": "none",
+      "provenance": ""
+    },
+    {
+      "id": "company.asset",
+      "kind": "platform",
+      "provider": "uniqon",
+      "contract_version": "company.asset/2.0",
+      "tools": [
+        "quantum_asset_list",
+        "quantum_asset_get",
+        "quantum_asset_metrics",
+        "quantum_circuit_export"
+      ],
+      "handles": [
+        "asset_id",
+        "circuit_id"
+      ],
+      "approval": "none",
+      "provenance": ""
+    },
+    {
+      "id": "quantum.simulation",
+      "kind": "simulator",
+      "provider": "independent-simulator",
+      "contract_version": "quantum.simulation/2.0",
+      "tools": [
+        "quantum_simulate"
+      ],
+      "handles": [
+        "circuit_id"
+      ],
+      "approval": "none",
+      "provenance": "independent-simulator"
+    },
+    {
+      "id": "quantum.compilation",
+      "kind": "compiler",
+      "provider": "independent-compiler",
+      "contract_version": "quantum.compilation/2.0",
+      "tools": [
+        "quantum_compile_estimate"
+      ],
+      "handles": [
+        "circuit_id"
+      ],
+      "approval": "none",
+      "provenance": "independent-compiler"
+    },
+    {
+      "id": "quantum.device",
+      "kind": "device",
+      "provider": "ionstack-twinrun",
+      "contract_version": "quantum.device/2.0",
+      "tools": [
+        "quantum_device_identity",
+        "quantum_device_run"
+      ],
+      "handles": [
+        "circuit_id",
+        "twin_id"
+      ],
+      "approval": "human",
+      "provenance": "qccd-twin"
+    },
+    {
+      "id": "compute.cloud",
+      "kind": "cloud",
+      "provider": "uqc-cloud",
+      "contract_version": "compute.cloud/2.0",
+      "tools": [
+        "quantum_cloud_devices",
+        "quantum_cloud_submit",
+        "quantum_cloud_status",
+        "quantum_cloud_result"
+      ],
+      "handles": [],
+      "approval": "human",
+      "provenance": "uqc-cloud"
+    },
+    {
+      "id": "compute.hpc",
+      "kind": "compute",
+      "provider": "hpc-slurm-ssh",
+      "contract_version": "compute.hpc/2.0",
+      "tools": [
+        "hpc_queue",
+        "hpc_submit",
+        "hpc_job_status",
+        "hpc_script_check",
+        "hpc_resources",
+        "hpc_file_list",
+        "hpc_file_fetch",
+        "hpc_stage_file",
+        "hpc_job_cancel",
+        "hpc_dir_create",
+        "hpc_file_remove"
+      ],
+      "handles": [],
+      "approval": "human",
+      "provenance": "hpc-slurm-ssh"
+    },
+    {
+      "id": "company.knowledge",
+      "kind": "knowledge",
+      "provider": "company-knowledge",
+      "contract_version": "company.knowledge/2.0",
+      "tools": [
+        "company_knowledge_search",
+        "company_fetch"
+      ],
+      "handles": [],
+      "approval": "none",
+      "provenance": ""
+    },
+    {
+      "id": "company.workflow",
+      "kind": "workflow",
+      "provider": "company-agent",
+      "contract_version": "company.workflow/2.0",
+      "tools": [
+        "company_capabilities",
+        "company_workflow_validate",
+        "company_analysis_render",
+        "company_table_profile",
+        "company_workspace_reference"
+      ],
+      "handles": [],
+      "approval": "none",
+      "provenance": ""
+    },
+    {
+      "id": "company.latex",
+      "kind": "document",
+      "provider": "company-latex",
+      "contract_version": "company.latex/2.0",
+      "tools": [
+        "company_latex_structure",
+        "company_latex_read",
+        "company_latex_edit",
+        "company_latex_batch_edit",
+        "company_latex_check",
+        "company_latex_compile",
+        "company_latex_diff",
+        "company_latex_checkpoint",
+        "company_latex_revert",
+        "company_latex_pull",
+        "company_latex_push",
+        "company_latex_overleaf_pull",
+        "company_latex_overleaf_push",
+        "company_latex_overleaf_status",
+        "company_latex_issue_note"
+      ],
+      "handles": [],
+      "approval": "human",
+      "provenance": ""
+    },
+    {
+      "id": "company.office",
+      "kind": "document",
+      "provider": "company-office",
+      "contract_version": "company.office/2.0",
+      "tools": [
+        "company_office_analyze",
+        "company_office_create"
+      ],
+      "handles": [],
+      "approval": "none",
+      "provenance": ""
+    },
+    {
+      "id": "company.plan",
+      "kind": "plan",
+      "provider": "company-plan",
+      "contract_version": "company.plan/2.0",
+      "tools": [
+        "company_plan_projects",
+        "company_plan_issues",
+        "company_plan_issue_get",
+        "company_plan_issue_create",
+        "company_plan_mrs",
+        "company_plan_note_create",
+        "company_plan_issue_write",
+        "company_plan_milestones",
+        "company_plan_milestone_create"
+      ],
+      "handles": [],
+      "approval": "human",
+      "provenance": ""
+    },
+    {
+      "id": "company.portal",
+      "kind": "portal",
+      "provider": "company-portal",
+      "contract_version": "company.portal/2.0",
+      "tools": [
+        "company_portal_open"
+      ],
+      "handles": [],
+      "approval": "none",
+      "provenance": ""
+    }
+  ]
+}

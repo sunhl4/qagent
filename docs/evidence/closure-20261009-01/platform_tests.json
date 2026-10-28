@@ -1,0 +1,26 @@
+{
+  "command": [
+    "/home/sunhl/next03-envs/quality-py312/bin/python",
+    "-m",
+    "pytest",
+    "-q",
+    "-p",
+    "no:cacheprovider",
+    "--tb=short",
+    "tests/test_company_agent_provider.py",
+    "tests/test_dependency_aliases.py",
+    "tests/test_packaging_platform.py"
+  ],
+  "counts": {
+    "passed": 46,
+    "subtests passed": 79
+  },
+  "cwd": "/home/sunhl/projects/company-quantum-platform",
+  "elapsed_ms": 5724,
+  "ended_at": "2026-10-09T02:34:43.587601+00:00",
+  "exit_code": 0,
+  "gate": "platform_tests",
+  "log_sha256": "sha256:7d77986bc4e52406ea8608a9edf1131542ced0105370d25d5a513af20b7b473d",
+  "started_at": "2026-10-09T02:34:37.310945+00:00",
+  "status": "passed"
+}

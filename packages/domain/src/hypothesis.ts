@@ -8,7 +8,18 @@
  * - 有预期效应与风险：缺失即不通过。
  */
 
-import type { Finding } from "./experiment.ts";
+import { compileExperiment } from "./experiment.ts";
+import type {
+  ArtifactKind,
+  Baseline,
+  ExperimentSpec,
+  Finding,
+  Guardrail,
+  MetricDirection,
+  OnUnknown,
+  ResourceType,
+  Variables,
+} from "./experiment.ts";
 
 export type HypothesisOriginType =
   | "literature_gap"
@@ -160,4 +171,130 @@ export function draftHypothesisFromReproduction(
   };
   const checked = checkHypothesis(record);
   return { ...checked, record: checked.ok ? record : undefined };
+}
+
+/**
+ * 假设 → 实验规格编译（docs/04 §6.1）。
+ *
+ * 输入必须先通过 `checkHypothesis()` 质量门；输出交给
+ * `compileExperiment()` 做完整规格校验。决策文案由假设派生，
+ * 使规格中的保留/撤销规则可追溯到假设本身。
+ */
+
+import type {
+  ArtifactKind,
+  Baseline,
+  DataSeed,
+  ExperimentSpec,
+  Finding,
+  Guardrail,
+  MetricDirection,
+  OnUnknown,
+  ResourceType,
+  Variables,
+} from "./experiment.ts";
+
+export interface HypothesisSpecMetric {
+  name: string;
+  direction: MetricDirection;
+  minimum_observable_effect: number;
+}
+
+export interface HypothesisSpecResources {
+  type: ResourceType;
+  count?: number;
+  accelerator?: string | null;
+  max_wall_clock_seconds: number;
+  max_cost: number;
+  currency: string;
+  checkpoint_required?: boolean;
+  checkpoint_interval_seconds?: number | null;
+}
+
+export interface HypothesisSpecInput {
+  hypothesis: HypothesisRecord;
+  experiment_id: string;
+  task_id: string;
+  /** 已复现、带指标值的基线；未复现会被 compileExperiment 拒绝。 */
+  baseline: Baseline;
+  primary: HypothesisSpecMetric;
+  guardrails?: Guardrail[];
+  variables: Variables;
+  resources: HypothesisSpecResources;
+  seeds?: number[];
+  data?: ExperimentSpec["data"];
+  extraOptionalArtifacts?: ArtifactKind[];
+  maxAttempts?: number;
+  maxConsecutiveFailures?: number;
+  deadlineAt?: string | null;
+  onUnknown?: OnUnknown;
+}
+
+export interface HypothesisSpecResult {
+  ok: boolean;
+  spec?: ExperimentSpec;
+  findings: Finding[];
+}
+
+export function compileHypothesisSpec(input: HypothesisSpecInput): HypothesisSpecResult {
+  const findings: Finding[] = [];
+  const gate = checkHypothesis(input.hypothesis);
+  const gateErrors = gate.errors;
+  findings.push(...gate.warnings);
+  if (!gate.ok) {
+    findings.push(...gateErrors);
+    return { ok: false, findings };
+  }
+
+  const optional: ArtifactKind[] = ["report", ...(input.extraOptionalArtifacts ?? [])];
+  const repeats = Math.max(1, input.hypothesis.minimal_test.repeats);
+  const statement = input.hypothesis.expected_effect
+    ? `${input.hypothesis.expected_effect}（假设 ${input.hypothesis.hypothesis_id}）`
+    : input.hypothesis.statement;
+
+  const spec: ExperimentSpec = {
+    experiment_id: input.experiment_id,
+    task_id: input.task_id,
+    hypothesis: {
+      statement: input.hypothesis.statement,
+      origin: input.hypothesis.origin.type,
+      evidence_refs: input.hypothesis.origin.evidence,
+      falsifiable_by: input.hypothesis.falsifiable_by,
+      expected_effect: input.hypothesis.expected_effect ?? null,
+    },
+    baseline: input.baseline,
+    variables: input.variables,
+    data: input.data,
+    metrics: {
+      primary: input.primary.name,
+      direction: input.primary.direction,
+      minimum_observable_effect: input.primary.minimum_observable_effect,
+      guardrails: input.guardrails ?? [],
+      statistic: "mean",
+      repeats,
+      seeds: input.seeds ?? [],
+    },
+    resources: input.resources,
+    stopping: {
+      max_attempts: Math.max(1, input.maxAttempts ?? 3),
+      max_consecutive_failures: Math.max(1, input.maxConsecutiveFailures ?? 1),
+      deadline_at: input.deadlineAt ?? null,
+      early_stop: null,
+    },
+    decision: {
+      keep_if: `假设成立：${statement}`,
+      discard_if: `假设不成立：${input.hypothesis.falsifiable_by}`,
+      on_unknown: input.onUnknown ?? "escalate",
+    },
+    artifacts: {
+      required: ["code_hash", "env_lock", "raw_metrics", "manifest"],
+      optional,
+    },
+  };
+
+  const compiled = compileExperiment(spec);
+  findings.push(...compiled.warnings, ...compiled.errors);
+  if (!compiled.ok) return { ok: false, findings };
+
+  return { ok: true, spec, findings };
 }

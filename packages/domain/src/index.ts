@@ -60,7 +60,11 @@ export {
   evaluateClaim,
 } from "./reproduction.ts";
 export type * from "./hypothesis.ts";
-export { checkHypothesis, draftHypothesisFromReproduction } from "./hypothesis.ts";
+export {
+  checkHypothesis,
+  compileHypothesisSpec,
+  draftHypothesisFromReproduction,
+} from "./hypothesis.ts";
 export type * from "./software-gate.ts";
 export { evaluateSoftwareMerge, validateSoftwareMergeInput, validateSoftwareSpec } from "./software-gate.ts";
 export type * from "./platform-signal.ts";

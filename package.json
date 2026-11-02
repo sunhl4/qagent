@@ -1,0 +1,24 @@
+{
+  "name": "ai-research-harness",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Research layer built on top of DeepSeek Harness, consuming harness-core through versioned ports.",
+  "workspaces": [
+    "contracts",
+    "packages/*",
+    "adapters/*"
+  ],
+  "scripts": {
+    "validate": "python3 scripts/validate.py",
+    "test": "node --test \"tests/*.test.ts\"",
+    "test:contracts": "node --test tests/contracts.test.ts",
+    "test:pipeline": "node --test tests/pipeline.test.ts",
+    "stubs-check": "node --test tests/contracts.test.ts",
+    "contracts-typecheck": "node scripts/typecheck.mjs",
+    "check": "npm run validate && npm run test"
+  },
+  "engines": {
+    "node": ">=22.6.0"
+  }
+}

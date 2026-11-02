@@ -1317,7 +1317,7 @@ DSH 核心或通用工具 → 对方
 make check
 ```
 
-包括 36 条一致性用例（35 MUST）、164 个契约、流水线、循环、失败库、日报、worktree、租约、账本、恢复、回收、文献、复现、假设门禁与软件门禁测试、契约与桩自检。桩全部声明 `degraded: true`，支持失败注入（未知执行、失败、预算超限、能力缺失）。
+包括 36 条一致性用例（35 MUST）、170 个契约、流水线、循环、失败库、日报、worktree、租约、账本、恢复、回收、文献、复现、假设门禁与软件门禁测试、契约与桩自检。桩全部声明 `degraded: true`，支持失败注入（未知执行、失败、预算超限、能力缺失）。
 
 阶段 1 的参考实现已经落地：`packages/pipeline/src/loop.ts` 提供有界循环（预算、截止时间、最大尝试次数、连续失败、早停），`packages/domain/src/failure.ts` 提供失败分类；每次尝试写 `manifest.json`，循环写 `loop-summary.json`，失败与负结果同样保留。`packages/domain/src/failure-library.ts` 提供失败去重与检索，`packages/pipeline/src/report.ts` 生成基础日报，`packages/workspace/src/worktree.ts` 提供 Git 分支/worktree 隔离。
 

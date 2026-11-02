@@ -3,7 +3,13 @@ export { runExperiment } from "./run.ts";
 export type * from "./loop.ts";
 export { runExperimentLoop } from "./loop.ts";
 export type * from "./report.ts";
-export { buildDailyReport, writeDailyReport } from "./report.ts";
+export {
+  aggregateLoops,
+  buildDailyReport,
+  buildWeeklyReport,
+  writeDailyReport,
+  writeWeeklyReport,
+} from "./report.ts";
 export type * from "./lease.ts";
 export { acquireLease, reconcileLease, releaseLease } from "./lease.ts";
 export type * from "./reclaim.ts";

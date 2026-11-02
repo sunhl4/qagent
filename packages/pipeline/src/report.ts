@@ -161,21 +161,26 @@ function renderMarkdown(report: DailyReport): string {
 }
 
 /**
- * 聚合当天的循环结果。
- *
- * - `keep` 进入关键结果；`discard` 作为负结果保留。
- * - 失败按类别分组，并保留稳定错误码。
- * - 需要审批、升级、阻塞或没有候选的循环进入人工决策清单。
+ * 跨循环聚合（日报与周报共用）。
+ * 只陈述可追溯事实；`human_decisions` 已按出现顺序去重。
  */
-export function buildDailyReport(input: DailyReportInput): DailyReport {
-  const generatedAt = input.generatedAt ?? new Date().toISOString();
+export interface LoopAggregation {
+  experiments: DailyExperimentSummary[];
+  key_results: DailyKeyResult[];
+  negative_results: DailyNegativeResult[];
+  failures: DailyFailureGroup[];
+  costs: Record<string, number>;
+  human_decisions: string[];
+}
+
+export function aggregateLoops(loops: readonly LoopSummary[]): LoopAggregation {
   const experiments = new Map<string, DailyExperimentSummary>();
   const keyResults: DailyKeyResult[] = [];
   const negativeResults: DailyNegativeResult[] = [];
   const failureMap = new Map<FailureCategory, { count: number; codes: Set<string> }>();
-  const humanDecisions: string[] = [...(input.humanDecisions ?? [])];
+  const humanDecisions: string[] = [];
 
-  for (const loop of input.loops ?? []) {
+  for (const loop of loops) {
     for (const attempt of loop.attempts) {
       let experiment = experiments.get(attempt.experiment_id);
       if (!experiment) {
@@ -272,11 +277,7 @@ export function buildDailyReport(input: DailyReportInput): DailyReport {
     };
   });
 
-  const report: DailyReport = {
-    report_id: `daily-${input.date}`,
-    date: input.date,
-    generated_at: generatedAt,
-    goals: [...(input.goals ?? [])],
+  return {
     experiments: [...experiments.values()].sort((left, right) =>
       left.experiment_id.localeCompare(right.experiment_id),
     ),
@@ -285,6 +286,34 @@ export function buildDailyReport(input: DailyReportInput): DailyReport {
     failures,
     costs,
     human_decisions: [...new Set(humanDecisions)],
+  };
+}
+
+/**
+ * 聚合当天的循环结果。
+ *
+ * - `keep` 进入关键结果；`discard` 作为负结果保留。
+ * - 失败按类别分组，并保留稳定错误码。
+ * - 需要审批、升级、阻塞或没有候选的循环进入人工决策清单。
+ */
+export function buildDailyReport(input: DailyReportInput): DailyReport {
+  const generatedAt = input.generatedAt ?? new Date().toISOString();
+  const aggregated = aggregateLoops(input.loops ?? []);
+  const humanDecisions = [
+    ...new Set([...(input.humanDecisions ?? []), ...aggregated.human_decisions]),
+  ];
+
+  const report: DailyReport = {
+    report_id: `daily-${input.date}`,
+    date: input.date,
+    generated_at: generatedAt,
+    goals: [...(input.goals ?? [])],
+    experiments: aggregated.experiments,
+    key_results: aggregated.key_results,
+    negative_results: aggregated.negative_results,
+    failures: aggregated.failures,
+    costs: aggregated.costs,
+    human_decisions: humanDecisions,
     next_steps: [...(input.planned ?? [])],
     markdown: "",
   };
@@ -334,6 +363,235 @@ export async function writeDailyReport(
       severity: "warning",
       code: "W_DAILY_REPORT_MD",
       message: `日报 Markdown 写入失败: ${markdownPut.error.code} ${markdownPut.error.message}`,
+    });
+  }
+
+  return {
+    report,
+    jsonRef: jsonPut.ok ? jsonPut.value : undefined,
+    markdownRef: markdownPut.ok ? markdownPut.value : undefined,
+    findings,
+  };
+}
+
+/**
+ * 周报：按 docs/04 §8.2 的口径聚合一周的循环结果。
+ * 文献进展、复现进展与风险由调用方提供；其余来自可追溯的循环摘要。
+ */
+
+export interface WeeklyReportInput {
+  /** 周一日期，格式 YYYY-MM-DD。 */
+  week_start: string;
+  generatedAt?: string;
+  researchDirection?: string | null;
+  literatureProgress?: string[];
+  reproductionProgress?: string[];
+  goals?: string[];
+  planned?: string[];
+  risks?: string[];
+  /** 本调用方事项，会与循环产生的合并去重。 */
+  humanDecisions?: string[];
+  loops?: LoopSummary[];
+}
+
+export interface WeeklyDecisionTotals {
+  attempts: number;
+  kept: number;
+  discarded: number;
+  extended: number;
+  stopped: number;
+  escalated: number;
+}
+
+export interface WeeklyReport {
+  report_id: string;
+  week_start: string;
+  generated_at: string;
+  research_direction: string | null;
+  literature_progress: string[];
+  reproduction_progress: string[];
+  experiments: DailyExperimentSummary[];
+  decisions: WeeklyDecisionTotals;
+  key_results: DailyKeyResult[];
+  failures: DailyFailureGroup[];
+  costs: Record<string, number>;
+  human_decisions: string[];
+  risks: string[];
+  next_steps: string[];
+  markdown: string;
+}
+
+export interface WeeklyReportWriteResult {
+  report: WeeklyReport;
+  jsonRef?: ArtifactRef;
+  markdownRef?: ArtifactRef;
+  findings: Finding[];
+}
+
+function renderWeeklyMarkdown(report: WeeklyReport): string {
+  const experimentRows =
+    report.experiments.length === 0
+      ? "| - | 0 | 0 | 0 | 0 |"
+      : report.experiments
+          .map(
+            (experiment) =>
+              `| ${experiment.experiment_id} | ${experiment.attempts} | ${experiment.kept} | ${experiment.discarded} | ${experiment.failed} |`,
+          )
+          .join("\n");
+
+  return [
+    `# 周报 ${report.week_start}（起）`,
+    "",
+    `生成时间：${report.generated_at}`,
+    "",
+    "## 本周研究方向",
+    "",
+    `- ${report.research_direction ?? "未填写"}`,
+    "",
+    "## 文献进展",
+    "",
+    bullets(report.literature_progress, "无"),
+    "",
+    "## 复现进展",
+    "",
+    bullets(report.reproduction_progress, "无"),
+    "",
+    "## 实验结论",
+    "",
+    `本周共 ${report.decisions.attempts} 次尝试：保留 ${report.decisions.kept}、撤销 ${report.decisions.discarded}、需继续 ${report.decisions.extended}、停止 ${report.decisions.stopped}、升级 ${report.decisions.escalated}。`,
+    "",
+    "| 实验 | 尝试 | 保留 | 撤销 | 失败 |",
+    "|---|---|---|---|---|",
+    experimentRows,
+    "",
+    "## 失败库新增",
+    "",
+    report.failures.length === 0
+      ? "- 无"
+      : report.failures
+          .map((group) => `- ${group.category}：${group.count} 次（${group.codes.join("、")}）`)
+          .join("\n"),
+    "",
+    "## 周成本",
+    "",
+    `- ${formatCosts(report.costs)}`,
+    "",
+    "## 下周计划",
+    "",
+    bullets(report.next_steps, "未填写计划"),
+    "",
+    "## 风险",
+    "",
+    bullets(report.risks, "无"),
+    "",
+    "## 需要人工决策",
+    "",
+    bullets(report.human_decisions, "无"),
+    "",
+  ].join("\n");
+}
+
+export function buildWeeklyReport(input: WeeklyReportInput): WeeklyReport {
+  const generatedAt = input.generatedAt ?? new Date().toISOString();
+  const aggregated = aggregateLoops(input.loops ?? []);
+
+  const decisions: WeeklyDecisionTotals = {
+    attempts: 0,
+    kept: 0,
+    discarded: 0,
+    extended: 0,
+    stopped: 0,
+    escalated: 0,
+  };
+  for (const loop of input.loops ?? []) {
+    for (const attempt of loop.attempts) {
+      decisions.attempts += 1;
+      switch (attempt.decision) {
+        case "keep":
+          decisions.kept += 1;
+          break;
+        case "discard":
+          decisions.discarded += 1;
+          break;
+        case "extend":
+          decisions.extended += 1;
+          break;
+        case "stop":
+          decisions.stopped += 1;
+          break;
+        case "escalate":
+          decisions.escalated += 1;
+          break;
+        default:
+          break;
+      }
+    }
+  }
+
+  const humanDecisions = [
+    ...new Set([...(input.humanDecisions ?? []), ...aggregated.human_decisions]),
+  ];
+
+  const report: WeeklyReport = {
+    report_id: `weekly-${input.week_start}`,
+    week_start: input.week_start,
+    generated_at: generatedAt,
+    research_direction: input.researchDirection ?? null,
+    literature_progress: [...(input.literatureProgress ?? [])],
+    reproduction_progress: [...(input.reproductionProgress ?? [])],
+    experiments: aggregated.experiments,
+    decisions,
+    key_results: aggregated.key_results,
+    failures: aggregated.failures,
+    costs: aggregated.costs,
+    human_decisions: humanDecisions,
+    risks: [...(input.risks ?? [])],
+    next_steps: [...(input.planned ?? [])],
+    markdown: "",
+  };
+
+  report.markdown = renderWeeklyMarkdown(report);
+  return report;
+}
+
+export async function writeWeeklyReport(
+  report: WeeklyReport,
+  deps: { artifacts: ArtifactStorePort },
+  context: { tenantId: string; projectId?: string },
+): Promise<WeeklyReportWriteResult> {
+  const findings: Finding[] = [];
+  const prefix = `reports/weekly/${report.week_start}`;
+
+  const jsonText = JSON.stringify(report, null, 2);
+  const jsonPut = await deps.artifacts.put({
+    tenantId: context.tenantId,
+    projectId: context.projectId,
+    key: `${prefix}/report.json`,
+    contentType: "application/json",
+    bytes: new TextEncoder().encode(jsonText),
+    idempotencyKey: `${report.report_id}:json`,
+  });
+  if (!jsonPut.ok) {
+    findings.push({
+      severity: "warning",
+      code: "W_WEEKLY_REPORT_JSON",
+      message: `周报 JSON 写入失败: ${jsonPut.error.code} ${jsonPut.error.message}`,
+    });
+  }
+
+  const markdownPut = await deps.artifacts.put({
+    tenantId: context.tenantId,
+    projectId: context.projectId,
+    key: `${prefix}/report.md`,
+    contentType: "text/markdown",
+    bytes: new TextEncoder().encode(report.markdown),
+    idempotencyKey: `${report.report_id}:md`,
+  });
+  if (!markdownPut.ok) {
+    findings.push({
+      severity: "warning",
+      code: "W_WEEKLY_REPORT_MD",
+      message: `周报 Markdown 写入失败: ${markdownPut.error.code} ${markdownPut.error.message}`,
     });
   }
 

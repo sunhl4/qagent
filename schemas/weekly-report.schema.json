@@ -1,0 +1,123 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://company.example/schemas/weekly-report.schema.json",
+  "title": "WeeklyReport",
+  "description": "Weekly research report aggregated from experiment loop summaries (docs/04 §8.2). Facts only; literature and reproduction progress are provided by callers with traceable sources.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "report_id",
+    "week_start",
+    "generated_at",
+    "research_direction",
+    "literature_progress",
+    "reproduction_progress",
+    "experiments",
+    "decisions",
+    "key_results",
+    "failures",
+    "costs",
+    "human_decisions",
+    "risks",
+    "next_steps",
+    "markdown"
+  ],
+  "properties": {
+    "report_id": {"type": "string", "minLength": 1},
+    "week_start": {"type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$"},
+    "generated_at": {"type": "string", "format": "date-time"},
+    "research_direction": {"type": ["string", "null"]},
+    "literature_progress": {"type": "array", "items": {"type": "string"}},
+    "reproduction_progress": {"type": "array", "items": {"type": "string"}},
+    "experiments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["experiment_id", "attempts", "kept", "discarded", "failed", "costs"],
+        "properties": {
+          "experiment_id": {"type": "string"},
+          "attempts": {"type": "integer", "minimum": 0},
+          "kept": {"type": "integer", "minimum": 0},
+          "discarded": {"type": "integer", "minimum": 0},
+          "failed": {"type": "integer", "minimum": 0},
+          "costs": {
+            "type": "object",
+            "additionalProperties": {"type": "number", "minimum": 0}
+          }
+        }
+      }
+    },
+    "decisions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "attempts",
+        "kept",
+        "discarded",
+        "extended",
+        "stopped",
+        "escalated"
+      ],
+      "properties": {
+        "attempts": {"type": "integer", "minimum": 0},
+        "kept": {"type": "integer", "minimum": 0},
+        "discarded": {"type": "integer", "minimum": 0},
+        "extended": {"type": "integer", "minimum": 0},
+        "stopped": {"type": "integer", "minimum": 0},
+        "escalated": {"type": "integer", "minimum": 0}
+      }
+    },
+    "key_results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["experiment_id", "run_id", "decision", "reason"],
+        "properties": {
+          "experiment_id": {"type": "string"},
+          "run_id": {"type": "string"},
+          "decision": {
+            "type": "string",
+            "enum": ["keep", "discard", "extend", "stop", "escalate"]
+          },
+          "reason": {"type": ["string", "null"]}
+        }
+      }
+    },
+    "failures": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["category", "count", "codes"],
+        "properties": {
+          "category": {
+            "type": "string",
+            "enum": [
+              "implementation",
+              "data",
+              "metric",
+              "resource",
+              "hypothesis",
+              "environment",
+              "instability",
+              "policy",
+              "unknown"
+            ]
+          },
+          "count": {"type": "integer", "minimum": 0},
+          "codes": {"type": "array", "items": {"type": "string"}}
+        }
+      }
+    },
+    "costs": {
+      "type": "object",
+      "additionalProperties": {"type": "number", "minimum": 0}
+    },
+    "human_decisions": {"type": "array", "items": {"type": "string"}},
+    "risks": {"type": "array", "items": {"type": "string"}},
+    "next_steps": {"type": "array", "items": {"type": "string"}},
+    "markdown": {"type": "string", "minLength": 1}
+  }
+}

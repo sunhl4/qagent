@@ -1,0 +1,146 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://company.example/schemas/plugin-contract.schema.json",
+  "title": "DSHPluginContract",
+  "description": "Manifest and behavioural contract for a company DSH plugin.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["name", "version", "compatibility", "provides", "permissions", "config_schema", "health_check"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "pattern": "^@[a-z0-9-]+/dsh-plugin-[a-z0-9-]+$"
+    },
+    "version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(-[0-9A-Za-z.-]+)?$"},
+    "description": {"type": "string", "maxLength": 500},
+    "compatibility": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["dsh", "cordis"],
+      "properties": {
+        "dsh": {"type": "string"},
+        "cordis": {"type": "string"},
+        "node": {"type": "string"}
+      }
+    },
+    "provides": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["services"],
+      "properties": {
+        "services": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["key", "methods"],
+            "properties": {
+              "key": {"type": "string", "pattern": "^ctx\\.[a-zA-Z][a-zA-Z0-9]*$"},
+              "methods": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+              "idempotent": {"type": "array", "items": {"type": "string"}, "default": []}
+            }
+          }
+        },
+        "events_consumed": {"type": "array", "items": {"type": "string"}, "default": []},
+        "events_emitted": {"type": "array", "items": {"type": "string"}, "default": []},
+        "tools": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "side_effect"],
+            "properties": {
+              "name": {"type": "string"},
+              "side_effect": {"type": "string", "enum": ["none", "read", "write", "irreversible"]},
+              "requires_approval": {"type": "boolean", "default": false},
+              "timeout_seconds": {"type": "integer", "minimum": 1}
+            }
+          },
+          "default": []
+        }
+      }
+    },
+    "depends_on": {"type": "array", "items": {"type": "string"}, "default": []},
+    "permissions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["filesystem", "network", "process", "secrets", "resources"],
+      "properties": {
+        "filesystem": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "read": {"type": "array", "items": {"type": "string"}, "default": []},
+            "write": {"type": "array", "items": {"type": "string"}, "default": []}
+          }
+        },
+        "network": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "egress": {"type": "array", "items": {"type": "string"}, "default": []},
+            "allow_internet": {"type": "boolean", "default": false}
+          }
+        },
+        "process": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "spawn": {"type": "boolean", "default": false},
+            "privileged": {"type": "boolean", "default": false}
+          }
+        },
+        "secrets": {
+          "type": "array",
+          "items": {"type": "string"},
+          "default": []
+        },
+        "resources": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "may_request_gpu": {"type": "boolean", "default": false},
+            "may_request_hpc": {"type": "boolean", "default": false},
+            "may_request_qpu": {"type": "boolean", "default": false},
+            "max_cost_per_call": {"type": ["number", "null"]}
+          }
+        }
+      }
+    },
+    "config_schema": {"type": "object"},
+    "health_check": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["method"],
+      "properties": {
+        "method": {"type": "string"},
+        "interval_seconds": {"type": "integer", "minimum": 1, "default": 30},
+        "timeout_seconds": {"type": "integer", "minimum": 1, "default": 5}
+      }
+    },
+    "migrations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["from", "to", "script"],
+        "properties": {
+          "from": {"type": "string"},
+          "to": {"type": "string"},
+          "script": {"type": "string"},
+          "reversible": {"type": "boolean", "default": false}
+        }
+      },
+      "default": []
+    },
+    "compliance": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "license": {"type": "string"},
+        "security_review_ref": {"type": ["string", "null"]},
+        "data_classification_max": {"type": "string", "enum": ["public", "internal", "confidential", "restricted"]}
+      }
+    }
+  }
+}

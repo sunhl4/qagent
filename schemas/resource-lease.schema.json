@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://company.example/schemas/resource-lease.schema.json",
+  "title": "ResourceLease",
+  "description": "Short-lived right to use a bounded set of compute resources.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["lease_id", "tenant_id", "holder", "resource", "state", "not_before", "expires_at", "fencing_token"],
+  "properties": {
+    "lease_id": {"type": "string", "minLength": 1},
+    "tenant_id": {"type": "string"},
+    "project_id": {"type": ["string", "null"]},
+    "holder": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "id"],
+      "properties": {
+        "type": {"type": "string", "enum": ["task", "attempt", "session", "maintenance"]},
+        "id": {"type": "string"}
+      }
+    },
+    "resource": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "count"],
+      "properties": {
+        "type": {"type": "string", "enum": ["cpu", "gpu", "hpc", "qpu", "cloud", "browser", "storage"]},
+        "count": {"type": "integer", "minimum": 1},
+        "accelerator": {"type": ["string", "null"]},
+        "region": {"type": ["string", "null"]},
+        "provider": {"type": ["string", "null"]},
+        "provider_resource_id": {"type": ["string", "null"]},
+        "handle_id": {"type": ["string", "null"]}
+      }
+    },
+    "state": {
+      "type": "string",
+      "enum": ["REQUESTED", "PREPARED", "ACTIVE", "DRAINING", "RELEASED", "REVOKED", "EXPIRED", "FAILED"]
+    },
+    "not_before": {"type": "string", "format": "date-time"},
+    "expires_at": {"type": "string", "format": "date-time"},
+    "renewable_until": {"type": ["string", "null"], "format": "date-time"},
+    "fencing_token": {"type": "integer", "minimum": 1},
+    "cost": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "reserved": {"type": "number", "minimum": 0},
+        "currency": {"type": "string", "minLength": 3, "maxLength": 3},
+        "actual": {"type": ["number", "null"]}
+      }
+    },
+    "checkpoint_uri": {"type": ["string", "null"]},
+    "capabilities": {"type": "array", "items": {"type": "string"}, "default": []},
+    "constraints": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "max_wall_clock_seconds": {"type": ["integer", "null"]},
+        "no_internet": {"type": "boolean", "default": true},
+        "data_residency": {"type": ["string", "null"]}
+      }
+    },
+    "created_at": {"type": "string", "format": "date-time"},
+    "released_at": {"type": ["string", "null"], "format": "date-time"},
+    "release_reason": {"type": ["string", "null"]},
+    "hold_reason": {"type": ["string", "null"]},
+    "policy_decision_id": {"type": ["string", "null"]},
+    "revision": {"type": "integer", "minimum": 1, "default": 1}
+  }
+}

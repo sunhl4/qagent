@@ -1,0 +1,147 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://company.example/schemas/experiment-spec.schema.json",
+  "title": "ExperimentSpec",
+  "description": "Executable contract for one algorithm experiment.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["experiment_id", "task_id", "hypothesis", "baseline", "variables", "metrics", "resources", "stopping", "decision", "artifacts"],
+  "properties": {
+    "experiment_id": {"type": "string", "minLength": 1},
+    "task_id": {"type": "string", "minLength": 1},
+    "hypothesis": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["statement", "falsifiable_by"],
+      "properties": {
+        "statement": {"type": "string", "minLength": 1},
+        "origin": {"type": "string", "enum": ["literature_gap", "reproduction_anomaly", "failure_pattern", "transfer", "human"]},
+        "evidence_refs": {"type": "array", "items": {"type": "string"}, "default": []},
+        "falsifiable_by": {"type": "string", "minLength": 1},
+        "expected_effect": {"type": ["string", "null"]}
+      }
+    },
+    "baseline": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "source", "reproduced"],
+      "properties": {
+        "name": {"type": "string"},
+        "source": {"type": "string"},
+        "run_id": {"type": ["string", "null"]},
+        "reproduced": {"type": "boolean"},
+        "metric_value": {"type": ["number", "null"]},
+        "uncertainty": {"type": ["number", "null"]}
+      }
+    },
+    "variables": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["changed", "controlled"],
+      "properties": {
+        "changed": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+        "controlled": {"type": "array", "items": {"type": "string"}},
+        "allowed_paths": {"type": "array", "items": {"type": "string"}, "default": []},
+        "forbidden_paths": {"type": "array", "items": {"type": "string"}, "default": []}
+      }
+    },
+    "data": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "dataset_ref": {"type": ["string", "null"]},
+        "dataset_hash": {"type": ["string", "null"]},
+        "split": {"type": ["string", "null"]},
+        "leakage_check": {"type": ["string", "null"]}
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["primary", "direction"],
+      "properties": {
+        "primary": {"type": "string"},
+        "direction": {"type": "string", "enum": ["minimize", "maximize"]},
+        "minimum_observable_effect": {"type": ["number", "null"]},
+        "guardrails": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "max_degradation"],
+            "properties": {
+              "name": {"type": "string"},
+              "max_degradation": {"type": "number", "minimum": 0}
+            }
+          },
+          "default": []
+        },
+        "statistic": {"type": "string", "enum": ["mean", "median", "confidence_interval"], "default": "mean"},
+        "repeats": {"type": "integer", "minimum": 1, "default": 3},
+        "seeds": {"type": "array", "items": {"type": "integer"}, "default": []}
+      }
+    },
+    "resources": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "max_wall_clock_seconds", "max_cost", "currency"],
+      "properties": {
+        "type": {"type": "string", "enum": ["cpu", "gpu", "hpc", "qpu", "cloud", "browser"]},
+        "count": {"type": "integer", "minimum": 1, "default": 1},
+        "accelerator": {"type": ["string", "null"]},
+        "max_wall_clock_seconds": {"type": "integer", "minimum": 1},
+        "max_cost": {"type": "number", "minimum": 0},
+        "currency": {"type": "string", "minLength": 3, "maxLength": 3},
+        "checkpoint_required": {"type": "boolean", "default": true},
+        "checkpoint_interval_seconds": {"type": ["integer", "null"], "minimum": 1}
+      }
+    },
+    "stopping": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["max_attempts", "max_consecutive_failures"],
+      "properties": {
+        "max_attempts": {"type": "integer", "minimum": 1},
+        "max_consecutive_failures": {"type": "integer", "minimum": 1},
+        "deadline_at": {"type": ["string", "null"], "format": "date-time"},
+        "early_stop": {"type": ["string", "null"]}
+      }
+    },
+    "decision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["keep_if", "discard_if"],
+      "properties": {
+        "keep_if": {"type": "string", "minLength": 1},
+        "discard_if": {"type": "string", "minLength": 1},
+        "on_unknown": {"type": "string", "enum": ["escalate", "discard"], "default": "escalate"}
+      }
+    },
+    "approval": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "required": {"type": "boolean", "default": false},
+        "reasons": {"type": "array", "items": {"type": "string"}, "default": []},
+        "approved_by": {"type": ["string", "null"]}
+      }
+    },
+    "artifacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["required"],
+      "properties": {
+        "required": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["code_hash", "env_lock", "container_digest", "config", "raw_metrics", "logs", "checkpoint", "manifest", "report"]
+          }
+        },
+        "optional": {"type": "array", "items": {"type": "string"}, "default": []}
+      }
+    },
+    "created_at": {"type": "string", "format": "date-time"},
+    "revision": {"type": "integer", "minimum": 1, "default": 1}
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://company.example/schemas/worktree-record.schema.json",
+  "title": "WorktreeRecord",
+  "description": "Local Git worktree record for one experiment attempt. Branches are retained; only clean worktrees may be removed.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "worktree_id",
+    "experiment_id",
+    "attempt",
+    "repo_root",
+    "branch",
+    "path",
+    "base_commit",
+    "state",
+    "recorded_at"
+  ],
+  "properties": {
+    "worktree_id": {"type": "string", "minLength": 1},
+    "experiment_id": {"type": "string", "minLength": 1},
+    "attempt": {"type": "integer", "minimum": 1},
+    "repo_root": {"type": "string", "minLength": 1},
+    "branch": {"type": "string", "minLength": 1},
+    "path": {"type": "string", "minLength": 1},
+    "base_commit": {"type": ["string", "null"]},
+    "state": {
+      "type": "string",
+      "enum": ["created", "reused", "removed", "absent"]
+    },
+    "recorded_at": {"type": "string", "format": "date-time"}
+  }
+}

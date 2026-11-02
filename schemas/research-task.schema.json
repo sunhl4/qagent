@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://company.example/schemas/research-task.schema.json",
+  "title": "ResearchTask",
+  "description": "A unit of work dispatched to the platform and executed by a DSH session.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["task_id", "tenant_id", "project_id", "kind", "goal", "acceptance", "budget", "created_at"],
+  "properties": {
+    "task_id": {"type": "string", "minLength": 1, "maxLength": 128},
+    "tenant_id": {"type": "string", "minLength": 1},
+    "project_id": {"type": "string", "minLength": 1},
+    "parent_task_id": {"type": ["string", "null"]},
+    "kind": {
+      "type": "string",
+      "enum": ["literature_review", "reproduction", "hypothesis", "algorithm_experiment", "software_change", "frontend_verification", "report", "resource_maintenance"]
+    },
+    "title": {"type": "string", "maxLength": 300},
+    "goal": {"type": "string", "minLength": 1},
+    "non_goals": {"type": "array", "items": {"type": "string"}, "default": []},
+    "inputs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["type", "ref"],
+        "properties": {
+          "type": {"type": "string", "enum": ["paper", "artifact", "repo", "dataset", "experiment", "document", "url"]},
+          "ref": {"type": "string"},
+          "hash": {"type": ["string", "null"]}
+        }
+      },
+      "default": []
+    },
+    "acceptance": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["criterion", "check"],
+        "properties": {
+          "criterion": {"type": "string"},
+          "check": {"type": "string", "description": "Machine-executable check command or assertion id"},
+          "required": {"type": "boolean", "default": true}
+        }
+      }
+    },
+    "budget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["max_cost", "currency"],
+      "properties": {
+        "max_cost": {"type": "number", "minimum": 0},
+        "currency": {"type": "string", "minLength": 3, "maxLength": 3},
+        "max_wall_clock_seconds": {"type": "integer", "minimum": 1},
+        "max_gpu_hours": {"type": "number", "minimum": 0},
+        "max_hpc_core_hours": {"type": "number", "minimum": 0}
+      }
+    },
+    "priority": {"type": "string", "enum": ["low", "normal", "high", "critical"], "default": "normal"},
+    "deadline_at": {"type": ["string", "null"], "format": "date-time"},
+    "approval": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "required": {"type": "boolean", "default": false},
+        "approved_by": {"type": ["string", "null"]},
+        "approved_at": {"type": ["string", "null"], "format": "date-time"},
+        "scope": {"type": ["string", "null"]},
+        "expires_at": {"type": ["string", "null"], "format": "date-time"}
+      }
+    },
+    "model_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "allowed_providers": {"type": "array", "items": {"type": "string"}},
+        "allowed_residency": {"type": "array", "items": {"type": "string"}},
+        "preferred_model": {"type": ["string", "null"]}
+      }
+    },
+    "state": {
+      "type": "string",
+      "enum": ["draft", "queued", "running", "waiting_approval", "waiting_resource", "succeeded", "failed", "cancelled", "partial"],
+      "default": "draft"
+    },
+    "created_at": {"type": "string", "format": "date-time"},
+    "updated_at": {"type": ["string", "null"], "format": "date-time"},
+    "revision": {"type": "integer", "minimum": 1, "default": 1}
+  }
+}

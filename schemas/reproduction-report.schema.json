@@ -1,0 +1,199 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://company.example/schemas/reproduction-report.schema.json",
+  "title": "ReproductionReport",
+  "description": "Three-layer reproduction (semantic, numeric, generality) with per-claim tolerance comparison and difference attribution. Unknown executions escalate instead of concluding.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "reproduction_id",
+    "task_id",
+    "paper",
+    "difficulty",
+    "environment",
+    "data",
+    "runs",
+    "claims_to_verify",
+    "semantic_checks",
+    "generality_checks",
+    "differences",
+    "conclusion",
+    "created_at"
+  ],
+  "properties": {
+    "reproduction_id": {"type": "string", "minLength": 1},
+    "task_id": {"type": "string", "minLength": 1},
+    "paper": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "title": {"type": ["string", "null"]},
+        "doi": {"type": ["string", "null"]},
+        "arxiv_id": {"type": ["string", "null"]},
+        "code_url": {"type": ["string", "null"]}
+      }
+    },
+    "difficulty": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "code_available",
+        "data_available",
+        "hyperparameters_complete",
+        "compute_requirement",
+        "dependency_risk",
+        "evaluation_clarity",
+        "overall",
+        "total"
+      ],
+      "properties": {
+        "code_available": {"type": "string", "enum": ["official", "third_party", "none"]},
+        "data_available": {"type": "string", "enum": ["public", "partial", "private"]},
+        "hyperparameters_complete": {"type": "string", "enum": ["complete", "partial", "missing"]},
+        "compute_requirement": {"type": "string", "enum": ["single_gpu", "multi_gpu", "cluster"]},
+        "dependency_risk": {"type": "string", "enum": ["standard", "medium", "high"]},
+        "evaluation_clarity": {"type": "string", "enum": ["script_available", "described", "text_only"]},
+        "overall": {"type": "string", "enum": ["low", "medium", "high"]},
+        "total": {"type": "integer", "minimum": 0, "maximum": 12},
+        "scores": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["dimension", "score"],
+            "properties": {
+              "dimension": {"type": "string", "minLength": 1},
+              "score": {"type": "integer", "minimum": 0, "maximum": 2}
+            }
+          }
+        }
+      }
+    },
+    "environment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["lockfile_hash", "hardware"],
+      "properties": {
+        "container": {"type": ["string", "null"]},
+        "python": {"type": ["string", "null"]},
+        "framework": {"type": ["string", "null"]},
+        "cuda": {"type": ["string", "null"]},
+        "lockfile_hash": {"type": ["string", "null"]},
+        "hardware": {"type": ["string", "null"]}
+      }
+    },
+    "data": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source", "hash"],
+      "properties": {
+        "source": {"type": "string", "minLength": 1},
+        "hash": {"type": ["string", "null"]},
+        "split": {"type": ["string", "null"]},
+        "preprocessing_notes": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "runs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["run_id", "name", "seeds", "status"],
+        "properties": {
+          "run_id": {"type": "string", "minLength": 1},
+          "name": {"type": "string", "minLength": 1},
+          "command": {"type": ["string", "null"]},
+          "seeds": {"type": "array", "items": {"type": "integer"}},
+          "status": {
+            "type": "string",
+            "enum": ["succeeded", "failed", "unknown", "cancelled", "skipped"]
+          },
+          "metric_name": {"type": ["string", "null"]},
+          "values": {"type": "array", "items": {"type": "number"}},
+          "cost": {"type": ["number", "null"]},
+          "currency": {"type": ["string", "null"]},
+          "lease_ids": {"type": "array", "items": {"type": "string"}}
+        }
+      }
+    },
+    "claims_to_verify": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "claim_id",
+          "claim",
+          "metric_name",
+          "original_value",
+          "tolerance",
+          "mean",
+          "std",
+          "within_tolerance"
+        ],
+        "properties": {
+          "claim_id": {"type": "string", "minLength": 1},
+          "claim": {"type": "string", "minLength": 1},
+          "metric_name": {"type": "string", "minLength": 1},
+          "original_value": {"type": "number"},
+          "tolerance": {"type": "number", "minimum": 0},
+          "mean": {"type": ["number", "null"]},
+          "std": {"type": ["number", "null"]},
+          "count": {"type": "integer", "minimum": 0},
+          "within_tolerance": {"type": ["boolean", "null"]},
+          "attribution": {"type": ["string", "null"]}
+        }
+      }
+    },
+    "semantic_checks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["item", "passed"],
+        "properties": {
+          "item": {"type": "string", "minLength": 1},
+          "passed": {"type": "boolean"},
+          "note": {"type": ["string", "null"]}
+        }
+      }
+    },
+    "generality_checks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["setting", "direction_consistent"],
+        "properties": {
+          "setting": {"type": "string", "minLength": 1},
+          "direction_consistent": {"type": "boolean"},
+          "note": {"type": ["string", "null"]}
+        }
+      }
+    },
+    "differences": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["kind", "description"],
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": ["data", "implementation", "evaluation", "hardware", "randomness", "other"]
+          },
+          "description": {"type": "string", "minLength": 1},
+          "evidence": {"type": ["string", "null"]}
+        }
+      }
+    },
+    "conclusion": {
+      "type": "string",
+      "enum": ["succeeded", "partial", "failed", "not_attempted"]
+    },
+    "reusable_assets": {"type": "array", "items": {"type": "string"}},
+    "open_questions": {"type": "array", "items": {"type": "string"}},
+    "created_at": {"type": "string", "format": "date-time"},
+    "revision": {"type": "integer", "minimum": 1, "default": 1}
+  }
+}

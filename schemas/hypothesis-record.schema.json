@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://company.example/schemas/hypothesis-record.schema.json",
+  "title": "HypothesisRecord",
+  "description": "A research hypothesis with quality-gate fields: falsifiable statement, sourced evidence, minimal costed test and declared risks.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "hypothesis_id",
+    "statement",
+    "origin",
+    "falsifiable_by",
+    "minimal_test",
+    "risks",
+    "status",
+    "created_at"
+  ],
+  "properties": {
+    "hypothesis_id": {"type": "string", "minLength": 1},
+    "statement": {"type": "string", "minLength": 1},
+    "origin": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "evidence"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["literature_gap", "reproduction_anomaly", "failure_pattern", "transfer"]
+        },
+        "evidence": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "falsifiable_by": {"type": "string", "minLength": 1},
+    "expected_effect": {"type": ["string", "null"]},
+    "minimal_test": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["budget", "repeats"],
+      "properties": {
+        "dataset": {"type": ["string", "null"]},
+        "metric": {"type": ["string", "null"]},
+        "budget": {"type": ["string", "null"]},
+        "repeats": {"type": "integer", "minimum": 1}
+      }
+    },
+    "risks": {"type": "array", "items": {"type": "string"}},
+    "status": {
+      "type": "string",
+      "enum": ["proposed", "validated", "rejected", "superseded"]
+    },
+    "source_reproduction_id": {"type": ["string", "null"]},
+    "created_at": {"type": "string", "format": "date-time"},
+    "revision": {"type": "integer", "minimum": 1, "default": 1}
+  }
+}

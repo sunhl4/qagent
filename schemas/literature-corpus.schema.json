@@ -1,0 +1,98 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://company.example/schemas/literature-corpus.schema.json",
+  "title": "LiteratureCorpus",
+  "description": "Deduplicated paper set with version merge reasons, citation edges, review candidates and topic clusters. Title conflicts are marked for manual confirmation, never silently merged.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["corpus_id", "generated_at", "papers", "review_candidates", "citations", "clusters"],
+  "properties": {
+    "corpus_id": {"type": "string", "minLength": 1},
+    "generated_at": {"type": "string", "format": "date-time"},
+    "papers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["paper", "versions"],
+        "properties": {
+          "paper": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["paper_id", "title", "authors", "year", "source"],
+            "properties": {
+              "paper_id": {"type": "string", "minLength": 1},
+              "title": {"type": "string", "minLength": 1},
+              "authors": {"type": "array", "items": {"type": "string"}},
+              "year": {"type": "integer"},
+              "doi": {"type": ["string", "null"]},
+              "arxiv_id": {"type": ["string", "null"]},
+              "venue": {"type": ["string", "null"]},
+              "source": {"type": "string", "minLength": 1},
+              "code_url": {"type": ["string", "null"]},
+              "topics": {"type": "array", "items": {"type": "string"}}
+            }
+          },
+          "versions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["paper_id", "title", "authors", "year", "source"],
+              "properties": {
+                "paper_id": {"type": "string", "minLength": 1},
+                "title": {"type": "string", "minLength": 1},
+                "authors": {"type": "array", "items": {"type": "string"}},
+                "year": {"type": "integer"},
+                "doi": {"type": ["string", "null"]},
+                "arxiv_id": {"type": ["string", "null"]},
+                "venue": {"type": ["string", "null"]},
+                "source": {"type": "string", "minLength": 1},
+                "code_url": {"type": ["string", "null"]},
+                "topics": {"type": "array", "items": {"type": "string"}}
+              }
+            }
+          },
+          "merge_reasons": {"type": "array", "items": {"type": "string"}}
+        }
+      }
+    },
+    "review_candidates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["paper_ids", "reason"],
+        "properties": {
+          "paper_ids": {"type": "array", "items": {"type": "string"}, "minItems": 2},
+          "reason": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "citations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["from_paper_id", "to_paper_id", "direction"],
+        "properties": {
+          "from_paper_id": {"type": "string", "minLength": 1},
+          "to_paper_id": {"type": "string", "minLength": 1},
+          "direction": {"type": "string", "enum": ["backward", "forward"]}
+        }
+      }
+    },
+    "clusters": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["topic", "paper_ids"],
+        "properties": {
+          "topic": {"type": "string", "minLength": 1},
+          "paper_ids": {"type": "array", "items": {"type": "string"}}
+        }
+      }
+    }
+  }
+}

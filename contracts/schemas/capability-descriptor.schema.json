@@ -1,0 +1,157 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://company.example/contracts/capability-descriptor.schema.json",
+  "title": "CapabilityDescriptor",
+  "description": "Runtime capability declaration returned by describe() on any port.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "port",
+    "version",
+    "features",
+    "observedAt"
+  ],
+  "properties": {
+    "port": {
+      "type": "string",
+      "enum": [
+        "model-gateway",
+        "compute",
+        "hpc-scheduler",
+        "artifact-store",
+        "identity",
+        "secrets",
+        "events",
+        "session",
+        "telemetry"
+      ]
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "features": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "limits": {
+      "type": "object",
+      "additionalProperties": {
+        "type": [
+          "number",
+          "string",
+          "boolean"
+        ]
+      }
+    },
+    "degraded": {
+      "type": "boolean",
+      "default": false
+    },
+    "observedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "implementedBy": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "models": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "modelId",
+          "provider",
+          "version",
+          "status"
+        ],
+        "properties": {
+          "modelId": {
+            "type": "string"
+          },
+          "provider": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string"
+          },
+          "capabilities": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "contextTokens": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "residency": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "dataClassMax": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "public",
+              "internal",
+              "confidential",
+              "restricted",
+              null
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "degraded",
+              "disabled",
+              "canary"
+            ]
+          }
+        }
+      }
+    },
+    "kinds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "delivery": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "at_most_once",
+        "at_least_once",
+        null
+      ]
+    },
+    "ordering": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "none",
+        "per_resource",
+        "global",
+        null
+      ]
+    }
+  }
+}

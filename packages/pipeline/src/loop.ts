@@ -22,7 +22,7 @@ import type {
   Finding,
   PreviousAttemptState,
 } from "../../domain/src/index.ts";
-import { buildFailureEntries, classifyFailure, failureStats, planResume } from "../../domain/src/index.ts";
+import { buildFailureEntries, buildPlatformSignal, classifyFailure, failureStats, planResume } from "../../domain/src/index.ts";
 import type { WorktreeRecord } from "../../workspace/src/index.ts";
 import { createExperimentWorktree } from "../../workspace/src/index.ts";
 import { runExperiment } from "./run.ts";
@@ -211,6 +211,51 @@ export async function runExperimentLoop(
   let currentSpec = input.spec;
   let previousOutcome: RunOutcomeLike | undefined;
 
+  /** 发布实验完成 / 预算耗尽事实事件；失败只记 finding，不改变循环结果。 */
+  const emitLoopSignal = async (
+    type: "experiment.completed.v1" | "budget.exhausted.v1",
+    data: Record<string, string | number | boolean | null>,
+  ): Promise<void> => {
+    if (!deps.events) return;
+    const built = buildPlatformSignal({
+      type,
+      tenant_id: input.subject.tenantId,
+      project_id: input.subject.projectId ?? null,
+      resource_id: input.spec.experiment_id,
+      resource_version: attempts.length + 1,
+      time: now().toISOString(),
+      data,
+    });
+    if (!built.ok || !built.signal) {
+      findings.push({
+        severity: "warning",
+        code: "W_SIGNAL_BUILD",
+        message: `平台事件构造失败: ${built.findings.map((item) => item.message).join("; ")}`,
+      });
+      return;
+    }
+    const published = await deps.events.publish({
+      id: built.signal.id,
+      type: built.signal.type,
+      source: "research-layer",
+      tenantId: input.subject.tenantId,
+      projectId: input.subject.projectId,
+      resourceId: built.signal.resource_id,
+      resourceVersion: built.signal.resource_version,
+      time: built.signal.time,
+      dataContentType: "application/json",
+      data: built.signal.data,
+      traceId: input.traceId,
+    });
+    if (!published.ok) {
+      findings.push({
+        severity: "warning",
+        code: "W_SIGNAL_PUBLISH",
+        message: `平台事件发布失败: ${published.error.code} ${published.error.message}`,
+      });
+    }
+  };
+
   const finish = async (
     stopReason: LoopStopReason,
     stopDetail: string | null,
@@ -283,6 +328,22 @@ export async function runExperimentLoop(
           message: `失败库写入失败: ${libraryPut.error.code} ${libraryPut.error.message}`,
         });
       }
+    }
+
+    if (stopReason === "kept") {
+      await emitLoopSignal("experiment.completed.v1", {
+        stop_reason: stopReason,
+        attempts: attempts.length,
+        last_decision: attempts.at(-1)?.decision ?? null,
+      });
+    }
+    if (stopReason === "budget_exhausted") {
+      await emitLoopSignal("budget.exhausted.v1", {
+        stop_reason: stopReason,
+        attempts: attempts.length,
+        remaining_budget: remainingBudget,
+        currency,
+      });
     }
 
     return {

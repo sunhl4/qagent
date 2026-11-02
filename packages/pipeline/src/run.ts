@@ -21,6 +21,7 @@ import type {
 import type { Decision, ExperimentSpec, Finding, FailureRecord } from "../../domain/src/index.ts";
 import {
   buildCostLedgerSnapshot,
+  buildPlatformSignal,
   classifyFailure,
   compileExperiment,
   decide,
@@ -327,6 +328,57 @@ export async function runExperiment(
     return { state, failure, manifest, manifestRef, findings, ...extra };
   };
 
+  /** 发布租约生命周期事实事件；失败只记 finding，不阻断业务。 */
+  const emitLeaseSignal = async (
+    lease: LeaseRecord,
+    phase: "prepared" | "released",
+    sink: Finding[],
+  ): Promise<void> => {
+    if (!deps.events || !lease) return;
+    const built = buildPlatformSignal({
+      type: "lease.changed.v1",
+      tenant_id: lease.tenant_id,
+      project_id: lease.project_id ?? null,
+      resource_id: lease.lease_id,
+      resource_version: lease.revision ?? 1,
+      time: now().toISOString(),
+      data: {
+        phase,
+        state: lease.state,
+        fencing: lease.fencing_token,
+        handle: lease.resource.handle_id ?? null,
+      },
+    });
+    if (!built.ok || !built.signal) {
+      sink.push({
+        severity: "warning",
+        code: "W_SIGNAL_BUILD",
+        message: `租约事件构造失败: ${built.findings.map((item) => item.message).join("; ")}`,
+      });
+      return;
+    }
+    const published = await deps.events.publish({
+      id: built.signal.id,
+      type: built.signal.type,
+      source: "research-layer",
+      tenantId: lease.tenant_id,
+      projectId: lease.project_id ?? undefined,
+      resourceId: built.signal.resource_id,
+      resourceVersion: built.signal.resource_version,
+      time: built.signal.time,
+      dataContentType: "application/json",
+      data: built.signal.data,
+      traceId: input.traceId,
+    });
+    if (!published.ok) {
+      sink.push({
+        severity: "warning",
+        code: "W_SIGNAL_PUBLISH",
+        message: `租约事件发布失败: ${published.error.code} ${published.error.message}`,
+      });
+    }
+  };
+
   /* 1. 编译与校验 */
   const compiled = compileExperiment(input.spec);
   findings.push(...compiled.errors, ...compiled.warnings);
@@ -533,6 +585,7 @@ export async function runExperiment(
 
     handle = acquired.handle!;
     activeLease = acquired.lease;
+    await emitLeaseSignal(activeLease, "prepared", findings);
   } else {
     const quote = await deps.compute.quote(request);
     if (!quote.ok) {
@@ -706,6 +759,7 @@ export async function runExperiment(
     if (settled.ok) {
       activeLedger = settled.ledger;
       activeLease = settled.lease;
+      await emitLeaseSignal(activeLease, "released", findings);
     }
   }
 

@@ -1,0 +1,95 @@
+{
+  "implementation": {
+    "name": "harness-core",
+    "version": "0.1.0",
+    "owner": "harness team",
+    "repository": "git@internal.example:research/harness-core.git",
+    "contact": "harness-team@example.com"
+  },
+  "contractVersion": "0.1.0",
+  "environment": "staging",
+  "generatedAt": "2026-10-29T00:00:00Z",
+  "ports": [
+    {
+      "name": "model-gateway",
+      "version": "0.1.0",
+      "transport": "in_process",
+      "endpointRef": "secret://models/gateway",
+      "features": ["complete", "stream", "embed", "json_schema", "usage", "fallback"],
+      "limits": {
+        "maxConcurrency": 64,
+        "maxContextTokens": 128000
+      },
+      "degraded": false,
+      "notes": "本地 DeepSeek 与外部 API 双路由"
+    },
+    {
+      "name": "compute",
+      "version": "0.1.0",
+      "transport": "http",
+      "endpointRef": "secret://compute/gateway",
+      "features": ["submit", "status", "cancel", "logs", "release", "reconcile", "usage"],
+      "limits": {
+        "maxWallClockSeconds": 604800,
+        "maxGpuPerJob": 8
+      },
+      "degraded": false
+    },
+    {
+      "name": "hpc-scheduler",
+      "version": "0.1.0",
+      "transport": "http",
+      "endpointRef": "secret://hpc/gateway",
+      "features": ["submit", "status", "cancel", "logs", "release", "reconcile", "reservation", "queueInfo"],
+      "limits": {
+        "maxNodes": 32
+      },
+      "degraded": false,
+      "notes": "Slurm 队列语义"
+    },
+    {
+      "name": "artifact-store",
+      "version": "0.1.0",
+      "transport": "http",
+      "endpointRef": "secret://storage/gateway",
+      "features": ["put", "stat", "get", "signedUrl", "list", "setRetention"],
+      "degraded": false
+    },
+    {
+      "name": "identity",
+      "version": "0.1.0",
+      "transport": "http",
+      "endpointRef": "secret://identity/gateway",
+      "features": ["verify", "authorize", "revoke"],
+      "degraded": false
+    },
+    {
+      "name": "secrets",
+      "version": "0.1.0",
+      "transport": "http",
+      "endpointRef": "secret://secrets/gateway",
+      "features": ["issue", "revoke", "status", "binding"],
+      "limits": {
+        "maxTtlSeconds": 900
+      },
+      "degraded": false
+    },
+    {
+      "name": "events",
+      "version": "0.1.0",
+      "transport": "http",
+      "endpointRef": "secret://events/gateway",
+      "features": ["publish", "subscribe", "dedupe"],
+      "limits": {
+        "maxPayloadBytes": 262144
+      },
+      "degraded": false,
+      "notes": "至少一次投递"
+    }
+  ],
+  "dataResidency": ["cn"],
+  "knownLimitations": [
+    "ComputePort.list 分页语义待冻结",
+    "EventPort 跨区域复制未实现"
+  ]
+}

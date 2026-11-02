@@ -1,0 +1,123 @@
+# 模型注册与路由示意
+# 价格为占位，需以采购合同或成本测算替换。
+
+version: 1
+
+models:
+  - model_id: deepseek-api-chat
+    provider: deepseek_api
+    version: "pinned-by-contract"
+    endpoint_ref: "secret://models/deepseek-api"
+    capabilities: [chat, tools, json, streaming, code, long_context]
+    context_tokens: 128000
+    residency: external
+    data_classification_max: internal
+    cost:
+      input_per_million: 0.0
+      output_per_million: 0.0
+      currency: CNY
+    limits:
+      rpm: 600
+      tpm: 200000
+      max_concurrency: 32
+    quality:
+      eval_suite: "company-agent-eval-v1"
+      eval_score: 0.0
+      tool_call_success: 0.0
+      json_compliance: 0.0
+      last_evaluated_at: null
+    status: active
+    fallback_order: [local-deepseek-flash, purchased-a-large]
+    task_types: [planning, coding, review, report]
+
+  - model_id: local-deepseek-flash
+    provider: self_hosted
+    version: "v4.1-flash-1017"
+    endpoint_ref: "secret://models/local-gateway"
+    capabilities: [chat, tools, json, streaming, long_context]
+    context_tokens: 128000
+    residency: on_prem
+    data_classification_max: restricted
+    cost:
+      input_per_million: 0.0
+      output_per_million: 0.0
+      currency: CNY
+    limits:
+      rpm: 1200
+      tpm: 400000
+      max_concurrency: 64
+    quality:
+      eval_suite: "company-agent-eval-v1"
+      eval_score: 0.0
+      tool_call_success: 0.0
+      json_compliance: 0.0
+      last_evaluated_at: null
+    status: active
+    fallback_order: [deepseek-api-chat]
+    task_types: [planning, coding, literature, extraction, review]
+
+  - model_id: purchased-a-large
+    provider: purchased
+    version: "contract-2026-10"
+    endpoint_ref: "secret://models/vendor-a"
+    capabilities: [chat, tools, json, vision]
+    context_tokens: 200000
+    residency: external
+    data_classification_max: internal
+    cost:
+      input_per_million: 0.0
+      output_per_million: 0.0
+      currency: CNY
+    limits:
+      rpm: 300
+      tpm: 150000
+      max_concurrency: 16
+    quality:
+      eval_suite: "company-agent-eval-v1"
+      eval_score: 0.0
+      tool_call_success: 0.0
+      json_compliance: 0.0
+      last_evaluated_at: null
+    status: canary
+    fallback_order: [local-deepseek-flash]
+    task_types: [planning, review]
+
+routing:
+  default_model: local-deepseek-flash
+  rules:
+    - name: restricted-data-on-prem
+      when:
+        data_classification: restricted
+      require:
+        residency: on_prem
+      deny_if_unavailable: true
+
+    - name: high-risk-planning
+      when:
+        task_type: planning
+        risk: high
+      prefer: [local-deepseek-flash, deepseek-api-chat]
+
+    - name: bulk-extraction
+      when:
+        task_type: extraction
+      prefer: [local-deepseek-flash]
+      limits:
+        max_cost_per_task: 5.0
+
+    - name: vision-required
+      when:
+        requires_vision: true
+      prefer: [purchased-a-large]
+
+  cost_guard:
+    enabled: true
+    per_task_max: 50.0
+    per_tenant_daily_max: 2000.0
+    currency: CNY
+    on_exceed: require_approval
+
+  health:
+    check_interval_seconds: 60
+    degraded_after_consecutive_failures: 3
+    disable_after_consecutive_failures: 10

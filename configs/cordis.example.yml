@@ -1,0 +1,165 @@
+# 示意配置：DeepSeek Harness / Cordis 插件组合
+#
+# 重要：
+# 1. 本文件是架构示意，不是 DSH 官方配置格式的承诺。
+# 2. 字段名、插件包名、加载顺序必须以公司锁定的 DSH 版本重新核对。
+# 3. 生产环境不要把密钥写在此文件中，使用 secret 引用。
+
+version: 1
+
+# 环境选择：开发 / 预发 / 生产
+env: development
+
+# 运行时限制
+runtime:
+  maxConcurrentSessions: 4
+  sessionTimeoutSeconds: 3600
+  toolCallTimeoutSeconds: 300
+  maxToolCallsPerTurn: 40
+  workspaceRoot: "/workspace"
+
+# 模型提供者（账号与密钥通过 secret 引用）
+providers:
+  - id: deepseek-api
+    kind: openai-compatible
+    baseUrl: "https://api.deepseek.com"
+    secretRef: "secret://models/deepseek-api"
+    defaultModel: "deepseek-chat"
+
+  - id: local-deepseek
+    kind: openai-compatible
+    baseUrl: "http://inference-gateway.internal/v1"
+    secretRef: "secret://models/local-gateway"
+    defaultModel: "deepseek-v4.1-flash"
+
+  - id: purchased-a
+    kind: openai-compatible
+    baseUrl: "https://vendor-a.example/v1"
+    secretRef: "secret://models/vendor-a"
+    defaultModel: "vendor-a-large"
+
+# 模型路由
+routing:
+  default:
+    provider: local-deepseek
+    model: deepseek-v4.1-flash
+  rules:
+    - match: {taskType: planning}
+      prefer: [deepseek-api, local-deepseek]
+    - match: {taskType: coding}
+      prefer: [local-deepseek, deepseek-api]
+    - match: {taskType: literature}
+      prefer: [local-deepseek]
+    - match: {dataClass: restricted}
+      require: {residency: on_prem}
+  fallback:
+    enabled: true
+    maxAttempts: 2
+
+# 插件
+plugins:
+  # 公司自研：目标与任务
+  - id: "@company/dsh-plugin-goal"
+    enabled: true
+    config:
+      taskApiBaseUrl: "http://platform.internal/api/v1"
+      secretRef: "secret://platform/agent-token"
+
+  # 公司自研：文献
+  - id: "@company/dsh-plugin-literature"
+    enabled: true
+    config:
+      searchSources: ["arxiv", "openalex", "crossref"]
+      parserServiceUrl: "http://grobid.internal"
+      cacheDir: "/workspace/.cache/literature"
+      maxResultsPerQuery: 50
+
+  # 公司自研：实验
+  - id: "@company/dsh-plugin-experiment"
+    enabled: true
+    config:
+      schemaPath: "/etc/dsh/schemas/experiment-spec.schema.json"
+      requireBaselineReproduced: true
+      maxConcurrentExperiments: 2
+
+  # 公司自研：资源
+  - id: "@company/dsh-plugin-resource"
+    enabled: true
+    config:
+      slurmGatewayUrl: "http://slurm-bridge.internal"
+      kueueNamespace: "research"
+      leaseTtlSeconds: 900
+      maxIdleBeforeReleaseSeconds: 300
+
+  # 公司自研：软件工程
+  - id: "@company/dsh-plugin-software"
+    enabled: true
+    config:
+      worktreeRoot: "/workspace/worktrees"
+      allowedRepos: ["github.com/company/*"]
+      testCommands:
+        - "pytest -q"
+        - "npx playwright test"
+      securityCommands:
+        - "semgrep --config=auto"
+        - "trivy fs --exit-code 1 --severity HIGH,CRITICAL ."
+
+  # 公司自研：策略网关
+  - id: "@company/dsh-plugin-policy"
+    enabled: true
+    config:
+      policyBundleRef: "policy://research/v3"
+      failClosed: true
+      auditSink: "http://audit.internal/events"
+
+  # 公司自研：记忆与失败库
+  - id: "@company/dsh-plugin-memory"
+    enabled: true
+    config:
+      storeUrl: "http://memory.internal"
+      namespace: "research"
+
+  # 公司自研：报告
+  - id: "@company/dsh-plugin-report"
+    enabled: true
+    config:
+      templateDir: "/etc/dsh/templates"
+      outputDir: "/workspace/reports"
+
+  # 公司自研：可观测
+  - id: "@company/dsh-plugin-observability"
+    enabled: true
+    config:
+      otlpEndpoint: "http://otel-collector.internal:4317"
+      sampleRatio: 0.1
+
+  # 官方/社区插件按需启用，启用前必须做安全审查
+  - id: "@deepseek-ai/dsh-sandbox"
+    enabled: true
+    config:
+      provider: "container"
+      rootless: true
+      networkPolicy: "deny-all"
+      allowlist: ["pypi.org", "github.com", "api.deepseek.com"]
+
+# 沙箱
+sandbox:
+  provider: container
+  image: "registry.internal/dsh/base:2026.10"
+  limits:
+    cpu: 4
+    memoryGb: 16
+    diskGb: 50
+    processes: 512
+  timeoutSeconds: 1800
+  readOnlyRoot: true
+  noNewPrivileges: true
+
+# 审批
+approval:
+  providers:
+    - type: manual
+      channel: "platform-ui"
+    - type: slack
+      webhookSecretRef: "secret://slack/approval"
+  defaultTtlSeconds: 86400

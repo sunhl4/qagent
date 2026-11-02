@@ -1,0 +1,94 @@
+# 示例：论文复现计划
+
+reproduction_id: "REP-2026-0001"
+task_id: "TASK-2026-0002"
+
+paper:
+  title: "示例论文标题"
+  authors: ["A. Author", "B. Author"]
+  venue: "Example Venue"
+  year: 2026
+  doi: "10.0000/example"
+  arxiv_id: "2601.00000"
+  code_url: "https://github.com/example/repo"
+  license: "unknown"
+
+difficulty:
+  code_available: partial
+  data_available: public
+  hyperparameters_complete: false
+  compute_requirement: single_gpu
+  dependency_risk: medium
+  evaluation_clarity: script_available
+  overall: medium
+
+environment:
+  container: "registry.internal/repro/example:2026.10"
+  python: "3.12"
+  framework: "pytorch 2.x"
+  cuda: "12.x"
+  lockfile_hash: "0000000000000000000000000000000000000000000000000000000000000000"
+  hardware: "A100-40GB"
+
+data:
+  source: "公开数据集"
+  hash: "0000000000000000000000000000000000000000000000000000000000000000"
+  split: "按论文描述"
+  preprocessing_notes:
+    - "论文未说明随机种子，统一使用 13/37/101"
+
+claims_to_verify:
+  - claim: "方法 A 在数据集 D 上达到指标 M"
+    original_value: 0.0
+    tolerance: 0.02
+  - claim: "消融 B 贡献 Z 个百分点"
+    original_value: 0.0
+    tolerance: 0.01
+
+runs:
+  - name: "baseline-original-settings"
+    command: "python train.py --config configs/original.yaml"
+    seeds: [13]
+  - name: "baseline-multi-seed"
+    command: "python train.py --config configs/original.yaml"
+    seeds: [13, 37, 101]
+  - name: "ablation-b"
+    command: "python train.py --config configs/no_b.yaml"
+    seeds: [13, 37, 101]
+
+evidence:
+  - type: "paper_section"
+    location: "Section 4.2, Table 2"
+    note: "报告主结果"
+  - type: "code_line"
+    ref: "repo/train.py#L120-L180"
+    note: "训练循环实现"
+  - type: "issue"
+    ref: "repo/issues/42"
+    note: "作者说明缺失超参"
+
+acceptance:
+  semantic:
+    - "算法实现与论文公式一致"
+    - "数据划分与论文一致"
+    - "指标定义与论文一致"
+  numeric:
+    - "主指标落在容差内，或偏差有可解释原因"
+  generality:
+    - "至少一个独立设置下方向一致"
+
+report:
+  sections:
+    - "环境与数据"
+    - "命令与种子"
+    - "结果表"
+    - "与原文差异"
+    - "差异归因"
+    - "结论"
+    - "可复用资产"
+    - "未解决问题"
+
+failure_policy:
+  on_missing_data: "标记为不可复现，记录原因"
+  on_missing_hyperparameter: "使用合理默认值并记录"
+  on_large_deviation: "做消融归因，不直接判定论文错误"

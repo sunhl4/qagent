@@ -1,0 +1,78 @@
+{
+  "name": "@company/dsh-plugin-experiment",
+  "version": "0.1.0",
+  "description": "Compile, validate and track algorithm experiments.",
+  "compatibility": {
+    "dsh": ">=0.1.0-preview <1.0.0",
+    "cordis": ">=4.0.0",
+    "node": ">=22.19.0"
+  },
+  "provides": {
+    "services": [
+      {
+        "key": "ctx.experiment",
+        "methods": ["compile", "validate", "estimate", "submit", "decide"],
+        "idempotent": ["validate", "estimate"]
+      }
+    ],
+    "events_consumed": ["experiment:submit", "experiment:complete"],
+    "events_emitted": ["experiment:validated", "experiment:rejected", "experiment:decided"],
+    "tools": [
+      {
+        "name": "compile_experiment_spec",
+        "side_effect": "none",
+        "requires_approval": false,
+        "timeout_seconds": 30
+      },
+      {
+        "name": "submit_experiment",
+        "side_effect": "write",
+        "requires_approval": true,
+        "timeout_seconds": 60
+      }
+    ]
+  },
+  "depends_on": ["@company/dsh-plugin-policy", "@company/dsh-plugin-resource"],
+  "permissions": {
+    "filesystem": {
+      "read": ["/etc/dsh/schemas", "/workspace/experiments"],
+      "write": ["/workspace/artifacts"]
+    },
+    "network": {
+      "egress": ["http://platform.internal", "http://slurm-bridge.internal"],
+      "allow_internet": false
+    },
+    "process": {
+      "spawn": false,
+      "privileged": false
+    },
+    "secrets": ["secret://platform/agent-token"],
+    "resources": {
+      "may_request_gpu": true,
+      "may_request_hpc": true,
+      "may_request_qpu": false,
+      "max_cost_per_call": 100.0
+    }
+  },
+  "config_schema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "schemaPath": {"type": "string"},
+      "requireBaselineReproduced": {"type": "boolean"},
+      "maxConcurrentExperiments": {"type": "integer", "minimum": 1}
+    },
+    "required": ["schemaPath"]
+  },
+  "health_check": {
+    "method": "health",
+    "interval_seconds": 30,
+    "timeout_seconds": 5
+  },
+  "migrations": [],
+  "compliance": {
+    "license": "Apache-2.0",
+    "security_review_ref": "security/reviews/experiment-plugin.md",
+    "data_classification_max": "confidential"
+  }
+}

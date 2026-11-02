@@ -1,0 +1,99 @@
+# 示例：一个小型算法实验的完整规格
+# 用于验证 ExperimentSpec schema 与平台流程，不代表真实研究结论。
+
+experiment_id: "EXP-2026-0001"
+task_id: "TASK-2026-0001"
+
+hypothesis:
+  statement: "在该小规模任务上，加入学习率预热可降低验证损失，且不增加显著训练时间。"
+  origin: literature_gap
+  evidence_refs:
+    - "paper:example-warmup-study"
+    - "reproduction:REP-2026-0001"
+  falsifiable_by: "若验证损失未下降，或训练时间增加超过 10%，则该假设不成立。"
+  expected_effect: "验证损失下降至少 2%"
+
+baseline:
+  name: "无预热基线"
+  source: "内部已复现基线"
+  run_id: "RUN-2026-0000"
+  reproduced: true
+  metric_value: 1.000
+  uncertainty: 0.005
+
+variables:
+  changed:
+    - "scheduler.warmup_steps"
+  controlled:
+    - "dataset"
+    - "train_test_split"
+    - "model_architecture"
+    - "batch_size"
+    - "optimizer"
+    - "evaluation_script"
+  allowed_paths:
+    - "src/train/config.py"
+    - "src/train/scheduler.py"
+  forbidden_paths:
+    - "src/data/**"
+    - "src/eval/**"
+    - "tests/**"
+
+data:
+  dataset_ref: "artifact://datasets/example-v1"
+  dataset_hash: "0000000000000000000000000000000000000000000000000000000000000000"
+  split: "train/val/test = 8/1/1"
+  leakage_check: "自动检查训练集与验证集 id 不重叠"
+
+metrics:
+  primary: "val_loss"
+  direction: minimize
+  minimum_observable_effect: 0.02
+  guardrails:
+    - name: "train_time_seconds"
+      max_degradation: 0.10
+    - name: "val_accuracy"
+      max_degradation: 0.01
+  statistic: confidence_interval
+  repeats: 3
+  seeds: [13, 37, 101]
+
+resources:
+  type: gpu
+  count: 1
+  accelerator: "A100-40GB"
+  max_wall_clock_seconds: 1800
+  max_cost: 20.0
+  currency: CNY
+  checkpoint_required: true
+  checkpoint_interval_seconds: 300
+
+stopping:
+  max_attempts: 3
+  max_consecutive_failures: 1
+  deadline_at: "2026-11-05T00:00:00Z"
+  early_stop: "验证损失连续 3 个 epoch 不改善"
+
+decision:
+  keep_if: "val_loss 下降 ≥ 0.02，且护栏指标退化不超过阈值，且三种子方向一致"
+  discard_if: "任一护栏指标超过退化阈值，或成本超过预算"
+  on_unknown: escalate
+
+approval:
+  required: false
+  reasons: []
+  approved_by: null
+
+artifacts:
+  required:
+    - code_hash
+    - env_lock
+    - container_digest
+    - config
+    - raw_metrics
+    - logs
+    - checkpoint
+    - manifest
+    - report
+  optional:
+    - figure

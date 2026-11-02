@@ -1,0 +1,80 @@
+# 示例：软件任务规格
+
+task_id: "TASK-2026-0003"
+kind: software_change
+title: "为实验列表页增加按状态筛选"
+
+goal: "用户可以按实验状态筛选列表，并在刷新后保持筛选条件。"
+
+non_goals:
+  - "不改变实验详情页"
+  - "不引入新的状态类型"
+
+requirement:
+  background: "实验数量增加后，用户难以快速找到失败或运行中的实验。"
+  users: ["研究人员", "平台运维"]
+  acceptance:
+    - criterion: "选择状态后列表只显示该状态的实验"
+      check: "e2e: experiments-filter.spec.ts::filters by status"
+    - criterion: "刷新页面后筛选条件保持"
+      check: "e2e: experiments-filter.spec.ts::persists filter in url"
+    - criterion: "无结果时显示空状态"
+      check: "e2e: experiments-filter.spec.ts::shows empty state"
+
+design:
+  api:
+    endpoint: "GET /api/v1/experiments"
+    new_query_param: "state"
+    allowed_values: ["draft", "queued", "running", "succeeded", "failed", "partial"]
+  frontend:
+    component: "ExperimentListFilters"
+    state_source: "URL query string"
+  data:
+    migration_required: false
+  failure_modes:
+    - "非法状态值 → 返回 400 并给出允许值"
+    - "空结果 → 显示空状态，不报错"
+
+plan:
+  - task: "添加后端查询参数与校验"
+    files: ["backend/api/experiments.py", "backend/tests/test_experiments_api.py"]
+    verify: "pytest backend/tests/test_experiments_api.py -q"
+  - task: "添加前端筛选组件"
+    files: ["frontend/src/components/ExperimentListFilters.tsx"]
+    verify: "npm test -- ExperimentListFilters"
+  - task: "接入 URL 状态"
+    files: ["frontend/src/pages/ExperimentsPage.tsx"]
+    verify: "npm test -- ExperimentsPage"
+  - task: "添加 E2E"
+    files: ["e2e/experiments-filter.spec.ts"]
+    verify: "npx playwright test experiments-filter.spec.ts"
+
+verification:
+  unit: "pytest -q"
+  frontend: "npm test"
+  e2e: "npx playwright test"
+  security:
+    - "semgrep --config=auto"
+    - "trivy fs --exit-code 1 --severity HIGH,CRITICAL ."
+  manual:
+    - "在 Chromium、Firefox、WebKit 下各跑一次关键路径"
+
+workspace:
+  repo: "github.com/company/research-platform"
+  base_branch: "main"
+  strategy: "git worktree"
+  container_image: "registry.internal/dev/frontend-backend:2026.10"
+
+constraints:
+  compatibility: "向后兼容，旧客户端不带参数时行为不变"
+  performance: "列表接口 P95 增加不超过 20ms"
+  security: "不得在 URL 中放敏感数据"
+
+approval:
+  required: true
+  reason: "涉及主分支合并"
+  approvers: ["frontend-lead", "backend-lead"]
+
+rollback:
+  strategy: "revert commit + 关闭 feature flag"
+  data_migration: "无"

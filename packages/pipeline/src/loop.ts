@@ -203,6 +203,8 @@ export async function runExperimentLoop(
   let consecutiveDiscards = 0;
   let resumesSoFar = 0;
   let sharedLedger: CostLedger = input.lease?.ledger ?? { entries: [] };
+  /** 供 planResume 使用的检查点池：调用方提供 + 本循环产出。 */
+  const checkpointPool: CheckpointRecord[] = [...(input.checkpoints ?? [])];
 
   const attempts: LoopAttemptRecord[] = [];
   const failureCandidates: FailureCandidate[] = [];
@@ -584,7 +586,9 @@ export async function runExperimentLoop(
 
     /* 6.1 恢复决策：说明如何继续（恢复/重启），达到上限则转人工 */
     let resumeEscalation: string | null = null;
-    if (input.checkpoints && input.resume) {
+    const resumesEnabled = input.resume !== undefined;
+    if (outcome.checkpoint) checkpointPool.push(outcome.checkpoint);
+    if (resumesEnabled) {
       const previousState: PreviousAttemptState | null =
         outcome.state === "unknown_execution"
           ? "unknown_execution"
@@ -598,11 +602,11 @@ export async function runExperimentLoop(
           experiment_id: currentSpec.experiment_id,
           previous_attempt: attempt,
           previous_state: previousState,
-          checkpoints: input.checkpoints,
+          checkpoints: checkpointPool,
           policy: {
-            required: input.resume.required ?? true,
-            max_resumes: input.resume.max_resumes,
-            max_age_seconds: input.resume.max_age_seconds ?? null,
+            required: input.resume!.required ?? true,
+            max_resumes: input.resume!.max_resumes,
+            max_age_seconds: input.resume!.max_age_seconds ?? null,
           },
           current_code_commit: attemptCode.commit,
           current_environment_hash: input.environment.lockfileHash,

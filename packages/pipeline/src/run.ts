@@ -22,6 +22,7 @@ import type { Decision, ExperimentSpec, Finding, FailureRecord } from "../../dom
 import {
   buildCostLedgerSnapshot,
   buildPlatformSignal,
+  checkpointArtifactKey,
   classifyFailure,
   compileExperiment,
   decide,
@@ -29,7 +30,12 @@ import {
   evaluatePolicy,
   summarizeCost,
 } from "../../domain/src/index.ts";
-import type { CostLedger, CostTotals, LeaseRecord } from "../../domain/src/index.ts";
+import type {
+  CheckpointRecord,
+  CostLedger,
+  CostTotals,
+  LeaseRecord,
+} from "../../domain/src/index.ts";
 import type { PolicyResult } from "../../domain/src/index.ts";
 import { acquireLease, reconcileLease, releaseLease } from "./lease.ts";
 
@@ -148,6 +154,8 @@ export interface RunOutcome {
   lease?: LeaseRecord;
   /** 启用租约时返回最终账本，供调用方跨轮串联。 */
   ledger?: CostLedger;
+  /** 供应商返回检查点时的指针记录。 */
+  checkpoint?: CheckpointRecord;
 }
 
 function sha256(value: string): string {
@@ -809,7 +817,45 @@ export async function runExperiment(
     });
   }
 
-  if (handle.checkpointUri) artifactsPresent.add("checkpoint");
+  /** 供应商侧返回检查点时，把指针记录写入产物，供 planResume 恢复决策使用。 */
+  let checkpointRecord: CheckpointRecord | undefined;
+  if (handle.checkpointUri) {
+    artifactsPresent.add("checkpoint");
+    const record: CheckpointRecord = {
+      checkpoint_id: `${runId}-checkpoint-1`,
+      experiment_id: input.spec.experiment_id,
+      attempt,
+      uri: handle.checkpointUri,
+      /* sha256 摘自检查点 URI；真实载荷哈希由存储侧 put 校验后代管。 */
+      sha256: sha256(handle.checkpointUri),
+      step: 0,
+      created_at: now().toISOString(),
+      code_commit: input.code.commit,
+      environment_hash: input.environment.lockfileHash,
+      valid: true,
+    };
+    const recordJson = JSON.stringify(record, null, 2);
+    const recordPut = await deps.artifacts.put({
+      tenantId: input.subject.tenantId,
+      projectId: input.subject.projectId,
+      key: checkpointArtifactKey(input.spec.experiment_id, attempt, record.checkpoint_id),
+      contentType: "application/json",
+      bytes: new TextEncoder().encode(recordJson),
+      expectedSha256: sha256(recordJson),
+      metadata: { task_id: input.spec.task_id, attempt: String(attempt) },
+      idempotencyKey: `${input.idempotencyKey}:checkpoint-record`,
+    });
+    if (recordPut.ok) {
+      storedArtifacts.push({ ref: recordPut.value, type: "checkpoint" });
+      checkpointRecord = record;
+    } else {
+      findings.push({
+        severity: "warning",
+        code: "W_CHECKPOINT_RECORD",
+        message: `检查点记录写入失败: ${recordPut.error.code} ${recordPut.error.message}`,
+      });
+    }
+  }
   artifactsPresent.add("code_hash");
   artifactsPresent.add("env_lock");
   artifactsPresent.add("container_digest");
@@ -966,5 +1012,6 @@ export async function runExperiment(
     costTotals,
     lease: activeLease,
     ledger: activeLedger,
+    checkpoint: checkpointRecord,
   };
 }

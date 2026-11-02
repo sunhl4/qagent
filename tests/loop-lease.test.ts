@@ -240,3 +240,29 @@ test("循环恢复决策：检查点代码版本不一致时重启并记录", as
   assert.ok(outcome.attempts[1].resume_plan?.startsWith("restart"));
   assert.equal(outcome.attempts[0].resume_from, null, "重启不应绑定检查点");
 });
+
+test("检查点闭环：失败现场落检查点记录并自动进入下一轮恢复", async () => {
+  const stack = createStubStack({
+    compute: { scenario: "fail", baseCostPerHour: 24, failCheckpointUri: true },
+  });
+  const outcome = await runExperimentLoop(
+    makeInput({
+      maxAttempts: 2,
+      maxConsecutiveFailures: 5,
+      resume: { max_resumes: 3, max_age_seconds: null },
+      propose: () => makeSpec(),
+      checkpoints: undefined,
+    }),
+    { compute: stack.compute, artifacts: stack.artifacts },
+  );
+
+  assert.equal(outcome.state, "exhausted");
+  assert.equal(outcome.attempts.length, 2);
+  assert.ok(outcome.attempts[0].resume_plan?.startsWith("resume"), attemptsDump(outcome));
+  assert.ok(outcome.attempts[0].resume_from);
+  assert.ok(outcome.attempts[1].resume_plan?.startsWith("resume"));
+});
+
+function attemptsDump(outcome: { attempts: Array<{ resume_plan: string | null }> }): string {
+  return JSON.stringify(outcome.attempts.map((attempt) => attempt.resume_plan));
+}

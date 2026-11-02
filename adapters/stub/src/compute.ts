@@ -22,6 +22,8 @@ export interface StubComputeOptions extends Partial<StubBaseOptions> {
   stepsToTerminal?: number;
   baseCostPerHour?: number;
   kinds?: Array<"cpu" | "gpu" | "hpc" | "cloud" | "qpu" | "browser">;
+  /** 注入：失败场景也返回检查点指针（验证失败现场可恢复）。 */
+  failCheckpointUri?: boolean;
 }
 
 interface RecordedJob {
@@ -38,6 +40,7 @@ export class StubComputePort extends StubBase implements HpcSchedulerPort {
   private readonly scenario: JobScenario;
   private readonly stepsToTerminal: number;
   private readonly baseCostPerHour: number;
+  private readonly failCheckpointUri: boolean;
   private readonly kinds: Array<"cpu" | "gpu" | "hpc" | "cloud" | "qpu" | "browser">;
   private counter = 0;
 
@@ -55,6 +58,7 @@ export class StubComputePort extends StubBase implements HpcSchedulerPort {
     this.scenario = options.scenario ?? "success";
     this.stepsToTerminal = Math.max(1, options.stepsToTerminal ?? 2);
     this.baseCostPerHour = options.baseCostPerHour ?? 10;
+    this.failCheckpointUri = options.failCheckpointUri ?? false;
     this.kinds = options.kinds ?? ["cpu", "gpu", "hpc", "cloud"];
   }
 
@@ -156,6 +160,9 @@ export class StubComputePort extends StubBase implements HpcSchedulerPort {
         exitCode: 1,
         reason: "桩：注入失败",
         usage: { wallClockSeconds, cost, currency: record.request.currency ?? "CNY" },
+        checkpointUri: this.failCheckpointUri
+          ? `stub://checkpoints/${handleId}/latest`
+          : undefined,
       };
       record.handle = handle;
       return ok(handle);

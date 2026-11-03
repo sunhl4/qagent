@@ -26,6 +26,7 @@ import { buildFailureEntries, buildPlatformSignal, classifyFailure, failureStats
 import type { WorktreeRecord } from "../../workspace/src/index.ts";
 import { createExperimentWorktree } from "../../workspace/src/index.ts";
 import { runExperiment } from "./run.ts";
+import { loadFailureLibrary } from "./retrieval.ts";
 import type { PipelineState, RunDeps, RunInput, RunOptions } from "./run.ts";
 
 export type LoopStopReason =
@@ -85,6 +86,8 @@ export interface LoopOutcome {
   failureRef?: ArtifactRef;
   /** 启用租约时返回最终共享账本，可直接交给 sweepLeases 继续扫描。 */
   ledger?: CostLedger;
+  /** 提供 `recallFailureUris` 时返回读回合并后的历史失败条目。 */
+  recalledFailures?: FailureEntry[];
   findings: Finding[];
 }
 
@@ -152,6 +155,8 @@ export interface LoopInput {
   checkpoints?: CheckpointRecord[];
   /** 恢复策略上限；与 `checkpoints` 同时提供才启用。 */
   resume?: LoopResumeOptions;
+  /** 历史失败库的 `failures.json` URI；提供后循环开始时读回并合并。 */
+  recallFailureUris?: string[];
   /** 循环 ID；默认由 experiment_id 与幂等键派生。 */
   loopId?: string;
   /** 第二轮及以后生成候选规格；返回 null 表示没有下一轮。 */
@@ -210,6 +215,18 @@ export async function runExperimentLoop(
   const failureCandidates: FailureCandidate[] = [];
   const worktrees: WorktreeRecord[] = [];
   const findings: Finding[] = [];
+
+  /** 任务开始前的失败召回：读回历史失败库，供上层/propose 避免重复失败模式。 */
+  let recalledFailures: FailureEntry[] = [];
+  if ((input.recallFailureUris?.length ?? 0) > 0) {
+    const loaded = await loadFailureLibrary(deps, {
+      tenantId: input.subject.tenantId,
+      projectId: input.subject.projectId ?? null,
+      uris: input.recallFailureUris!,
+    });
+    findings.push(...loaded.findings);
+    recalledFailures = loaded.entries;
+  }
   let currentSpec = input.spec;
   let previousOutcome: RunOutcomeLike | undefined;
 
@@ -359,6 +376,7 @@ export async function runExperimentLoop(
       summaryRef: put.ok ? put.value : undefined,
       failureRef,
       ledger: input.lease ? sharedLedger : undefined,
+      recalledFailures: input.recallFailureUris?.length ? recalledFailures : undefined,
       findings,
     };
   };

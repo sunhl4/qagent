@@ -14,6 +14,8 @@ export type * from "./lease.ts";
 export { acquireLease, reconcileLease, releaseLease } from "./lease.ts";
 export type * from "./reclaim.ts";
 export { sweepLeases } from "./reclaim.ts";
+export type * from "./retrieval.ts";
+export { loadFailureLibrary } from "./retrieval.ts";
 export type * from "./reproduction.ts";
 export { runReproduction } from "./reproduction.ts";
 export type * from "./software.ts";

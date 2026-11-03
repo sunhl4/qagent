@@ -148,3 +148,29 @@ export function failureStats(entries: readonly FailureEntry[]): FailureStats {
 
   return { total: entries.length, byCategory, byCode };
 }
+
+/**
+ * 跨循环/跨产物合并失败条目。
+ *
+ * 以 entry_id 去重；同一 ID 保留 occurred_at 较新的版本（重放可能更新消息），
+ * 时间也相同则后写入者优先。返回按时间倒序，便于检索展示。
+ */
+export function mergeFailureEntries(
+  entries: readonly FailureEntry[],
+): FailureEntry[] {
+  const byId = new Map<string, FailureEntry>();
+  for (const entry of entries) {
+    const existing = byId.get(entry.entry_id);
+    if (!existing) {
+      byId.set(entry.entry_id, entry);
+      continue;
+    }
+    if (Date.parse(entry.occurred_at) >= Date.parse(existing.occurred_at)) {
+      byId.set(entry.entry_id, entry);
+    }
+  }
+  return [...byId.values()].sort((left, right) => {
+    const time = right.occurred_at.localeCompare(left.occurred_at);
+    return time !== 0 ? time : left.entry_id.localeCompare(right.entry_id);
+  });
+}

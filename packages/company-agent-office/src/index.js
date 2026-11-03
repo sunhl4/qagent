@@ -5,10 +5,17 @@ export const inject = ["tools"];
 
 export function apply(ctx) {
   // company.office is the WPS-suite porting slice over the mounted workspace:
-  // P1 bounded text extraction plus P2 bounded single-file artifact creation.
-  // The preset catalog filter decides visibility (boot/lab/algo see it,
-  // sign does not). Every call resolves the bounded workspace the core
-  // runtime forwards and fails closed outside it; every part is standard-library
-  // work over the mounted workspace, so no ask gate applies.
+  // P1 bounded extraction (docx/xlsx/pptx/pdf/text), P2 bounded single-file
+  // artifact creation, P3 surgical w:ins/w:del edits + line diff + declarative
+  // charts, P4.5 matter artifacts (timeline/chronology/mindmap), the L4
+  // companion read-only format audit (baseline GB/T 9704 draft vs imported
+  // describe), the §4.5 pptx slice (structured-layout render + in-place
+  // shape text rewrite with a read-back B5 gate), and the L6/L7 exit:
+  // local soffice conversion (docx->pdf, doc->docx) plus the Windows
+  // open-in-WPS desktop handoff. The preset catalog filter decides visibility (boot/lab/algo
+  // see it, sign does not). Every call resolves the bounded workspace the
+  // core runtime forwards and fails closed outside it; every part is
+  // standard-library work over the mounted workspace, so no ask gate applies
+  // (writes carry their audit line).
   registerCapabilityTools(ctx, ["company.office"]);
 }

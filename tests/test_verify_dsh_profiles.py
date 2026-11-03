@@ -180,7 +180,7 @@ def test_tool_report_rejects_invalid_shape(tmp_path: Path) -> None:
 
 
 def test_verifier_builds_exact_tool_probe_per_profile() -> None:
-    for profile, expected_count in (("company-agent", 67), ("company-agent-minimal", 11)):
+    for profile, expected_count in (("company-agent", 78), ("company-agent-minimal", 22)):
         with VERIFY.profile_home(profile) as temporary:
             home = Path(temporary)
             VERIFY.write_session_probe(home, profile)
@@ -200,6 +200,7 @@ def test_verifier_builds_exact_tool_probe_per_profile() -> None:
                 assert builtins.isdisjoint(expected)
 
 
+@pytest.mark.posix_permissions  # 非法组合拒绝探针要跑 POSIX 的 start_runtime.sh
 def test_verifier_reports_provider_readiness_without_exposing_values(monkeypatch, capsys) -> None:
     monkeypatch.setattr(
         VERIFY,

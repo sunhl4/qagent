@@ -197,10 +197,10 @@ def test_cli_rejects_non_finite_json_number(capsys) -> None:
 def test_tools_command_exposes_contract_catalog(capsys) -> None:
     assert main(["tools"]) == 0
     tools = json.loads(capsys.readouterr().out)
-    assert len(tools) == 59
+    assert len(tools) == 71
     assert "quantum_algorithm_catalog" in {row["name"] for row in tools}
-    assert tools[0]["name"] == "company_capabilities"
-    assert tools[-1]["name"] == "company_office_analyze"
+    assert tools[0]["name"] == "company_work_item"
+    assert tools[-1]["name"] == "company_office_deliver"
 
 
 def test_tools_command_filters_by_preset(capsys) -> None:
@@ -208,6 +208,7 @@ def test_tools_command_filters_by_preset(capsys) -> None:
     boot = {row["name"] for row in json.loads(capsys.readouterr().out)}
     assert boot == {
         "company_capabilities",
+        "company_work_item",
         "company_knowledge_search",
         "company_fetch",
         "company_table_profile",
@@ -216,6 +217,17 @@ def test_tools_command_filters_by_preset(capsys) -> None:
         "company_analysis_render",
         "company_office_analyze",
         "company_office_create",
+        "company_office_compare",
+        "company_office_edit",
+        "company_office_validate",
+        "company_office_chart",
+        "company_office_matter",
+        "company_office_audit",
+        "company_office_pptx",
+        "company_office_convert",
+        "company_office_open",
+        "company_office_compute",
+        "company_office_deliver",
         "company_portal_open",
     }
     assert main(["tools", "--preset", "lab"]) == 0

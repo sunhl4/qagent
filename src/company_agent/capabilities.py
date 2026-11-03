@@ -40,6 +40,10 @@ def _parse_capabilities(rows: object) -> tuple[Capability, ...]:
         "company.office": "document",
         "company.plan": "plan",
         "company.portal": "portal",
+        "company.workflow": "workflow",
+        "company.latex": "document",
+        "company.plan": "plan",
+        "company.office": "document",
     }
     if any(item.kind != expected_kinds.get(item.id) for item in capabilities):
         raise RuntimeError("capability contract is invalid")

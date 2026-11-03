@@ -3,6 +3,8 @@ window.__ModuleLoader__.load({
   factory:require=>{
     const React=require('react');
     const {jsx,jsxs}=require('react/jsx-runtime');
+    const RESOURCE_TASK_FETCH='/company-workspace/workbench/tasks';
+    const RESOURCE_TASK_STATES=new Set(['completed','unknown','refused']);
     const button=(label,props={})=>jsx('button',{type:'button',className:'cw-button',...props,children:label});
     const resourceStatus = status => !status ? '检测中…'
       : status.connected ? '资源已连接'
@@ -19,12 +21,15 @@ window.__ModuleLoader__.load({
       if(!Array.isArray(rows)||rows.length===0)return jsx('p',{className:'cw-resource-empty',children:empty});
       return jsx('div',{className:'cw-resource-table-wrap',children:jsx('table',{className:'cw-resource-table',children:[jsx('thead',{children:jsx('tr',{children:columns.map(([key,label])=>jsx('th',{children:label},key))})}),jsx('tbody',{children:rows.slice(0,32).map((row,index)=>jsx('tr',{children:columns.map(([key])=>jsx('td',{children:row[key]===undefined||row[key]===''?'—':String(row[key])},key))},`${index}-${row.id||row.job||row.name||''}`))})]})});
     }
+    const restoreTaskSnapshot=tasks=>Array.isArray(tasks)
+      ? tasks.filter(row=>row&&typeof row==='object').map(row=>({...row,connection_state:'reconnecting',source:'server-facts-reconnect'}))
+      : [];
     function ResourceCenter({kind}){
       const name=kind==='cloud'?'云平台':'超算';
       const [tab,setTab]=React.useState('summary');
-      const [snapshot,setSnapshot]=React.useState({status:null,overview:null,loading:true,error:null});
+      const [snapshot,setSnapshot]=React.useState({status:null,overview:null,tasks:null,loading:true,error:null});
       const load=React.useCallback(async()=>{
-        if(typeof fetch!=='function'){setSnapshot({status:{connected:false,reason:'fetch_failed'},overview:null,loading:false,error:'客户端服务不可用'});return;}
+        if(typeof fetch!=='function'){setSnapshot(previous=>({...previous,status:{connected:false,reason:'fetch_failed'},overview:null,tasks:{available:false,tasks:restoreTaskSnapshot(previous.tasks&&previous.tasks.tasks),reason:'reconnecting'},loading:false,error:'客户端服务不可用'}));return;}
         setSnapshot(previous=>({...previous,loading:true,error:null}));
         try{
           const statusResponse=await fetch(`/company-workspace/${kind}/status`);
@@ -34,12 +39,20 @@ window.__ModuleLoader__.load({
             const overviewResponse=await fetch(`/company-workspace/${kind}/overview`);
             overview=overviewResponse.ok?await overviewResponse.json():{reason:'fetch_failed'};
           }
-          setSnapshot({status,overview,loading:false,error:null});
-        }catch(error){setSnapshot(previous=>({...previous,loading:false,error:String(error?.message||'资源服务不可用').slice(0,120)}));}
+          const taskResponse=await fetch('/company-workspace/workbench/tasks');
+          const rawTasks=taskResponse.ok?await taskResponse.json():{available:false,tasks:[],reason:'fetch_failed'};
+          const previousTasks=snapshot.tasks&&snapshot.tasks.tasks;
+          const projectedTasks=rawTasks&&Array.isArray(rawTasks.tasks)
+            ? {...rawTasks,tasks:rawTasks.tasks.filter(row=>row&&RESOURCE_TASK_STATES.has(row.status)&&['server_facts','reconnecting'].includes(row.connection_state||'server_facts'))}
+            : {available:false,tasks:[],reason:'invalid_task_projection'};
+          if(projectedTasks.available===false)projectedTasks.tasks=restoreTaskSnapshot(previousTasks);
+          setSnapshot({status,overview,tasks:projectedTasks,loading:false,error:null});
+        }catch(error){setSnapshot(previous=>({...previous,loading:false,tasks:{available:false,tasks:restoreTaskSnapshot(previous.tasks&&previous.tasks.tasks),reason:'reconnecting'},error:String(error?.message||'资源服务不可用').slice(0,120)}));}
       },[kind]);
       React.useEffect(()=>{setTab('summary');load();},[load]);
       const status=snapshot.status;
       const overview=snapshot.overview||{};
+      const tasks=snapshot.tasks&&Array.isArray(snapshot.tasks.tasks)?snapshot.tasks.tasks:[];
       const portal=`/company-workspace/portal/${kind}/`;
       const tabButton=(id,label)=>jsx('button',{type:'button',className:'cw-resource-tab','aria-pressed':tab===id,onClick:()=>setTab(id),children:label},id);
       const summary=kind==='cloud'
@@ -61,7 +74,7 @@ window.__ModuleLoader__.load({
           : tab==='files'
             ? jsx('section',{className:'cw-resource-sections',children:jsx(ResourceRows,{rows:files,columns:[['name','名称'],['kind','类型']],empty:kind==='hpc'?(overview.filesNote||'远端目录暂无可展示文件；文件取回由 hpc_file_fetch 写入当前 DSH 工作区。'):'云平台 SDK 没有远端文件夹浏览接口；文件通过 Agent 工具上传和结果回收。'})})
             : tab==='jobs'
-              ? jsxs('section',{className:'cw-resource-sections',children:[jsx('p',{className:'cw-resource-note',children:'作业提交、取消和未知结果核对不由面板按钮直接触发。请在对话中让 Agent 使用对应工具；DSH 会记录调用、审批、短结果和持久回执。'}),summary]})
+              ? jsxs('section',{className:'cw-resource-sections',children:[jsx('p',{className:'cw-resource-note',children:'作业提交、取消和未知结果核对不由面板按钮直接触发。请在对话中让 Agent 使用对应工具；DSH 会记录调用、审批、短结果和持久回执。'}),jsx('section',{children:[jsx('h4',{children:'平台作业投影'}),jsx(ResourceRows,{rows:tasks,columns:[['request_id','请求'],['operation','操作'],['status','执行状态'],['execution_state','平台状态'],['approval_state','审批状态'],['connection_state','连接事实'],['business_ref','业务引用'],['result_state','结果'],['billing_state','计费']],empty:snapshot.tasks&&snapshot.tasks.available===false?'服务端回执不可用，暂不显示任务。':'没有可展示的绑定作业。'})]}),summary]})
               : summary
       ]});
     }

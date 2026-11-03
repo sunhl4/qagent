@@ -10,12 +10,24 @@ from typing import Any
 from company_agent import analysis as _analysis_module
 from company_agent import budget
 from company_agent import latex_workspace as _latex_workspace
+from company_agent import office_audit as _office_audit
+from company_agent import office_chart as _office_chart
+from company_agent import office_compare as _office_compare
+from company_agent import office_compute as _office_compute
+from company_agent import office_convert as _office_convert
 from company_agent import office_create as _office_create
+from company_agent import office_deliver as _office_deliver
+from company_agent import office_edit as _office_edit
 from company_agent import office_ingest as _office_ingest
+from company_agent import office_matter as _office_matter
+from company_agent import office_open as _office_open
+from company_agent import office_pptx as _office_pptx
+from company_agent import office_validate as _office_validate
 from company_agent import plan_hub as _plan_hub
 from company_agent import portal as _portal
 from company_agent import table_profile as _table_profile
 from company_agent import workspace_reference as _workspace_reference
+from company_agent import work_items as _work_items
 from company_agent.capabilities import capability
 from company_agent.catalog import contract_snapshot, load_presets, load_result_policy, load_tools
 from company_agent.contracts import HANDLE_PREFIXES, HANDLES, Invocation
@@ -98,6 +110,17 @@ _LOCAL_TOOLS = {
     "company_analysis_render": _analysis_module.render,
     "company_office_analyze": _office_ingest.analyze,
     "company_office_create": _office_create.create,
+    "company_office_compare": _office_compare.compare,
+    "company_office_edit": _office_edit.edit,
+    "company_office_validate": _office_validate.validate,
+    "company_office_chart": _office_chart.chart,
+    "company_office_matter": _office_matter.matter,
+    "company_office_audit": _office_audit.audit,
+    "company_office_pptx": _office_pptx.pptx,
+    "company_office_convert": _office_convert.convert,
+    "company_office_open": _office_open.open_file,
+    "company_office_compute": _office_compute.compute,
+    "company_office_deliver": _office_deliver.deliver,
     "company_workflow_validate": validate,
     "company_latex_structure": _latex_workspace.structure,
     "company_latex_read": _latex_workspace.read_window,
@@ -123,6 +146,7 @@ _LOCAL_TOOLS = {
     "company_plan_issue_write": _plan_hub.issue_write,
     "company_plan_milestones": _plan_hub.milestones,
     "company_plan_milestone_create": _plan_hub.milestone_create,
+    "company_work_item": _work_items.work_item,
     "company_portal_open": _portal.open_portal,
 }
 
@@ -139,7 +163,7 @@ def _provider_tools() -> dict[str, tuple[str, str]]:
 
 
 _MAX_ARGUMENT_BYTES = 256_000
-_MAX_ARGUMENT_DEPTH = 12
+_MAX_ARGUMENT_DEPTH = 24
 _MAX_ARGUMENT_COLLECTION_ITEMS = 10_000
 _MAX_PUBLIC_ERROR_CHARS = 500
 _SENSITIVE_ERROR_MARKERS = ("token", "secret", "api_key", "password", "authorization")

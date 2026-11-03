@@ -29,6 +29,13 @@ def run(program, *, env=None, timeout=45):
         "COMPANY_AGENT_RECEIPT_DIR": tempfile.mkdtemp(prefix="company-agent-fixture-"),
     }
     environment.update(env or {})
+    # Windows node aborts at process init (ncrypto::CSPRNG) without SystemRoot,
+    # and subprocessEnvironment() requires absolute PATH entries, so the POSIX
+    # "/usr/bin:/bin" hermetic PATH only applies off-Windows.
+    if os.name == "nt":
+        environment["SystemRoot"] = os.environ.get("SystemRoot", "")
+        environment["windir"] = os.environ.get("windir", "")
+        environment["PATH"] = os.environ.get("PATH", "")
     assert NODE.is_file(), "pinned DSH Node missing; run scripts/bootstrap_dsh.sh"
     assert PYTHON.is_file(), "managed test Python missing"
     return subprocess.run([str(NODE), "--input-type=module", "-e", program], cwd=ROOT,

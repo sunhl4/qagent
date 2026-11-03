@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import hashlib
 import io
+import re
 import xml.etree.ElementTree as ET
 import zipfile
 from collections.abc import Iterator
@@ -43,10 +44,13 @@ _MARK_INLINE = "…[行内截断]"
 
 _W_NS = "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}"
 _MAIN_NS = "{http://schemas.openxmlformats.org/spreadsheetml/2006/main}"
+_A_NS = "{http://schemas.openxmlformats.org/drawingml/2006/main}"
 _REL_NS = "{http://schemas.openxmlformats.org/officeDocument/2006/relationships}"
 _REL_R_NS = "{http://schemas.openxmlformats.org/package/2006/relationships}Relationship"
 
-_KIND_BY_SUFFIX = {".docx": "docx", ".xlsx": "xlsx", ".pdf": "pdf", ".txt": "text", ".md": "text"}
+_KIND_BY_SUFFIX = {".docx": "docx", ".xlsx": "xlsx", ".pptx": "pptx", ".pdf": "pdf", ".txt": "text", ".md": "text"}
+
+MAX_PPTX_SLIDES = 32
 
 
 class OfficeIngestError(ValueError):
@@ -82,6 +86,8 @@ def _analyze(data: bytes, suffix: str, offset: int) -> dict[str, Any]:
         return _docx_page(data, offset)
     if suffix == ".xlsx":
         return _xlsx_page(data, offset)
+    if suffix == ".pptx":
+        return _pptx_page(data, offset)
     if suffix == ".pdf":
         return _pdf_page(data, offset)
     return _text_page(data, offset)
@@ -110,13 +116,64 @@ def _offset(args: dict) -> int:
 
 
 def _refusal_message(suffix: str) -> str:
-    if suffix in {".doc", ".xls"}:
-        return f"{suffix} 旧二进制格式未接入:请在 Word/WPS 中另存为 .docx/.xlsx 后重试"
-    if suffix in {".ppt", ".pptx"}:
-        return f"{suffix} 摄取未接入: pptx 结构化摄取属于后续批次,当前明确拒绝"
+    if suffix in {".doc", ".xls", ".wps", ".et", ".dps"}:
+        return f"{suffix} 旧二进制格式未接入:请在 Word/WPS 中另存为 .docx/.xlsx/.pptx 后重试"
+    if suffix in {".ppt"}:
+        return f"{suffix} 旧二进制格式未接入:请在 PowerPoint/WPS 中另存为 .pptx 后重试"
     if suffix in {".png", ".jpg", ".jpeg", ".gif", ".webp", ".bmp", ".tif", ".tiff"}:
         return f"{suffix} 图片 OCR 未接入:当前明确拒绝,不返回空文本"
-    return f"{suffix} 是不支持的摄取类型;支持 .docx .xlsx .pdf .txt .md"
+    return f"{suffix} 是不支持的摄取类型;支持 .docx .xlsx .pptx .pdf .txt .md"
+
+
+def _pptx_page(data: bytes, offset: int) -> dict[str, Any]:
+    entries = _pptx_slides(data)
+    total = len(entries)
+    entries = entries[:MAX_PPTX_SLIDES]
+
+    def units() -> Iterator[tuple[int, str, str]]:
+        for count, name, xml_bytes in entries:
+            yield count, name, _pptx_slide_text(xml_bytes)
+
+    payload = pack(units(), offset, total)
+    if total > MAX_PPTX_SLIDES:
+        marker = f"[幻灯片超出 {MAX_PPTX_SLIDES} 张上限:第 {MAX_PPTX_SLIDES + 1}-{total} 张未读取]"
+        _append_marker(payload, marker)
+        payload["total_units"] = MAX_PPTX_SLIDES
+        payload["truncated"] = True
+    return payload
+
+
+def _pptx_slides(data: bytes) -> list[tuple[int, str, bytes]]:
+    try:
+        package = zipfile.ZipFile(io.BytesIO(data))
+    except zipfile.BadZipFile as exc:
+        raise OfficeIngestError("pptx 数据包损坏:明确拒绝") from exc
+    rows: list[tuple[int, str, bytes]] = []
+    pattern = re.compile(r"^ppt/slides/slide([0-9]{1,4})\.xml$")
+    for name in package.namelist():
+        match = pattern.match(name)
+        if match is None:
+            continue
+        try:
+            rows.append((int(match.group(1)), f"slide{int(match.group(1))}", package.read(name)))
+        except KeyError as exc:  # pragma: no cover - namelist/read mismatch
+            raise OfficeIngestError("pptx 幻灯片实体无法读取") from exc
+    return sorted(rows)
+
+
+def _pptx_slide_text(xml_bytes: bytes) -> str:
+    try:
+        root = ET.fromstring(xml_bytes)
+    except ET.ParseError as exc:
+        raise OfficeIngestError("pptx 幻灯片 XML 无法解析") from exc
+    lines: list[str] = []
+    for node in root.iter(f"{_A_NS}t"):
+        piece = (node.text or "").strip()
+        if piece:
+            lines.append(piece)
+    if not lines:
+        return "[本页无文本层内容]"
+    return "\n".join(lines)[:MAX_ITEM_TEXT_CHARS]
 
 
 def _read_bounded(root, relative: str) -> bytes:

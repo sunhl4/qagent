@@ -106,6 +106,12 @@ def _run_git(args: list[str], *, token: str, base: str, cwd: Path | None = None)
         "GIT_ASKPASS": "",
         "GIT_SSH_COMMAND": "false",
         "GIT_CONFIG_NOSYSTEM": "1",
+        "GIT_CONFIG_NOSCOPE": "1",
+        "GIT_CONFIG_GLOBAL": os.devnull,
+        "GIT_CONFIG_SYSTEM": os.devnull,
+        "GIT_CONFIG_COUNT": "1",
+        "GIT_CONFIG_KEY_0": "core.autocrlf",
+        "GIT_CONFIG_VALUE_0": "false",
     })
     command = [
         executable,
@@ -178,18 +184,15 @@ def _clone(remote: str, token: str, base: str, destination: Path, branch: str) -
     )
 
 
+def _normalize_managed_bytes(payload: bytes) -> bytes:
+    """Use LF in workspace projections regardless of Windows Git checkout mode."""
+
+    return payload.replace(b"\r\n", b"\n").replace(b"\r", b"\n")
 def _content_differs(local_payload: bytes, remote_payload: bytes) -> bool:
-    """Compare managed content ignoring Windows/Unix newline style only.
+    """Compare managed content ignoring Windows/Unix newline style only."""
 
-    The git bridge clone stores byte-faithful blobs while hosts may hold
-    CRLF variants; treating an end-line translation as a lost edit would
-    block every pull on Windows. Everything else (including whitespace
-    changes inside lines) still counts as a real difference."""
+    return _normalize_managed_bytes(local_payload) != _normalize_managed_bytes(remote_payload)
 
-    if local_payload == remote_payload:
-        return False
-    normalize = lambda payload: payload.replace(b"\r\n", b"\n").replace(b"\r", b"\n")
-    return normalize(local_payload) != normalize(remote_payload)
 
 
 def pull_into(project_dir: Path, args: dict[str, Any], backup=None) -> dict[str, Any]:
@@ -259,7 +262,7 @@ def pull_into(project_dir: Path, args: dict[str, Any], backup=None) -> dict[str,
                 raise PlanError("overleaf snapshot exceeds the bounded file count")
             if total + len(data) > MAX_SYNC_TOTAL:
                 raise PlanError("overleaf snapshot exceeds the bounded size")
-            _atomic_write(project_dir.joinpath(*relative.split("/")), data)
+            _atomic_write(project_dir.joinpath(*relative.split("/")), _normalize_managed_bytes(data))
             imported.append(relative)
             total += len(data)
         result: dict[str, Any] = {
@@ -322,7 +325,7 @@ def status_of(project_dir: Path, args: dict[str, Any]) -> dict[str, Any]:
                 difference = "online-only"
             elif relative not in online and relative in local:
                 difference = "local-only"
-            elif online[relative] != local[relative]:
+            elif online[relative] != local[relative] and _content_differs(local[relative], online[relative]):
                 difference = "modified"
             else:
                 continue
@@ -334,7 +337,7 @@ def status_of(project_dir: Path, args: dict[str, Any]) -> dict[str, Any]:
         total = len([
             1
             for relative in set(online) | set(local)
-            if relative not in online or relative not in local or online[relative] != local[relative]
+            if relative not in online or relative not in local or _content_differs(local.get(relative, b""), online.get(relative, b""))
         ])
         return {
             "project": project_dir.name,
@@ -383,8 +386,13 @@ def push_from(project_dir: Path, files: list[tuple[str, Path]], args: dict[str, 
         for relative_path, source in actions:
             destination = clone_dir / relative_path
             destination.parent.mkdir(parents=True, exist_ok=True)
-            destination.write_bytes(source.read_bytes())
-            _run_git(["add", "--", relative_path], token=token, base=base, cwd=clone_dir)
+            payload = _normalize_managed_bytes(source.read_bytes())
+            if destination.is_file() and _content_differs(destination.read_bytes(), payload):
+                destination.write_bytes(payload)
+                _run_git(["add", "--", relative_path], token=token, base=base, cwd=clone_dir)
+            elif not destination.is_file():
+                destination.write_bytes(payload)
+                _run_git(["add", "--", relative_path], token=token, base=base, cwd=clone_dir)
         staged = _run_git(
             ["diff", "--cached", "--name-only"],
             token=token,

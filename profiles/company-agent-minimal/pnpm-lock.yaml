@@ -17,6 +17,9 @@ importers:
       '@unitqc/company-agent-latex':
         specifier: file:../../packages/company-agent-latex
         version: file:../../packages/company-agent-latex
+      '@unitqc/company-agent-office':
+        specifier: file:../../packages/company-agent-office
+        version: file:../../packages/company-agent-office
       '@unitqc/company-agent-plan':
         specifier: file:../../packages/company-agent-plan
         version: file:../../packages/company-agent-plan
@@ -38,6 +41,9 @@ packages:
   '@unitqc/company-agent-latex@file:../../packages/company-agent-latex':
     resolution: {directory: ../../packages/company-agent-latex, type: directory}
 
+  '@unitqc/company-agent-office@file:../../packages/company-agent-office':
+    resolution: {directory: ../../packages/company-agent-office, type: directory}
+
   '@unitqc/company-agent-plan@file:../../packages/company-agent-plan':
     resolution: {directory: ../../packages/company-agent-plan, type: directory}
 
@@ -56,6 +62,10 @@ snapshots:
       '@unitqc/company-agent-core': file:../../packages/company-agent-core
 
   '@unitqc/company-agent-latex@file:../../packages/company-agent-latex':
+    dependencies:
+      '@unitqc/company-agent-core': file:../../packages/company-agent-core
+
+  '@unitqc/company-agent-office@file:../../packages/company-agent-office':
     dependencies:
       '@unitqc/company-agent-core': file:../../packages/company-agent-core
 

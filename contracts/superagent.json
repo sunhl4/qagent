@@ -1,0 +1,32 @@
+{
+  "version": "1.0.0",
+  "fail_closed": true,
+  "accept_modes": ["off", "observe", "auto"],
+  "default_accept_mode": "observe",
+  "default_source": "company",
+  "limits": {
+    "source_bytes": 64,
+    "thread_id_bytes": 128,
+    "actor_id_bytes": 200,
+    "trigger_text_bytes": 4000,
+    "scope_bytes": 1500,
+    "title_bytes": 200,
+    "worktree_name_bytes": 64,
+    "report_bytes": 1200,
+    "max_query_items": 100
+  },
+  "db_env": "COMPANY_AGENT_WORK_ITEM_DB",
+  "db_default_dir": "work-items",
+  "states": {
+    "ticket": ["open", "ended"],
+    "assignment": ["pending", "running", "ended"],
+    "report": ["progress", "waiting", "ready", "blocked", "failed", "dropped"],
+    "decision": ["accept", "ignore", "stop", "unavailable"]
+  },
+  "source_kinds": ["company", "github", "feishu", "workspace"],
+  "retention": {
+    "max_events": 100000,
+    "max_triggers": 100000,
+    "max_tickets": 10000
+  }
+}

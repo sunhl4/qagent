@@ -60,6 +60,14 @@
 
 ---
 
+### 会话 C:WSL 副本晚间接力(22:02-22:44)
+- 晚间快照同步(551 文件,含 docs;逐字节校验 0 偏差)→ profiles/runtime 安装 + `bootstrap_dsh.sh` rc=0(D: 端锁文件已含 office 后解锁)。
+- 修复跨平台 Bug:`src/company_agent/office_open.py` 模块级 `_startfile = os.startfile` 在 POSIX 导入即炸,波及整条 invoke 链(cmd/verify_dsh_profiles/overleaf_e2e 收集失败)→ 改为 `getattr(os, "startfile", None)` + `_shell_open` fail-closed 报错;双端同步(sha `ef3015fb…`)。
+- 全量套件:**1173 通过 / 10 失败 / 3 跳过**。10 个失败全部属于并行会话合同批次 3(office pptx/审计切片,contracts 21:57)自身开发顺序的"测试同步"阶段:test_office_convert ×2、test_office_open ×4(WPS 注册表分支 fixture 属 Windows 侧)、test_cli ×2 / test_installed_wheel / test_verify_dsh_profiles 的工具计数门。overleaf_e2e 离线用例经 startfile 补丁后转绿。
+- 证据:compliance gate **25/25 绿**;license tree scan 86 包(office/UI 并入后)无违禁族。
+
+---
+
 ## 下一步(挂接点)
 1. 等 D: 上 overleaf/验收链会话(最后写入 12:44)稳定后取新快照同步 copy。
 2. copy 端再生两份 profile 的 pnpm-lock(纳入 office 依赖)→ 重跑 `bootstrap_dsh.sh` → 复测 `test_acceptance` / `test_verify_dsh_profiles` 的 2 个在途用例。

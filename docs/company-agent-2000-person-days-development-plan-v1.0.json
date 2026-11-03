@@ -23,7 +23,21 @@
     {"id": "P5-b2 knowledge recall governance", "date": "2026-10-26", "doc": "docs/company-agent-plan-p5b2-know-recall-2026-10-26.zh-CN.md", "gate_scenarios": 23},
     {"id": "P8-a1 governance boundary alignment (H03/H02)", "date": "2026-10-26", "doc": "docs/company-agent-plan-p8a1-governance-boundary-2026-10-26.zh-CN.md"},
     {"id": "P8-a2 license register audit", "date": "2026-10-26", "doc": "docs/company-agent-plan-p8a2-license-audit-2026-10-26.zh-CN.md", "gate_scenarios": 24},
-    {"id": "P8-a3 installed-tree per-package license scan", "date": "2026-10-26", "doc": "docs/company-agent-plan-p8a3-license-tree-audit-2026-10-26.zh-CN.md", "gate_scenarios": 25}
+    {"id": "P8-a3 installed-tree per-package license scan", "date": "2026-10-26", "doc": "docs/company-agent-plan-p8a3-license-tree-audit-2026-10-26.zh-CN.md", "gate_scenarios": 25},
+    {"id": "E0 workspace and profile reproducibility closeout", "date": "2026-10-29", "doc": "docs/company-agent-execution-plan-2026-10-29.zh-CN.md", "verification": "corepack pnpm frozen installs; no-legacy and profile gates"},
+    {"id": "E1 P6-A workbench task projection", "date": "2026-10-29", "doc": "docs/company-agent-execution-plan-2026-10-29.zh-CN.md", "verification": "server-side receipt projection and UI route coverage"},
+    {"id": "E2 P8-A web injection isolation gate", "date": "2026-10-29", "doc": "docs/company-agent-execution-plan-2026-10-29.zh-CN.md", "verification": "web signal remains untrusted and cannot alter authorization"},
+    {"id": "E0 follow-up cross-platform and full-regression cleanup", "date": "2026-10-29", "doc": "docs/implementation-2026-10-29-p6-p8-slices.zh-CN.md", "verification": "31 full-suite failures remain isolated from P6/P8 focused gates"},
+    {"id": "E3 P6-B workbench status axes and reconnect", "date": "2026-11-02", "doc": "docs/implementation-2026-11-02-e3-e4.zh-CN.md", "verification": "Python focused gates 51 passed/1 skipped; Node host/UI 13 passed; plan validator passed"},
+    {"id": "E4 P8-B tenant revocation counterexamples", "date": "2026-11-02", "doc": "docs/implementation-2026-11-02-e3-e4.zh-CN.md", "verification": "trusted subject scopes receipts, workbench projection and host cache; cross-subject fixture passes"}
+  ],
+  "planned_batches": [
+    {"id": "E3 P6-B workbench status axes and reconnect", "depends_on": ["E1"], "status": "focused_implementation_complete", "verification": "server facts now expose execution/result/approval/connection/billing axes; duplicate and stale events fail closed; reconnect restores cached rows without claiming platform completion"},
+    {"id": "E4 P8-B tenant revocation counterexamples", "depends_on": ["E0"], "status": "focused_implementation_complete", "verification": "trusted subject scopes receipts, reconcile, workbench projections and host caches; revoked/invalid registry remains fail closed"},
+    {"id": "E5 P2 MCP and model acceptance", "depends_on": ["model-owner-input"], "status": "blocked_on_owner"},
+    {"id": "E6 P4 real platform seams", "depends_on": ["cloud-owner-input", "hpc-owner-input", "device-owner-input"], "status": "blocked_on_owner"},
+    {"id": "E7 P7 billing and operations", "depends_on": ["billing-owner-input"], "status": "blocked_on_owner"},
+    {"id": "E8 P9 pilot and handover", "depends_on": ["G1", "G2", "G3", "G4"], "status": "planned"}
   ],
   "calendar_assumption": {
     "core_team_size": "12-15",

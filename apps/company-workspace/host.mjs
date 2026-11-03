@@ -16,11 +16,115 @@ export const name = 'company-workspace-shell';
 export const inject = ['webServer', 'connection', 'clientModules', 'workspaceRegistry'];
 const ID = '@unitqc/company-workspace-ui';
 const ROOT = new URL('../../', import.meta.url);
+const WORKBENCH_OPERATIONS = new Set(['cloud.submit', 'hpc.submit', 'device.run']);
+const REQUEST_ID = /^req_[0-9a-f]{32}$/;
+const BUSINESS_REF = /^[A-Za-z0-9_.:-]{1,256}$/;
+const SUBJECT_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._-]{0,62}@[A-Za-z0-9][A-Za-z0-9.-]{0,52}$/;
+const WORKBENCH_RECORDS = new Set(['dispatch', 'outcome']);
+const WORKBENCH_CONNECTION_STATES = new Set(['server_facts', 'reconnecting', 'unavailable']);
 
 function trusted(req, authority) {
   const host = req.headers.host;
   if (host !== authority || req.headers['sec-fetch-site'] === 'cross-site') return false;
   return !req.headers.origin || req.headers.origin === `http://${authority}`;
+}
+
+export function workbenchEventRank(row) {
+  if (!row || typeof row !== 'object' || !WORKBENCH_RECORDS.has(row.record)) return -1;
+  const status = String(row.status || '');
+  const execution = String(row.execution_state || '');
+  if (row.record === 'outcome' && status === 'ok' && execution === 'completed') return 5;
+  if (row.record === 'outcome' && status === 'refused' && execution === 'dispatched') return 4;
+  if (row.record === 'outcome' && status === 'error' && execution === 'unknown') return 3;
+  if (row.record === 'dispatch' && status === 'dispatched' && execution === 'dispatched') return 2;
+  return -1;
+}
+
+export function workbenchTaskFromEvent(row, connectionState = 'server_facts') {
+  const rank = workbenchEventRank(row);
+  if (rank < 0) return null;
+  const requestId = String(row.request_id || '');
+  const operation = String(row.operation || '');
+  const timestamp = Number(row.timestamp);
+  const updatedAt = Number.isSafeInteger(timestamp) && timestamp >= 0 ? timestamp : 0;
+  const successful = rank === 5;
+  const reference = successful && BUSINESS_REF.test(String(row.business_ref || '')) ? String(row.business_ref) : '';
+  const completed = successful && Boolean(reference);
+  return {
+    request_id: requestId,
+    operation,
+    status: completed ? 'completed' : rank === 4 ? 'refused' : 'unknown',
+    execution_state: completed ? 'completed' : row.execution_state === 'dispatched' ? 'dispatched' : 'unknown',
+    approval_state: 'not_projected',
+    connection_state: connectionState,
+    business_ref: reference,
+    result_state: completed ? 'available' : 'unknown',
+    billing_state: 'not_projected',
+    updated_at: updatedAt,
+    source: 'company-agent-receipts',
+    _rank: rank,
+  };
+}
+
+export function resolveTrustedSubject(connection, req) {
+  const resolver = connection && typeof connection.subjectForRequest === 'function'
+    ? connection.subjectForRequest
+    : connection && typeof connection.subject === 'function' ? connection.subject : null;
+  const candidate = resolver ? resolver(req) : '';
+  return typeof candidate === 'string' && SUBJECT_PATTERN.test(candidate.trim())
+    ? candidate.trim() : 'unknown@unknown';
+}
+
+export function scopedFactKey(key, subjectValue) {
+  const subject = typeof subjectValue === 'string' && SUBJECT_PATTERN.test(subjectValue.trim())
+    ? subjectValue.trim() : 'unknown@unknown';
+  return `${key}:${subject}`;
+}
+
+export function projectWorkbenchTasks(records, options = {}) {
+  if (!Array.isArray(records)) return [];
+  const connectionState = WORKBENCH_CONNECTION_STATES.has(options.connectionState)
+    ? options.connectionState : 'server_facts';
+  const grouped = new Map();
+  const targetSubject = typeof options.subject === 'string' && SUBJECT_PATTERN.test(options.subject.trim())
+    ? options.subject.trim() : '';
+  for (const row of records) {
+    if (!row || typeof row !== 'object' || !REQUEST_ID.test(String(row.request_id || ''))) continue;
+    if (targetSubject && String(row.subject || '') !== targetSubject) continue;
+    const operation = String(row.operation || '');
+    if (!WORKBENCH_OPERATIONS.has(operation)) continue;
+    const event = workbenchTaskFromEvent(row, connectionState);
+    if (!event) continue;
+    const requestId = event.request_id;
+    const previous = grouped.get(requestId);
+    if (previous && (
+      event.updated_at < previous.updated_at
+      || (event.updated_at === previous.updated_at && event._rank <= previous._rank)
+    )) continue;
+    grouped.set(requestId, event);
+  }
+  return [...grouped.values()]
+    .sort((a,b)=>b.updated_at-a.updated_at || b._rank-a._rank || a.request_id.localeCompare(b.request_id))
+    .slice(0,24)
+    .map(({_rank,_record,...task})=>task);
+}
+
+export function restoreWorkbenchTasks(snapshot, records, options = {}) {
+  const next = projectWorkbenchTasks(records, options);
+  if (!snapshot || typeof snapshot !== 'object' || !Array.isArray(snapshot.tasks)) return next;
+  const byRequest = new Map(next.map(task => [task.request_id, task]));
+  for (const cached of snapshot.tasks) {
+    if (!cached || typeof cached !== 'object' || !REQUEST_ID.test(String(cached.request_id || ''))) continue;
+    if (options.subject && cached.subject && cached.subject !== options.subject) continue;
+    if (!byRequest.has(cached.request_id)) {
+      byRequest.set(cached.request_id, {
+        ...cached,
+        connection_state: 'reconnecting',
+        source: 'server-facts-reconnect',
+      });
+    }
+  }
+  return [...byRequest.values()].slice(0,24);
 }
 
 export async function apply(ctx) {
@@ -30,6 +134,8 @@ export async function apply(ctx) {
   }
   const authority = `127.0.0.1:${Number(port)}`;
   const trustedRequest = req => trusted(req, authority);
+  const trustedSubject = req => resolveTrustedSubject(ctx.connection, req);
+  const subprocessEnvFor = req => ({...process.env, COMPANY_AGENT_SUBJECT: trustedSubject(req)});
   const [client, css, layoutModel, page] = await Promise.all([
     readFile(new URL('client.js', import.meta.url), 'utf8'),
     readFile(new URL('workspace.css', import.meta.url), 'utf8'),
@@ -149,7 +255,7 @@ export async function apply(ctx) {
     } catch (exc) {
       return {error:'写入服务端配置失败：' + String(exc && exc.message || exc).slice(0, 80)};
     }
-    for (const key of ['cloud-status','cloud-overview','hpc-status','hpc-overview']) cache.delete(key);
+    invalidateServiceCache();
     return {
       cloudKeySet: Boolean(CONFIG.cloudKey),
       cloudApi: CONFIG.cloudApi,
@@ -161,13 +267,20 @@ export async function apply(ctx) {
     };
   };
   const cache = new Map();
-  const cached = (key, ttlSeconds, fn) => {
-    const hit = cache.get(key);
-    if (hit && Date.now() - hit.at < ttlSeconds * 1000) return Promise.resolve(hit.data);
-    return fn().then(data => {cache.set(key, {at:Date.now(), data});return data;},
-                    error => {const data = {error:String(error && error.message || error).slice(0,160)};cache.set(key,{at:Date.now(),data});return data;});
+  const cacheKeyFor = (key, req) => scopedFactKey(key, trustedSubject(req));
+  const invalidateCache = key => {
+    for (const cachedKey of cache.keys()) if (cachedKey === key || cachedKey.startsWith(`${key}:`)) cache.delete(cachedKey);
   };
-  const antiReplay = key => ({'x-api-key':key, 'x-timestamp':String(Date.now()), 'x-nonce':createHash('sha256').update(String(Date.now())+process.pid+Math.random()).digest('hex').slice(0,24), accept:'application/json'});
+  const cached = (key, ttlSeconds, fn, req) => {
+    const scopedKey = cacheKeyFor(key, req);
+    const hit = cache.get(scopedKey);
+    if (hit && Date.now() - hit.at < ttlSeconds * 1000) return Promise.resolve(hit.data);
+    return fn().then(data => {cache.set(scopedKey, {at:Date.now(), data});return data;},
+                    error => {const data = {error:String(error && error.message || error).slice(0,160)};cache.set(scopedKey,{at:Date.now(),data});return data;});
+  };
+  const invalidateServiceCache = () => {
+    for (const key of ['cloud-status','cloud-overview','hpc-status','hpc-overview','cloud-probe','hpc-portal-probe','agent-state']) invalidateCache(key);
+  };
   const probePortal = async url => {
     try {
       const target = new URL(url);
@@ -219,7 +332,7 @@ export async function apply(ctx) {
     list.push('/home/sunhl/projects/qchem_qml_md/.venv/bin/python', 'python3');
     return list.filter((value, index) => list.indexOf(value) === index);
   };
-  const cloudProbe = () => cached('cloud-probe', 15, async () => {
+  const cloudProbe = (req) => cached('cloud-probe', 15, async () => {
     let lastError = '';
     for (const python of cloudProbeCandidates()) {
       try {
@@ -231,7 +344,7 @@ export async function apply(ctx) {
       for (const key of Object.keys(uqcEnv)) if (uqcEnv[key] === undefined) delete uqcEnv[key];
       const {stdout} = await run(python,
         [new URL('uqc-cloud-probe.py', import.meta.url).pathname],
-        {timeout:50000, maxBuffer:256 * 1024, windowsHide:true, env:uqcEnv});
+        {timeout:50000, maxBuffer:256 * 1024, windowsHide:true, env:{...uqcEnv, COMPANY_AGENT_SUBJECT:trustedSubject(req)}});
       const line = String(stdout).trim().split('\n').filter(Boolean).pop() || '';
         return JSON.parse(line);
       } catch (exc) {
@@ -242,16 +355,16 @@ export async function apply(ctx) {
     }
     return {connected:false, reason:'probe_error', detail:lastError};
   });
-  const cloudStatus = () => cached('cloud-status', 20, async () => {
+  const cloudStatus = (req) => cached('cloud-status', 20, async () => {
     if (!CONFIG.cloudKey) return {connected:false, reason:'missing_api_key', apiBase:CONFIG.cloudApi, portal:CONFIG.cloudPortal};
-    const probe = await cloudProbe();
+    const probe = await cloudProbe(req);
     const base = {apiBase:CONFIG.cloudApi, portal:CONFIG.cloudPortal};
     if (probe.connected) return {connected:true, ...base};
     return {connected:false, reason:probe.reason || 'unreachable', detail:String(probe.detail || '').slice(0,160), ...base};
   });
-  const cloudOverview = () => cached('cloud-overview', 15, async () => {
+  const cloudOverview = (req) => cached('cloud-overview', 15, async () => {
     if (!CONFIG.cloudKey) return {reason:'missing_api_key', devices:null, jobs:[]};
-    const probe = await cloudProbe();
+    const probe = await cloudProbe(req);
     if (!probe.connected) return {reason:probe.reason || 'unreachable', devices:null, jobs:[], detail:String(probe.detail || '').slice(0,160)};
   return {
     reason:'ok',
@@ -265,9 +378,9 @@ export async function apply(ctx) {
     ? `${CONFIG.hpcUser}@${CONFIG.hpcHost}` : '';
   const sshRun = async command => run('ssh', ['-o', 'BatchMode=yes', '-o', 'ConnectTimeout=8', '-o', 'StrictHostKeyChecking=accept-new', sshTarget(), command],
     {timeout:20000, maxBuffer:256 * 1024, windowsHide:true});
-  const hpcStatus = () => cached('hpc-status', 20, async () => {
+  const hpcStatus = (req) => cached('hpc-status', 20, async () => {
     if (!CONFIG.hpcPortal) return {connected:false, reason:'unconfigured', gateway:CONFIG.hpcGateway};
-    const probe = await cached('hpc-portal-probe', 30, () => probePortal(CONFIG.hpcPortal));
+    const probe = await cached('hpc-portal-probe', 30, () => probePortal(CONFIG.hpcPortal), req);
     if (probe.error || !probe.status) return {connected:false, reason:'unreachable', detail:probe.error, portal:CONFIG.hpcPortal};
     const headers = probe.headers || {};
     const policy = /sameorigin/i.test(headers['x-frame-options'] || '') ? 'self' :
@@ -280,7 +393,7 @@ export async function apply(ctx) {
     return {connected:sshOk, sshOk, sshDetail, reason:sshOk ? 'ok' : 'portal_ok_without_ssh',
       portal:CONFIG.hpcPortal, host:CONFIG.hpcHost, user:CONFIG.hpcUser, embeddable:true, framePolicy:'proxied'};
   });
-  const hpcOverview = () => cached('hpc-overview', 15, async () => {
+  const hpcOverview = (req) => cached('hpc-overview', 15, async () => {
     if (!sshTarget()) return {reason:'unconfigured', running:null, history:null};
     try {
       const {stdout} = await sshRun(`squeue -u $USER -h -o '%.18i %.30j %.9P %.12T %.10M %.12S' ; echo '##' ; sacct -u $USER -S $(date -d '-7 days' +%Y-%m-%d) --noheader -P -o 'JobID,JobName%30,Partition,State,Elapsed,Start,End' | grep -v '\\.batch\\|\\.extern\\|\\.0' | tail -25`);
@@ -307,6 +420,9 @@ export async function apply(ctx) {
       return {reason:'unreachable', detail:String(exc && exc.message || exc).slice(0,140), running:null, history:null};
     }
   });
+  const subjectHeader = (req, subjectValue) => {
+    if (req && req.headers) req.headers['x-company-agent-subject'] = subjectValue;
+  };
   const jsonRoute = (path, handler, tag) => ctx.effect(() => ctx.webServer.register({kind:'exact', path, handler:async (req, res) => {
     if (!trustedRequest(req)) {res.writeHead(403);res.end();return;}
     if (ctx.connection.requestRejection) {
@@ -314,8 +430,10 @@ export async function apply(ctx) {
       if (reject) {res.writeHead(reject, {'content-type':'application/json'});res.end('{"error":"unauthorized"}');return;}
     } else if (ctx.connection.authorizeIndex && !ctx.connection.authorizeIndex(req, res)) return;
     if (req.method!=='GET') {res.writeHead(405);res.end();return;}
+    const subjectValue = trustedSubject(req);
+    subjectHeader(req, subjectValue);
     res.writeHead(200, {'content-type':'application/json; charset=utf-8','cache-control':'no-store','referrer-policy':'no-referrer','x-content-type-options':'nosniff'});
-    res.end(JSON.stringify(await handler()));
+    res.end(JSON.stringify(await handler(req)));
   }}), tag);
   const portalRoute = (kind) => ctx.effect(() => ctx.webServer.register({kind:'prefix', path:`/company-workspace/portal/${kind}`, handler:async (req, res) => {
     if (!sessionGate(req, res)) return;
@@ -432,15 +550,15 @@ export async function apply(ctx) {
     } catch { return {error:'directory unreadable'}; }
     return {workspaceId, path:clean, entries};
   };
-  const agentState = () => cached('agent-state', 10, async () => {
+  const agentState = (req) => cached('agent-state', 10, async () => {
     const python = process.env.COMPANY_AGENT_PYTHON;
     if (!python || !python.trim()) return {available:false, reason:'unconfigured'};
     const call = args => run(python, ['-P','-m','company_agent.cli', ...args],
-      {timeout:12000, maxBuffer:256 * 1024, windowsHide:true}).then(
+      {timeout:12000, maxBuffer:256 * 1024, windowsHide:true, env:subprocessEnvFor(req)}).then(
       r => {const body=JSON.parse(String(r.stdout||'{}')||'{}');return body;}, () => null);
     const [doctor, reconcile] = await Promise.all([
       call(['doctor']),
-      call(['reconcile','--limit','6']).catch(() => null)
+      call(['reconcile','--limit','24']).catch(() => null)
     ]);
     const healthy = doctor && typeof doctor === 'object' && !doctor.error;
     return {
@@ -456,6 +574,18 @@ export async function apply(ctx) {
       note: reconcile && typeof reconcile.note === 'string' ? reconcile.note.slice(0, 180) : ''
     };
   });
+  const workbenchTasks = async (req) => {
+    const python = process.env.COMPANY_AGENT_PYTHON;
+    if (!python || !python.trim()) return {available:false, tasks:[], reason:'unconfigured'};
+    const result = await run(python, ['-P','-m','company_agent.cli', 'reconcile', '--limit', '24'],
+      {timeout:12000, maxBuffer:256 * 1024, windowsHide:true, env:subprocessEnvFor(req)}).then(
+      value => {try{return JSON.parse(String(value.stdout || '{}'));}catch{return null;}},
+      () => null);
+    if (!result || result.available !== true) return {available:false, tasks:[], reason:'receipt_unavailable'};
+    const records = Array.isArray(result.recent) ? result.recent : [];
+    return {available:true, tasks:projectWorkbenchTasks(records, {subject:trustedSubject(req)})};
+  };
+  jsonRoute('/company-workspace/workbench/tasks', workbenchTasks, 'company-workspace: workbench tasks');
   jsonRoute('/company-workspace/agent/state', agentState, 'company-workspace: agent state');
   jsonRoute('/company-workspace/cloud/status', cloudStatus, 'company-workspace: cloud status');
   jsonRoute('/company-workspace/cloud/overview', cloudOverview, 'company-workspace: cloud overview');
@@ -581,7 +711,7 @@ export async function apply(ctx) {
         if (request.kind === kind && request.status === 'pending') {request.status = 'granted';request.grantedAt = new Date().toISOString();updated++;}
       });
       await accessWrite(state);
-      for (const key of ['cloud-status','cloud-overview','hpc-status','hpc-overview']) cache.delete(key);
+      invalidateServiceCache();
       return {ok:true, granted:{kind, open:planOpen(kind), requestsUpdated:updated}};
     });
   }}), 'company-workspace: access grant');

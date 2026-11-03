@@ -1,0 +1,152 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1120" viewBox="0 0 1800 1120" role="img" aria-labelledby="title desc">
+  <title id="title">?2 ??????</title>
+  <desc id="desc">???????E1??R1??????????????????????????E2?????????????A2????????????????????E1???</desc>
+  <defs>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L12,6 L0,12 z" fill="#243746"/></marker>
+    <marker id="arrow-blue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L12,6 L0,12 z" fill="#2f6f9f"/></marker>
+    <marker id="arrow-green" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L12,6 L0,12 z" fill="#3c7d55"/></marker>
+    <marker id="arrow-red" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L12,6 L0,12 z" fill="#a63d40"/></marker>
+    <style>
+      .title{font-family:"Microsoft YaHei","Noto Sans CJK SC",SimSun,Arial,sans-serif;font-size:30px;font-weight:600;fill:#1f2933;letter-spacing:1px}
+      .subtitle{font-family:"Microsoft YaHei","Noto Sans CJK SC",SimSun,Arial,sans-serif;font-size:16px;fill:#52606d}
+      .head{fill:#f3f7f9;stroke:#435563;stroke-width:1.8}
+      .head-old{fill:#f8f5ee;stroke:#8b7957;stroke-width:1.8}
+      .head-new{fill:#f2f7fb;stroke:#2f6f9f;stroke-width:1.8}
+      .head-device{fill:#f3f8f5;stroke:#3c7d55;stroke-width:1.8}
+      .head-title{font-family:"Microsoft YaHei","Noto Sans CJK SC",SimSun,Arial,sans-serif;font-size:16px;font-weight:600;fill:#1f2933}
+      .head-sub{font-family:"Microsoft YaHei","Noto Sans CJK SC",SimSun,Arial,sans-serif;font-size:13px;fill:#52606d}
+      .life{stroke:#b7c1c8;stroke-width:1.6;stroke-dasharray:7 8}
+      .axis{stroke:#d9e0e5;stroke-width:1.4}
+      .flow{stroke:#243746;stroke-width:2.2;fill:none;marker-end:url(#arrow)}
+      .blue{stroke:#2f6f9f;stroke-width:2.2;fill:none;marker-end:url(#arrow-blue)}
+      .green{stroke:#3c7d55;stroke-width:2.2;fill:none;marker-end:url(#arrow-green)}
+      .red{stroke:#a63d40;stroke-width:2.2;stroke-dasharray:9 6;fill:none;marker-end:url(#arrow-red)}
+      .event{font-family:"Microsoft YaHei","Noto Sans CJK SC",SimSun,Arial,sans-serif;font-size:14px;fill:#263746}
+      .event-blue{font-family:"Microsoft YaHei","Noto Sans CJK SC",SimSun,Arial,sans-serif;font-size:14px;fill:#2f6f9f}
+      .event-green{font-family:"Microsoft YaHei","Noto Sans CJK SC",SimSun,Arial,sans-serif;font-size:14px;fill:#3c7d55}
+      .event-red{font-family:"Microsoft YaHei","Noto Sans CJK SC",SimSun,Arial,sans-serif;font-size:14px;fill:#a63d40}
+      .row-no{font-family:Arial,sans-serif;font-size:13px;font-weight:700;fill:#52606d}
+      .old-note{fill:#fffaf0;stroke:#d4c190;stroke-width:1.5}
+      .new-note{fill:#f3f8fc;stroke:#9fc0d4;stroke-width:1.5}
+      .device-note{fill:#f3f8f5;stroke:#a8c8b2;stroke-width:1.5}
+      .stop-note{fill:#fff5f4;stroke:#d39a9d;stroke-width:1.5}
+      .note-title{font-family:"Microsoft YaHei","Noto Sans CJK SC",SimSun,Arial,sans-serif;font-size:15px;font-weight:600;fill:#374957}
+      .note-text{font-family:"Microsoft YaHei","Noto Sans CJK SC",SimSun,Arial,sans-serif;font-size:13px;fill:#52606d}
+      .legend{font-family:"Microsoft YaHei","Noto Sans CJK SC",SimSun,Arial,sans-serif;font-size:13px;fill:#52606d}
+    </style>
+  </defs>
+  <rect width="1800" height="1120" fill="#ffffff"/>
+  <text x="900" y="48" text-anchor="middle" class="title">?2  ??????</text>
+  <text x="900" y="78" text-anchor="middle" class="subtitle">???????????????????????????????</text>
+
+  <!-- participant headers -->
+  <g transform="translate(55 115)">
+    <rect width="175" height="74" rx="8" class="head-old"/>
+    <text x="87.5" y="31" text-anchor="middle" class="head-title">???</text>
+    <text x="87.5" y="54" text-anchor="middle" class="head-sub">E1 / R1</text>
+  </g>
+  <g transform="translate(285 115)">
+    <rect width="175" height="74" rx="8" class="head-new"/>
+    <text x="87.5" y="31" text-anchor="middle" class="head-title">???</text>
+    <text x="87.5" y="54" text-anchor="middle" class="head-sub">??????</text>
+  </g>
+  <g transform="translate(515 115)">
+    <rect width="175" height="74" rx="8" class="head-new"/>
+    <text x="87.5" y="31" text-anchor="middle" class="head-title">??????</text>
+    <text x="87.5" y="54" text-anchor="middle" class="head-sub">E1 ? E2</text>
+  </g>
+  <g transform="translate(745 115)">
+    <rect width="175" height="74" rx="8" class="head-new"/>
+    <text x="87.5" y="31" text-anchor="middle" class="head-title">????????</text>
+    <text x="87.5" y="54" text-anchor="middle" class="head-sub">HPC???</text>
+  </g>
+  <g transform="translate(975 115)">
+    <rect width="175" height="74" rx="8" class="head-new"/>
+    <text x="87.5" y="31" text-anchor="middle" class="head-title">????????</text>
+    <text x="87.5" y="54" text-anchor="middle" class="head-sub">QPU???</text>
+  </g>
+  <g transform="translate(1205 115)">
+    <rect width="175" height="74" rx="8" class="head"/>
+    <text x="87.5" y="31" text-anchor="middle" class="head-title">??????</text>
+    <text x="87.5" y="54" text-anchor="middle" class="head-sub">I1 / U1 / R1</text>
+  </g>
+  <g transform="translate(1435 115)">
+    <rect width="175" height="74" rx="8" class="head-device"/>
+    <text x="87.5" y="31" text-anchor="middle" class="head-title">????</text>
+    <text x="87.5" y="54" text-anchor="middle" class="head-sub">R1????</text>
+  </g>
+
+  <!-- lifelines -->
+  <line x1="142.5" y1="189" x2="142.5" y2="930" class="life"/>
+  <line x1="372.5" y1="189" x2="372.5" y2="930" class="life"/>
+  <line x1="602.5" y1="189" x2="602.5" y2="930" class="life"/>
+  <line x1="832.5" y1="189" x2="832.5" y2="930" class="life"/>
+  <line x1="1062.5" y1="189" x2="1062.5" y2="930" class="life"/>
+  <line x1="1292.5" y1="189" x2="1292.5" y2="930" class="life"/>
+  <line x1="1522.5" y1="189" x2="1522.5" y2="930" class="life"/>
+
+  <!-- phase strips -->
+  <rect x="55" y="212" width="1560" height="166" rx="8" class="old-note"/>
+  <text x="75" y="238" class="note-title">????????????</text>
+  <text x="75" y="260" class="note-text">?????E1??R1??????????R1???????????????</text>
+  <rect x="55" y="398" width="1560" height="304" rx="8" class="new-note"/>
+  <text x="75" y="424" class="note-title">????????????E2/A2</text>
+  <text x="75" y="446" class="note-text">?????I1?U1?R1??????????????E2???A2??????????</text>
+  <rect x="55" y="722" width="1560" height="208" rx="8" class="device-note"/>
+  <text x="75" y="748" class="note-title">??????????????</text>
+  <text x="75" y="770" class="note-text">???????R1???????????E1??????????????????????</text>
+
+  <!-- event rows -->
+  <line x1="55" y1="285" x2="1615" y2="285" class="axis"/><text x="66" y="280" class="row-no">1</text>
+  <path d="M142.5 302 H1522.5" class="flow"/>
+  <text x="832.5" y="297" text-anchor="middle" class="event">????E1??R1????????R1</text>
+
+  <line x1="55" y1="335" x2="1615" y2="335" class="axis"/><text x="66" y="330" class="row-no">2</text>
+  <path d="M142.5 352 C240 352 260 352 330 352" class="red"/>
+  <text x="242" y="347" text-anchor="middle" class="event-red">????????????</text>
+
+  <line x1="55" y1="468" x2="1615" y2="468" class="axis"/><text x="66" y="463" class="row-no">3</text>
+  <path d="M372.5 485 H1292.5" class="blue"/>
+  <text x="832.5" y="480" text-anchor="middle" class="event-blue">?????I1?U1?R1?????</text>
+
+  <line x1="55" y1="522" x2="1615" y2="522" class="axis"/><text x="66" y="517" class="row-no">4</text>
+  <path d="M372.5 539 H602.5" class="blue"/>
+  <text x="487.5" y="534" text-anchor="middle" class="event-blue">??????????</text>
+  <rect x="510" y="550" width="185" height="34" rx="6" fill="#ffffff" stroke="#9fc0d4" stroke-width="1.5"/>
+  <text x="602.5" y="572" text-anchor="middle" class="event-blue">???E2</text>
+
+  <line x1="55" y1="612" x2="1615" y2="612" class="axis"/><text x="66" y="607" class="row-no">5</text>
+  <path d="M602.5 629 H832.5" class="blue"/>
+  <text x="717.5" y="624" text-anchor="middle" class="event-blue">??E2?????</text>
+  <path d="M602.5 665 H1062.5" class="blue"/>
+  <text x="832.5" y="660" text-anchor="middle" class="event-blue">??E2?????</text>
+  <text x="1080" y="700" class="event-blue">??????103</text>
+
+  <line x1="55" y1="802" x2="1615" y2="802" class="axis"/><text x="66" y="797" class="row-no">6</text>
+  <path d="M1062.5 819 H1292.5" class="green"/>
+  <text x="1177.5" y="814" text-anchor="middle" class="event-green">???????A2</text>
+  <path d="M1292.5 855 H1522.5" class="green"/>
+  <text x="1407.5" y="850" text-anchor="middle" class="event-green">?R1???????</text>
+  <path d="M1522.5 891 H1292.5" class="green"/>
+  <text x="1407.5" y="886" text-anchor="middle" class="event-green">?????????????</text>
+
+  <line x1="55" y1="950" x2="1615" y2="950" class="axis"/><text x="66" y="945" class="row-no">7</text>
+  <path d="M142.5 970 H1062.5" class="red"/>
+  <text x="602.5" y="965" text-anchor="middle" class="event-red">???E1???????????????????</text>
+  <rect x="1120" y="946" width="420" height="54" rx="7" class="stop-note"/>
+  <text x="1140" y="969" class="note-title">?????????</text>
+  <text x="1140" y="989" class="note-text">R1??????????????????</text>
+
+  <!-- decision note -->
+  <rect x="55" y="1018" width="1560" height="55" rx="8" fill="#fffdf7" stroke="#d8c27a" stroke-width="1.5"/>
+  <text x="76" y="1041" class="note-title">???????</text>
+  <text x="190" y="1041" class="note-text">R1??????????R1?????????R1???????????????????????????????????</text>
+  <text x="190" y="1062" class="note-text">E1/E2?????????I1?????????U1???????R1????????A2??????????????</text>
+
+  <g transform="translate(58 1094)">
+    <line x1="0" y1="0" x2="34" y2="0" class="flow"/><text x="46" y="5" class="legend">?????</text>
+    <line x1="156" y1="0" x2="190" y2="0" class="blue"/><text x="202" y="5" class="legend">?????</text>
+    <line x1="326" y1="0" x2="360" y2="0" class="green"/><text x="372" y="5" class="legend">???????</text>
+    <line x1="528" y1="0" x2="562" y2="0" class="red"/><text x="574" y="5" class="legend">?????</text>
+  </g>
+</svg>

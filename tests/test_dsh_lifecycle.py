@@ -40,6 +40,13 @@ def test_real_dsh_approval_lifecycle(scenario, calls, asks, outcomes):
            # of cross-suite accumulation.
            "COMPANY_AGENT_TURN_ID": f"fixture-{uuid.uuid4().hex[:16]}",
            "COMPANY_AGENT_RECEIPT_DIR": tempfile.mkdtemp(prefix="company-agent-fixture-")}
+    # Windows node aborts at process init (ncrypto::CSPRNG) without SystemRoot,
+    # and subprocessEnvironment() requires absolute PATH entries, so the POSIX
+    # "/usr/bin:/bin" hermetic PATH only applies off-Windows.
+    if os.name == "nt":
+        env["SystemRoot"] = os.environ.get("SystemRoot", "")
+        env["windir"] = os.environ.get("windir", "")
+        env["PATH"] = os.environ.get("PATH", "")
     result = subprocess.run([str(node), str(ROOT / "tests/fixtures/dsh-lifecycle.mjs"), scenario],
                             cwd=ROOT, env=env, capture_output=True, text=True, timeout=45)
     assert result.returncode == 0, result.stderr

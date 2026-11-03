@@ -27,7 +27,7 @@ where = ["src"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]
-addopts = "-p no:cacheprovider -m 'not platform_compatibility and not latex_toolchain and not overleaf_live'"
+addopts = "-p no:cacheprovider -m 'not platform_compatibility and not latex_toolchain and not overleaf_live and not posix_permissions'"
 markers = [
     "platform_compatibility: explicit dual-repository gate; requires COMPANY_AGENT_PLATFORM_SOURCE",
     "latex_toolchain: explicit local TeX toolchain gate for the golden matrix",

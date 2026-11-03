@@ -14,7 +14,7 @@ DATA = ROOT / "docs" / "company-agent-2000-person-days-development-plan-v1.0.jso
 
 def main() -> int:
     errors: list[str] = []
-    data = json.loads(DATA.read_text())
+    data = json.loads(DATA.read_text(encoding="utf-8"))
     phase_total = sum(item["person_days"] for item in data["phases"])
     workstream_total = sum(item["person_days"] for item in data["workstreams"])
     role_total = sum(item["person_days"] for item in data["roles"])
@@ -38,7 +38,7 @@ def main() -> int:
         "2000 人天",
         "2000 人天包含 1740 人天基线建设和 260 人天受控风险储备",
     ]
-    document = DOC.read_text()
+    document = DOC.read_text(encoding="utf-8")
     for phrase in required:
         if phrase not in document:
             errors.append(f"document missing required boundary: {phrase}")

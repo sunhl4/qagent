@@ -43,7 +43,7 @@ def measure(function, repeats):
 
 
 def retrieval_evaluation():
-    fixture = json.loads((ROOT / "tests/fixtures/knowledge_cases.json").read_text())
+    fixture = json.loads((ROOT / "tests/fixtures/knowledge_cases.json").read_text(encoding="utf-8"))
     result = {}
     with tempfile.TemporaryDirectory(prefix="company-knowledge-benchmark-") as temporary:
         root = Path(temporary)
@@ -68,11 +68,7 @@ def retrieval_evaluation():
                         recall.append(len(set(names) & set(case["relevant"])) / len(case["relevant"]))
                         reciprocal.append(
                             next(
-                                (
-                                    1 / (index + 1)
-                                    for index, hit in enumerate(names)
-                                    if hit in case["relevant"]
-                                ),
+                                (1 / (index + 1) for index, hit in enumerate(names) if hit in case["relevant"]),
                                 0,
                             )
                         )

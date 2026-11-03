@@ -297,7 +297,9 @@ def test_refusals_are_honest_fail_closed(tmp_path: Path, monkeypatch) -> None:
     png = invoke("company_office_analyze", "lab", {"project": PROJECT, "path": "photo.png"})
     assert "OCR 未接入" in png.error
     pptx = invoke("company_office_analyze", "lab", {"project": PROJECT, "path": "deck.pptx"})
-    assert "未接入" in pptx.error
+    # .pptx 属合同声明的支持类型(逐片文本层);坏包必须按"损坏"fail-closed,
+    # 而不能退回"未接入"的通用话术。
+    assert "数据包损坏" in pptx.error
 
 
 def test_over_twenty_mb_file_is_refused_not_truncated(tmp_path: Path, monkeypatch) -> None:

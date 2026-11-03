@@ -364,10 +364,13 @@ def record_outcome(
 
 
 def load_records(*, limit: int = 24) -> list[dict[str, Any]]:
-    """Newest-first bounded read; malformed or torn lines are skipped."""
+    """Newest-first bounded read, scoped to the current subject."""
 
     if not isinstance(limit, int) or isinstance(limit, bool) or not 1 <= limit <= 400:
         raise ValueError("receipt read limit is invalid")
+    subject_value = subject()
+    if not isinstance(subject_value, str) or not _SUBJECT_PATTERN.fullmatch(subject_value):
+        raise ValueError("receipt subject filter is invalid")
     policy = _policy()
     fields = set(str(item) for item in policy["fields"])
     max_record_bytes = int(str(policy["max_record_bytes"]))
@@ -392,6 +395,8 @@ def load_records(*, limit: int = 24) -> list[dict[str, Any]]:
                 continue
             if not isinstance(record, dict) or set(record) != fields:
                 continue
+            if record.get("subject") != subject_value:
+                continue
             if not all(isinstance(record[key], str) for key in fields - {"elapsed_ms", "timestamp"}):
                 continue
             if any(
@@ -402,6 +407,46 @@ def load_records(*, limit: int = 24) -> list[dict[str, Any]]:
             if not _TOOL_PATTERN.fullmatch(str(record["tool"])):
                 continue
             if not _OPERATION_PATTERN.fullmatch(str(record["operation"])):
+                continue
+            record_ref = str(record["business_ref"])
+            if record_ref and not _REF_PATTERN.fullmatch(record_ref):
+                continue
+            records.append(record)
+    return records
+
+
+def _load_subject_records(subject_value: str, *, limit: int = 400) -> list[dict[str, Any]]:
+    if not isinstance(subject_value, str) or not _SUBJECT_PATTERN.fullmatch(subject_value):
+        raise ValueError("receipt subject filter is invalid")
+    policy = _policy()
+    fields = set(str(item) for item in policy["fields"])
+    max_record_bytes = int(str(policy["max_record_bytes"]))
+    files = _files(_root(), reverse=True)[: max(1, int(str(policy["max_files"])))]
+    records: list[dict[str, Any]] = []
+    for item in files:
+        if len(records) >= limit:
+            break
+        try:
+            data = item.read_text(encoding="utf-8")
+        except OSError:
+            continue
+        for raw in reversed(data.splitlines()):
+            if len(records) >= limit:
+                break
+            raw = raw.strip()
+            if not raw or len(raw.encode("utf-8")) > max_record_bytes:
+                continue
+            try:
+                record = strict_json_loads(raw)
+            except (json.JSONDecodeError, ValueError, TypeError, UnicodeError):
+                continue
+            if not isinstance(record, dict) or set(record) != fields or record.get("subject") != subject_value:
+                continue
+            if not all(isinstance(record[key], str) for key in fields - {"elapsed_ms", "timestamp"}):
+                continue
+            if any(not isinstance(record[key], int) or isinstance(record[key], bool) for key in ("elapsed_ms", "timestamp")):
+                continue
+            if not _TOOL_PATTERN.fullmatch(str(record["tool"])) or not _OPERATION_PATTERN.fullmatch(str(record["operation"])):
                 continue
             record_ref = str(record["business_ref"])
             if record_ref and not _REF_PATTERN.fullmatch(record_ref):
@@ -473,18 +518,16 @@ def evidence(tool_names: object) -> dict[str, Any]:
     }
 
 
-def reconcile(*, limit: int = 24) -> dict[str, Any]:
-    """Bounded reconciliation summary over the receipt store.
+def reconcile(*, limit: int = 24, subject_value: str | None = None) -> dict[str, Any]:
+    """Bounded reconciliation summary over the current subject's receipt store.
 
     Unknown outcomes are reported as facts, not failures: the operation may
     already have run on the platform, so the next step is always to re-query
     platform status with the original business context and never to resubmit.
-    A dispatch record without any outcome record means the invocation process
-    ended before confirming — the same unknown-by-construction interpretation.
     """
 
     try:
-        records = load_records(limit=400)
+        records = _load_subject_records(subject_value or subject(), limit=400)
         policy = _policy()
     except (OSError, ReceiptError, RuntimeError, ValueError):
         return {

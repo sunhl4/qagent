@@ -57,7 +57,7 @@ FORBIDDEN_PATHS = (
     "handbooks",
     "wrappers",
 )
-GENERATED_TOP_LEVEL = {".pytest_cache", ".ruff_cache", ".hypothesis"}
+GENERATED_TOP_LEVEL = {".pytest_cache", ".ruff_cache", ".hypothesis", ".gate-tmp"}
 FORBIDDEN_RUNTIME_NAMES = {".profile-start", ".credentials.yaml"}
 ALLOWED_TOP_LEVEL = {
     ".git",
@@ -121,6 +121,10 @@ def _source_files():
             # The oss-survey archive reports surveyed upstream projects under their
             # real upstream names; those facts are not legacy company architecture.
             if path.is_relative_to(ROOT / "docs" / "oss-survey"):
+                continue
+            # Conversation history narrates the recovered copy paths and prior
+            # repository names; narrative records are not active architecture.
+            if path.is_relative_to(ROOT / "docs") and path.name.startswith("conversation-log-"):
                 continue
             yield path
 

@@ -8,7 +8,7 @@ import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import http from 'node:http';
 import {Writable} from 'node:stream';
-import {apply} from '../../apps/company-workspace/host.mjs';
+import {apply, projectWorkbenchTasks, restoreWorkbenchTasks, resolveTrustedSubject, scopedFactKey, workbenchEventRank, workbenchTaskFromEvent} from '../../apps/company-workspace/host.mjs';
 
 async function host(port){
  // Explicit per-test port: ambient COMPANY_AGENT_DSH_PORT from developer
@@ -127,6 +127,83 @@ test('boot composition appends the company module and preserves native entries',
   'duplicate composition is rejected by the guard');
 });
 
+test('workbench task projection is auth-gated and reads one reconciled server fact source',async()=>{
+ const previous={python:process.env.COMPANY_AGENT_PYTHON,port:process.env.COMPANY_AGENT_DSH_PORT};
+ const dir=await mkdtemp(join(tmpdir(),'unitqc-workbench-'));
+ const fakePython=join(dir,'fake-python.mjs');
+ await writeFile(fakePython,``, 'utf8');
+ try{
+  process.env.COMPANY_AGENT_DSH_PORT='3097';
+  process.env.COMPANY_AGENT_PYTHON=process.execPath;
+  const {routes}=await host('3097');
+  const handler=routes.get('/company-workspace/workbench/tasks');
+  assert.ok(handler);
+  const unauth=response();await handler({method:'GET',headers:{host:'127.0.0.1:3097'}},unauth);assert.equal(unauth.status,401);
+  // The real CLI is intentionally unavailable in this fixture; the endpoint must
+  // report unavailable rather than manufacture an empty successful task list.
+  const unavailable=response();await handler({method:'GET',headers:{host:'127.0.0.1:3097',cookie:'fixture'}},unavailable);
+  assert.equal(unavailable.status,200);
+  assert.deepEqual(JSON.parse(unavailable.body),{available:false,tasks:[],reason:'receipt_unavailable'});
+ }finally{
+  await rm(dir,{recursive:true,force:true});
+  for(const [key,value] of Object.entries(previous)){if(value===undefined)delete process.env[key];else process.env[key]=value;}
+ }
+});
+
+test('workbench projection keeps unknown outcomes and only completes with a platform reference',()=>{
+ const request='req_'+'a'.repeat(32);
+ const rows=projectWorkbenchTasks([
+  {record:'outcome',request_id:request,operation:'hpc.submit',status:'ok',execution_state:'completed',business_ref:'',timestamp:30},
+  {record:'dispatch',request_id:request,operation:'hpc.submit',status:'dispatched',execution_state:'dispatched',business_ref:'',timestamp:20},
+  {record:'outcome',request_id:request,operation:'hpc.submit',status:'error',execution_state:'unknown',business_ref:'',timestamp:40},
+  {record:'outcome',request_id:'req_'+'b'.repeat(32),operation:'cloud.submit',status:'ok',execution_state:'completed',business_ref:'cloud-task-7',timestamp:10},
+  {record:'outcome',request_id:'req_'+'c'.repeat(32),operation:'device.run',status:'ok',execution_state:'completed',business_ref:'twin_9',timestamp:9},
+  {record:'outcome',request_id:'req_'+'d'.repeat(32),operation:'knowledge.search',status:'ok',execution_state:'completed',business_ref:'ignored',timestamp:99},
+ ]);
+ assert.deepEqual(rows.map(row=>row.request_id),['req_'+'a'.repeat(32),'req_'+'b'.repeat(32),'req_'+'c'.repeat(32)]);
+ assert.equal(rows[0].status,'unknown');assert.equal(rows[0].result_state,'unknown');assert.equal(rows[0].business_ref,'');
+ assert.equal(rows[1].status,'completed');assert.equal(rows[1].business_ref,'cloud-task-7');
+ assert.equal(rows[2].status,'completed');assert.equal(rows[2].business_ref,'twin_9');
+ assert.ok(rows.every(row=>row.billing_state==='not_projected'));
+});
+
+
+test('invalid workbench event states fail closed',()=>{
+ assert.equal(workbenchEventRank({record:'outcome',status:'ok',execution_state:'unknown'}),-1);
+ assert.equal(workbenchEventRank({record:'dispatch',status:'ok',execution_state:'completed'}),-1);
+ assert.equal(workbenchTaskFromEvent({record:'outcome',request_id:'req_'+'a'.repeat(32),operation:'hpc.submit',status:'refused',execution_state:'dispatched',timestamp:1}).status,'refused');
+});
+
+test('workbench projection rejects stale, malformed and duplicate events, and restores disconnected facts',()=>{
+ const request='req_'+'e'.repeat(32);
+ const completed={record:'outcome',request_id:request,operation:'cloud.submit',status:'ok',execution_state:'completed',business_ref:'cloud-task-1',timestamp:50};
+ const rows=projectWorkbenchTasks([
+  completed,
+  {...completed,timestamp:50},
+  {record:'outcome',request_id:request,operation:'cloud.submit',status:'error',execution_state:'unknown',business_ref:'',timestamp:49},
+  {record:'dispatch',request_id:request,operation:'cloud.submit',status:'dispatched',execution_state:'dispatched',business_ref:'',timestamp:20},
+  {record:'outcome',request_id:request,operation:'cloud.submit',status:'ok',execution_state:'completed',business_ref:'bad ref!',timestamp:60},
+  {record:'outcome',request_id:'req_'+'f'.repeat(32),operation:'cloud.submit',status:'ok',execution_state:'completed',business_ref:'cloud-task-2',timestamp:61},
+  {record:'outcome',request_id:'forged',operation:'cloud.submit',status:'ok',execution_state:'completed',business_ref:'cloud-task-3',timestamp:99},
+ ]);
+ assert.deepEqual(rows.map(row=>row.request_id),['req_'+'f'.repeat(32),request]);
+ assert.equal(rows[1].status,'unknown');
+ assert.equal(rows[0].connection_state,'server_facts');
+ const restored=restoreWorkbenchTasks({tasks:[{...rows[0],connection_state:'server_facts'}],active:true},[],{});
+ assert.equal(restored[0].connection_state,'reconnecting');
+ assert.equal(restored[0].source,'server-facts-reconnect');
+});
+
+test('trusted subject and cache keys are server-derived and tenant-scoped',()=>{
+ const connection={subjectForRequest:req=>req.headers.subject};
+ const req={headers:{subject:'operator@corp.example.com'}};
+ assert.equal(resolveTrustedSubject(connection,req),'operator@corp.example.com');
+ assert.equal(resolveTrustedSubject(connection,{headers:{subject:'../../guest'}}),'unknown@unknown');
+ assert.equal(scopedFactKey('agent-state','operator@corp.example.com'),'agent-state:operator@corp.example.com');
+ assert.notEqual(scopedFactKey('agent-state','operator@corp.example.com'),scopedFactKey('agent-state','guest@corp.example.com'));
+});
+
+
 test('portal proxy embeds configured pages and isolates portal cookies from Agent auth',async()=>{
  const previous={port:process.env.COMPANY_AGENT_DSH_PORT,config:process.env.UQC_WORKSPACE_CONFIG,hpc:process.env.HPC_PORTAL};
  const upstream=http.createServer((req,res)=>{
@@ -208,11 +285,13 @@ test('grant is token-only and settings never accept credentials',async()=>{
 });
 test('presentation overlay cannot activate in production or device profile',()=>{
  const gate = /Workspace demo UI requires development with company-agent-minimal \(boot\|algo\) or company-agent \(lab\|sign\)/;
- const result=spawnSync(process.execPath,[new URL('../../scripts/dsh-cli.mjs',import.meta.url).pathname],{env:{PATH:process.env.PATH,COMPANY_AGENT_DEPLOYMENT_MODE:'production',COMPANY_AGENT_PROFILE:'company-agent-minimal',COMPANY_AGENT_PRESET:'boot',COMPANY_AGENT_DEMO_UI:'1'},encoding:'utf8'});
+ const dshCli=new URL('../../scripts/dsh-cli.mjs',import.meta.url);
+ const dshCliPath=process.platform==='win32'&&dshCli.pathname.startsWith('/')?decodeURIComponent(dshCli.pathname.slice(1)):decodeURIComponent(dshCli.pathname);
+ const result=spawnSync(process.execPath,[dshCliPath],{env:{PATH:process.env.PATH,COMPANY_AGENT_DEPLOYMENT_MODE:'production',COMPANY_AGENT_PROFILE:'company-agent-minimal',COMPANY_AGENT_PRESET:'boot',COMPANY_AGENT_DEMO_UI:'1'},encoding:'utf8'});
  assert.notEqual(result.status,0);assert.match(result.stderr,gate);
  // The composed company-agent profile keeps the presentation shell in
  // development under its approval presets (lab/sign); the gate lets it through
  // to the next boot check instead.
- const allowed=spawnSync(process.execPath,[new URL('../../scripts/dsh-cli.mjs',import.meta.url).pathname],{env:{PATH:process.env.PATH,COMPANY_AGENT_DEPLOYMENT_MODE:'development',COMPANY_AGENT_PROFILE:'company-agent',COMPANY_AGENT_PRESET:'lab',COMPANY_AGENT_DEMO_UI:'1'},encoding:'utf8'});
+ const allowed=spawnSync(process.execPath,[dshCliPath],{env:{PATH:process.env.PATH,COMPANY_AGENT_DEPLOYMENT_MODE:'development',COMPANY_AGENT_PROFILE:'company-agent',COMPANY_AGENT_PRESET:'lab',COMPANY_AGENT_DEMO_UI:'1'},encoding:'utf8'});
  assert.notEqual(allowed.status,0);assert.doesNotMatch(allowed.stderr,gate);assert.match(allowed.stderr,/COMPANY_AGENT_DSH_ENTRY/);
 });

@@ -135,6 +135,7 @@
       "provider": "company-agent",
       "contract_version": "company.workflow/2.0",
       "tools": [
+        "company_work_item",
         "company_capabilities",
         "company_workflow_validate",
         "company_analysis_render",
@@ -178,7 +179,18 @@
       "contract_version": "company.office/2.0",
       "tools": [
         "company_office_analyze",
-        "company_office_create"
+        "company_office_compare",
+        "company_office_edit",
+        "company_office_validate",
+        "company_office_chart",
+        "company_office_matter",
+        "company_office_create",
+        "company_office_audit",
+        "company_office_pptx",
+        "company_office_convert",
+        "company_office_open",
+        "company_office_compute",
+        "company_office_deliver"
       ],
       "handles": [],
       "approval": "none",

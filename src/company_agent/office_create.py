@@ -418,24 +418,24 @@ def _sheet_xml(sheet: dict) -> str:
             if isinstance(cell, bool):
                 rendered = "TRUE" if cell else "FALSE"
                 cells.append(
-                    f'<c r="{ref}" t="inlineStr"><is><t>{rendered}</t></is></c>'
+                    f'<m:c r="{ref}" t="inlineStr"><m:is><m:t>{rendered}</m:t></m:is></m:c>'
                 )
             elif isinstance(cell, int):
-                cells.append(f'<c r="{ref}"><v>{cell}</v></c>')
+                cells.append(f'<m:c r="{ref}"><m:v>{cell}</m:v></m:c>')
             elif isinstance(cell, float):
                 if not math.isfinite(cell):
                     raise OfficeCreateError("浮点单元格必须是有限数,拒绝")
-                cells.append(f'<c r="{ref}"><v>{cell!r}</v></c>')
+                cells.append(f'<m:c r="{ref}"><m:v>{cell!r}</m:v></m:c>')
             elif isinstance(cell, str):
                 text = _check_text(cell, "单元格文本", MAX_CELL_TEXT_CHARS)
                 preserve = ' xml:space="preserve"' if "\n" in text else ""
                 cells.append(
-                    f'<c r="{ref}" t="inlineStr"><is><t{preserve}>{_esc(text)}</t></is></c>'
+                    f'<m:c r="{ref}" t="inlineStr"><m:is><m:t{preserve}>{_esc(text)}</m:t></m:is></m:c>'
                 )
             else:
                 raise OfficeCreateError("单元格只支持 字符串/数字/布尔/None")
         if cells:
-            row_parts.append(f'<row r="{row_index}">{"".join(cells)}</row>')
+            row_parts.append(f'<m:row r="{row_index}">{"".join(cells)}</m:row>')
     return (
         '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
         f'<m:worksheet xmlns:m="{_M_NS}">'

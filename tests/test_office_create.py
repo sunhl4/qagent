@@ -111,7 +111,9 @@ def test_xlsx_multi_sheet_roundtrip(tmp_path: Path, monkeypatch) -> None:
         sheet2 = package.read("xl/worksheets/sheet2.xml").decode("utf-8")
     assert 'name="总表"' in workbook and 'name="第二张"' in workbook
     assert ">离子阱<" in sheet1
-    assert "<v>3.5</v>" in sheet2 or "<is><t>TRUE</t></is>" in sheet2
+    # 全员带 m: 前缀:worksheet/sheetData/row/c 位于同一命名空间,Word/WPS 可开。
+    assert "<m:is>" in sheet1
+    assert "<m:v>3.5</m:v>" in sheet2 or "<m:is><m:t>TRUE</m:t></m:is>" in sheet2
 
 
 def test_xmind_package_opens(tmp_path: Path, monkeypatch) -> None:

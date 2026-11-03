@@ -20,7 +20,7 @@ from company_agent.schema import SchemaError, validate_schema_definition
 WORKSPACE_ROOT = Path(__file__).resolve().parents[2]
 _CONTRACT_NAMES = (
     "tools", "results", "providers", "capabilities", "policy", "presets", "templates", "skills",
-    "tenants", "budgets",
+    "tenants", "budgets", "superagent",
 )
 
 
@@ -310,12 +310,24 @@ def load_tools() -> dict[str, dict[str, Any]]:
             except SchemaError as exc:
                 raise RuntimeError("invalid Company Agent contract: tools.json") from exc
     expected_names = {
+        "company_work_item",
         "company_capabilities",
         "company_knowledge_search",
         "company_fetch", "company_table_profile",
         "company_workspace_reference", "company_analysis_render",
         "company_office_analyze",
         "company_office_create",
+        "company_office_compare",
+        "company_office_edit",
+        "company_office_validate",
+        "company_office_chart",
+        "company_office_matter",
+        "company_office_audit",
+        "company_office_pptx",
+        "company_office_convert",
+        "company_office_open",
+        "company_office_compute",
+        "company_office_deliver",
         "company_workflow_validate",
         "quantum_algorithm_catalog",
         "quantum_algorithm_run",

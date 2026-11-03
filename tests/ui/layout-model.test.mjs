@@ -66,6 +66,7 @@ test('additive client rides native slots and never replaces the conversation she
  const allowedFetches = [
   /\/company-workspace\/\$\{kind\}\/(?:status|overview)/,
   /\/company-workspace\/agent\/state'/,
+  /\/company-workspace\/workbench\/tasks'/,
   /\/company-workspace\/access'\)/,
   /\/company-workspace\/access',\{method:'POST'/
  ];

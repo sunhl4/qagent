@@ -5,7 +5,7 @@ export {
 export type * from "./decision.ts";
 export { decide } from "./decision.ts";
 export type * from "./policy.ts";
-export { evaluatePolicy } from "./policy.ts";
+export { buildPolicyDecisionRecord, evaluatePolicy } from "./policy.ts";
 export type * from "./states.ts";
 export { transition, allowedEvents, isTerminal } from "./states.ts";
 export type * from "./failure.ts";
@@ -15,6 +15,7 @@ export {
   buildFailureEntries,
   failureEntryId,
   failureStats,
+  mergeFailureEntries,
   queryFailureLibrary,
 } from "./failure-library.ts";
 export type * from "./lease.ts";

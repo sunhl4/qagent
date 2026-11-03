@@ -115,7 +115,9 @@ test("租约接入：成功运行后释放资源并结算成本", async () => {
   assert.equal(totals.committed, 0.8);
 
   assert.ok(outcome.manifest);
-  const costsArtifact = outcome.manifest!.artifacts.find((item) => item.type === "report");
+  const costsArtifact = outcome.manifest!.artifacts.find((item) =>
+    item.uri.endsWith("costs.json"),
+  );
   assert.ok(costsArtifact, "manifest 应包含成本快照产物");
   assert.match(costsArtifact!.sha256, /^[a-f0-9]{64}$/);
 

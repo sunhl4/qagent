@@ -22,6 +22,7 @@ import type { Decision, ExperimentSpec, Finding, FailureRecord } from "../../dom
 import {
   buildCostLedgerSnapshot,
   buildPlatformSignal,
+  buildPolicyDecisionRecord,
   checkpointArtifactKey,
   classifyFailure,
   compileExperiment,
@@ -36,7 +37,7 @@ import type {
   CostTotals,
   LeaseRecord,
 } from "../../domain/src/index.ts";
-import type { PolicyResult } from "../../domain/src/index.ts";
+import type { PolicyDecisionRecord, PolicyResult } from "../../domain/src/index.ts";
 import { acquireLease, reconcileLease, releaseLease } from "./lease.ts";
 
 export interface RunLeaseOptions {
@@ -143,6 +144,10 @@ export interface RunOutcome {
   state: PipelineState;
   decision?: Decision;
   policy?: PolicyResult;
+  /** 策略评估落盘后的决定记录（schemas/policy-decision.schema.json）。 */
+  policyRecord?: PolicyDecisionRecord;
+  /** 策略决定记录的产物 URI（与 manifest 产物独立）。 */
+  policyRecordRef?: ArtifactRef;
   manifest?: RunManifest;
   manifestRef?: ArtifactRef;
   failure?: FailureRecord;
@@ -299,6 +304,10 @@ export async function runExperiment(
     return put.value;
   };
 
+  /* 策略决定记录：在 failureOutcome 之前声明，避免 TDZ；写入失败只告警不阻塞。 */
+  let policyRecord: PolicyDecisionRecord | undefined;
+  let policyRecordRef: ArtifactRef | undefined;
+
   const persistCostSnapshot = async (
     ledger: CostLedger,
   ): Promise<{ ref?: ArtifactRef; totals?: CostTotals[] }> => {
@@ -333,7 +342,16 @@ export async function runExperiment(
   ): Promise<RunOutcome> => {
     const manifest = baseManifest(manifestStateFor(state), failure);
     const manifestRef = await persistManifest(manifest);
-    return { state, failure, manifest, manifestRef, findings, ...extra };
+    return {
+      state,
+      failure,
+      manifest,
+      manifestRef,
+      findings,
+      policyRecord: policyRecordRef ? policyRecord : undefined,
+      policyRecordRef: policyRecordRef,
+      ...extra,
+    };
   };
 
   /** 发布租约生命周期事实事件；失败只记 finding，不阻断业务。 */
@@ -428,6 +446,47 @@ export async function runExperiment(
     },
   );
 
+  /* 2.1 审批与决定留痕：策略评估结果落产物，任何路径都可追溯 */
+  policyRecord = buildPolicyDecisionRecord({
+    decision_id: `${input.idempotencyKey}:policy`,
+    subject: {
+      type: input.subject.type,
+      id: input.subject.id,
+      tenantId: input.subject.tenantId,
+      projectId: input.subject.projectId ?? null,
+    },
+    action: {
+      name: "experiment.submit",
+      target_type: input.spec.resources.type,
+      target_id: input.spec.experiment_id,
+      reversible: false,
+      estimated_cost: input.spec.resources.max_cost,
+      currency: input.spec.resources.currency,
+    },
+    result: policy,
+    approvalId: input.budget?.approvalId ?? null,
+    evaluatedAt: now().toISOString(),
+    traceId: input.traceId,
+  });
+  const policyRecordJson = JSON.stringify(policyRecord, null, 2);
+  const policyPut = await deps.artifacts.put({
+    tenantId: input.subject.tenantId,
+    projectId: input.subject.projectId,
+    key: `${attemptPrefix}/policy-decision.json`,
+    contentType: "application/json",
+    bytes: new TextEncoder().encode(policyRecordJson),
+    expectedSha256: sha256(policyRecordJson),
+    metadata: { task_id: input.spec.task_id, decision: policy.decision }
+  , idempotencyKey: `${input.idempotencyKey}:policy-record`,
+  });
+  policyRecordRef = policyPut.ok
+    ? policyPut.value
+    : (findings.push({
+        severity: "warning",
+        code: "W_POLICY_RECORD",
+        message: `策略决定写入失败: ${policyPut.error.code} ${policyPut.error.message}`,
+      }), undefined);
+
   if (policy.decision === "DENY") {
     const rule = policy.matchedRules.find((item) => item.effect === "deny");
     return failureOutcome(
@@ -437,7 +496,14 @@ export async function runExperiment(
     );
   }
   if (policy.decision === "REQUIRE_APPROVAL" || policy.decision === "DEFER") {
-    return { state: "needs_approval", policy, findings };
+    return {
+      state: "needs_approval",
+      policy,
+      policyRecord,
+      policyRecordRef,
+      manifestRef: policyRecordRef,
+      findings,
+    };
   }
 
   /* 3. 记录规格 */
@@ -467,6 +533,7 @@ export async function runExperiment(
   const storedArtifacts: Array<{ ref: ArtifactRef; type: ManifestArtifactType }> = [
     { ref: specPut.value, type: "config" },
   ];
+  if (policyRecordRef) storedArtifacts.push({ ref: policyRecordRef, type: "report" });
   const artifactsPresent = new Set<string>(["config", "manifest"]);
 
   /* 4. 报价 */
@@ -1005,6 +1072,8 @@ export async function runExperiment(
     state,
     decision,
     policy,
+    policyRecord: policyRecordRef ? policyRecord : undefined,
+    policyRecordRef,
     manifest,
     manifestRef,
     failure: decisionFailure,

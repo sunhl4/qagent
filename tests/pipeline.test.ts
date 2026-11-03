@@ -280,7 +280,11 @@ test("端到端：HPC 需要审批时不提交作业", async () => {
   );
 
   assert.equal(outcome.state, "needs_approval");
-  assert.equal(stack.artifacts.size(), 0, "审批前不应写入任何产物");
+  assert.equal(stack.artifacts.size(), 1, "只写策略决定记录（审批请求留痕），不写实验产物");
+  assert.ok(outcome.policyRecord);
+  assert.equal(outcome.policyRecord!.decision, "REQUIRE_APPROVAL");
+  assert.ok(outcome.manifestRef, "策略记录 URI 应在结果中");
+  assert.match(outcome.manifestRef!.uri, /policy-decision\.json$/);
 });
 
 test("端到端：预算不足直接拒绝", async () => {

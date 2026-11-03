@@ -288,6 +288,11 @@ test("循环：需要审批时停止且不提交作业", async () => {
 
   assert.equal(outcome.state, "escalated");
   assert.equal(outcome.attempts.length, 1);
-  assert.equal(outcome.attempts[0].manifest_ref ?? null, null);
-  assert.equal(stack.artifacts.size(), 1, "只有循环摘要，不应有执行产物");
+  assert.match(
+    outcome.attempts[0].manifest_ref ?? "",
+    /policy-decision\.json$/,
+    "审批请求留痕是本轮唯一清单级产物，其余执行产物不入库",
+  );
+  assert.equal(stack.artifacts.size(), 2, "循环摘要 + 策略决定记录（审批请求留痕），无执行产物");
 });
+

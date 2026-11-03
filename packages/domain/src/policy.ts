@@ -185,3 +185,122 @@ export function evaluatePolicy(action: PolicyAction, ctx: PolicyContext): Policy
     matchedRules: matched,
   };
 }
+
+/**
+ * 策略决定记录（schemas/policy-decision.schema.json）。
+ *
+ * `evaluatePolicy()` 只返回判定；审计与审批流需要一份可持久化、可校验的记录。
+ * 本函数是纯映射：多给的字符串键一律丢弃，保证不携带凭据类字段。
+ */
+
+export interface PolicyDecisionRecord {
+  decision_id: string;
+  subject: {
+    type: "user" | "service" | "agent" | "operator";
+    id: string;
+    tenant_id: string;
+    project_id: string | null;
+  };
+  action: {
+    name: string;
+    risk: "low" | "medium" | "high" | "critical";
+    target_type: string | null;
+    target_id: string | null;
+    reversible: boolean;
+    estimated_cost: number | null;
+    currency: string | null;
+  };
+  decision: PolicyDecisionKind;
+  reason: string;
+  matched_rules: PolicyRuleMatch[];
+  limits: {
+    max_cost: number | null;
+    max_wall_clock_seconds: number | null;
+    max_gpu_count: number | null;
+  };
+  approval: {
+    required_by: string[];
+    approval_id: string | null;
+    expires_at: string | null;
+    scope: string | null;
+  };
+  evaluated_at: string;
+  trace_id: string | null;
+}
+
+export interface PolicyDecisionActionDetail {
+  name: string;
+  target_type?: string | null;
+  target_id?: string | null;
+  reversible?: boolean;
+  estimated_cost?: number | null;
+  currency?: string | null;
+}
+
+export interface PolicyDecisionInput {
+  decision_id: string;
+  subject: PolicySubject & { projectId?: string | null };
+  action: PolicyDecisionActionDetail;
+  result: PolicyResult;
+  /** 审批人/按需扩展：与 schema 的 approval.required_by 对应。 */
+  requiredBy?: string[];
+  approvalId?: string | null;
+  evaluatedAt?: string;
+  traceId?: string;
+  policyVersion?: string | null;
+}
+
+export function buildPolicyDecisionRecord(input: PolicyDecisionInput): PolicyDecisionRecord {
+  const limits = input.result.limits;
+  const record: PolicyDecisionRecord = {
+    decision_id: input.decision_id,
+    subject: {
+      type: input.subject.type,
+      id: input.subject.id,
+      tenant_id: input.subject.tenantId,
+      project_id: input.subject.projectId ?? null,
+    },
+    action: {
+      name: input.action.name,
+      risk: "low",
+      target_type: input.action.target_type ?? null,
+      target_id: input.action.target_id ?? null,
+      reversible: input.action.reversible ?? true,
+      estimated_cost: input.action.estimated_cost ?? null,
+      currency: input.action.currency ?? null,
+    },
+    decision: input.result.decision,
+    reason: input.result.reason,
+    matched_rules: input.result.matchedRules.map((rule) => ({
+      rule_id: rule.ruleId,
+      effect: rule.effect,
+      detail: rule.detail ?? null,
+    })),
+    limits: {
+      max_cost: null,
+      max_wall_clock_seconds: null,
+      max_gpu_count: null,
+    },
+    approval: {
+      required_by: input.requiredBy ?? [],
+      approval_id: input.approvalId ?? null,
+      expires_at: null,
+      scope: null,
+    },
+    evaluated_at: input.evaluatedAt ?? new Date().toISOString(),
+    trace_id: input.traceId ?? null,
+  };
+
+  if (limits?.maxCost !== undefined) record.limits.max_cost = limits.maxCost;
+  if (limits?.maxWallClockSeconds !== undefined) {
+    record.limits.max_wall_clock_seconds = limits.maxWallClockSeconds;
+  }
+  if (limits?.maxGpuCount !== undefined) record.limits.max_gpu_count = limits.maxGpuCount;
+
+  return record;
+}
+
+(function ensureShapeTypes() {
+  const sample: PolicyDecisionRecord["subject"]["type"] = "operator";
+  void sample;
+})();

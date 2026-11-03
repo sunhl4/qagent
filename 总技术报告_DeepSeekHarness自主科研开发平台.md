@@ -1317,11 +1317,11 @@ DSH 核心或通用工具 → 对方
 make check
 ```
 
-包括 36 条一致性用例（35 MUST）、170 个契约、流水线、循环、失败库、日报、worktree、租约、账本、恢复、回收、文献、复现、假设门禁与软件门禁测试、契约与桩自检。桩全部声明 `degraded: true`，支持失败注入（未知执行、失败、预算超限、能力缺失）。
+包括 36 条一致性用例（35 MUST）、176 个契约、流水线、循环、失败库、日报、worktree、租约、账本、恢复、回收、文献、复现、假设门禁与软件门禁测试、契约与桩自检。桩全部声明 `degraded: true`，支持失败注入（未知执行、失败、预算超限、能力缺失）。
 
 阶段 1 的参考实现已经落地：`packages/pipeline/src/loop.ts` 提供有界循环（预算、截止时间、最大尝试次数、连续失败、早停），`packages/domain/src/failure.ts` 提供失败分类；每次尝试写 `manifest.json`，循环写 `loop-summary.json`，失败与负结果同样保留。`packages/domain/src/failure-library.ts` 提供失败去重与检索，`packages/pipeline/src/report.ts` 生成基础日报，`packages/workspace/src/worktree.ts` 提供 Git 分支/worktree 隔离。
 
-阶段 2 的研究层已覆盖单轮与循环级资源控制：`packages/domain/src/lease.ts` 提供租约状态机与续租，`packages/domain/src/cost.ts` 提供三段成本账本，`packages/pipeline/src/lease.ts` 把预留、报价、提交、释放结算与对账接到 `ComputePort`；`packages/domain/src/checkpoint.ts` 提供检查点恢复决策；`packages/domain/src/reclaim.ts` 与 `packages/pipeline/src/reclaim.ts` 提供一轮周期对账、过期回收和泄漏告警。`runExperiment()` 支持租约门控：准入预留、结束释放结算、`costs.json` 快照并入产物；`runExperimentLoop()` 支持循环级门控：共享账本跨轮扣减剩余预算、恢复决策写入尝试记录、达到上限转人工。未知执行只升级，不自动释放或重新提交。持久工作流与真实适配器仍由 harness-core 或后续 Temporal 集成提供。
+阶段 2 的研究层已覆盖单轮与循环级资源控制：`packages/domain/src/lease.ts` 提供租约状态机与续租，`packages/domain/src/cost.ts` 提供三段成本账本，`packages/pipeline/src/lease.ts` 把预留、报价、提交、释放结算与对账接到 `ComputePort`；`packages/domain/src/checkpoint.ts` 提供检查点恢复决策；`packages/domain/src/reclaim.ts` 与 `packages/pipeline/src/reclaim.ts` 提供一轮周期对账、过期回收和泄漏告警。`runExperiment()` 支持租约门控：准入预留、结束释放结算、`costs.json` 快照并入产物；`runExperimentLoop()` 支持循环级门控：共享账本跨轮扣减剩余预算、恢复决策写入尝试记录、达到上限转人工。治理侧：每次策略评估以 `PolicyDecisionRecord` 落盘为 `policy-decision.json`（审批留痕），失败库里经 `ArtifactStorePort` 读回并合并、在任务开始前召回（`pipeline/src/retrieval.ts`）。未知执行只升级，不自动释放或重新提交。持久工作流与真实适配器仍由 harness-core 或后续 Temporal 集成提供。
 
 阶段 3 的研究层部分已落地：`packages/domain/src/literature.ts` 提供文献去重（同 DOI 合并、arXiv 预印本并入正式版、标题冲突转人工确认）、语料组装与方法卡校验（缺证据定位为硬错误）；`packages/pipeline/src/literature.ts` 把组装后的语料与方法卡接到 `ArtifactStorePort`，人工确认候选一并落盘；`packages/domain/src/reproduction.ts` 提供复现难度评分、声明容差比较与报告编译（partial/failed 必须附差异归因，未知执行结论为 `not_attempted`）；`packages/pipeline/src/reproduction.ts` 把每种子的独立提交接到 `ComputePort` 走 `acquireLease`，执行未知立即停止且不释放不重试，预算耗尽后剩余种子跳过；`packages/domain/src/hypothesis.ts` 提供假设质量门与从复现结果草拟候选的证据自动链接。多源检索、全文解析与代码定位仍需文献插件与外部服务。
 

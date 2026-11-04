@@ -36,7 +36,7 @@ def _docx_bytes(text: str = "交付正文") -> bytes:
 
 
 def _deliver(name: str, **extra):
-    args = {"project": PROJECT, "path": name}
+    args = {"project": PROJECT, "path": name, "purpose": "测试写入"}
     args.update(extra)
     return invoke("company_office_deliver", "lab", args)
 
@@ -81,6 +81,29 @@ def test_suffix_guard_and_missing_file(tmp_path: Path, monkeypatch) -> None:
 
     missing = _deliver("nowhere.docx")
     assert missing.status == "error" and "workspace file" in missing.error
+    assert "尚未同步" in missing.error
+
+
+def test_preview_does_not_copy(tmp_path: Path, monkeypatch) -> None:
+    project = _workspace(tmp_path, monkeypatch)
+    (project / "draft.docx").write_bytes(_docx_bytes())
+    result = _deliver("draft.docx", mode="preview")
+    assert result.status == "ok", result.error
+    assert result.payload["mode"] == "preview"
+    assert result.payload["sequence"] == 0
+    assert result.payload["path"] == result.payload["source"]
+    assert not (project / "deliverables").exists()
+
+
+def test_title_allows_one_hundred_sixty_characters(tmp_path: Path, monkeypatch) -> None:
+    project = _workspace(tmp_path, monkeypatch)
+    (project / "draft.docx").write_bytes(_docx_bytes())
+    title = "A" * 160
+    result = _deliver("draft.docx", title=title)
+    assert result.status == "ok", result.error
+    assert title in result.payload["path"]
+    too_long = _deliver("draft.docx", title="B" * 161)
+    assert too_long.status == "error"
 
 
 def test_title_rejects_path_separator(tmp_path: Path, monkeypatch) -> None:

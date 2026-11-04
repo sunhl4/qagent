@@ -30,7 +30,7 @@ import time
 from pathlib import Path
 from typing import Any
 
-from company_agent import office_compute_child, office_convert, workspace_files
+from company_agent import office_compute_child, office_convert, office_purpose, workspace_files
 
 ENV_ALLOW = "COMPANY_AGENT_COMPUTE_ALLOW"
 WORKSPACE_ENV = workspace_files.WORKSPACE_ENV
@@ -47,6 +47,7 @@ class OfficeComputeError(ValueError):
 def compute(args: dict) -> dict:
     """Contract entry point: run one whitelisted sandbox program."""
 
+    purpose = office_purpose.take(args)
     root = workspace_files.root()
     project = args.get("project")
     if not isinstance(project, str) or not project.strip() or project != project.strip():
@@ -74,7 +75,11 @@ def compute(args: dict) -> dict:
     if receipt.get("ok") is not True:
         message = str(receipt.get("message") or "沙箱失败:无消息")
         raise OfficeComputeError(message[:200])
-    return _verified(root, project, receipt, elapsed_ms)
+    verified = _verified(root, project, receipt, elapsed_ms)
+    office_purpose.audit(
+        "office_compute", purpose, {"project": project, "source_chars": len(source)}
+    )
+    return verified
 
 
 def _allowed() -> bool:

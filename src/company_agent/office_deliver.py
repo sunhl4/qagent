@@ -18,13 +18,14 @@ name itself:
 from __future__ import annotations
 
 import hashlib
+import os
 import re
 from datetime import UTC, datetime
 from pathlib import Path
 
 from company_agent import office_create as _oc
 from company_agent import office_ingest as _ingest
-from company_agent import workspace_files
+from company_agent import office_purpose, workspace_files
 
 DELIVERY_DIR = "deliverables"
 MAX_FILE_BYTES = _ingest.MAX_FILE_BYTES
@@ -56,36 +57,103 @@ class OfficeDeliverError(ValueError):
 
 
 def deliver(args: dict) -> dict:
-    """Contract entry point: named, sequenced, never-overwriting delivery copy."""
+    """Contract entry point: preview in place, or a named delivery copy."""
 
+    purpose = office_purpose.take(args)
     root = workspace_files.root()
     compound = _oc._compound(args)
-    resolved = workspace_files.resolve(root, compound)
+    mode = _mode(args)
+    try:
+        resolved = workspace_files.resolve(root, compound)
+    except workspace_files.WorkspaceFileError as exc:
+        raise OfficeDeliverError(f"{exc};文件不存在或尚未同步") from exc
     if not resolved.is_file():
-        raise OfficeDeliverError("workspace path is not a file")
+        raise OfficeDeliverError("workspace path is not a file;文件不存在或尚未同步")
     suffix = resolved.suffix.casefold()
     if suffix not in DELIVERABLE_SUFFIXES:
         raise OfficeDeliverError(
             f"{suffix or '(无后缀)'} 不是交付类型;支持 {' '.join(DELIVERABLE_SUFFIXES)}"
         )
     data = _read_bounded(root, compound)
-    title = _title(args, resolved)
-    project_deliverables = f"{compound.split('/', 1)[0]}/{DELIVERY_DIR}"
-    sequence, target_name = _next_free(root, project_deliverables, title, suffix)
+    project = compound.split("/", 1)[0]
+    try:
+        from company_agent import office_validate
 
-    target_compound = f"{project_deliverables}/{target_name}"
+        citations = office_validate.require_passed(project, args)
+    except office_validate.OfficeValidateError as exc:
+        raise OfficeDeliverError(str(exc)) from exc
+    if mode == "preview":
+        payload = {
+            "source": compound,
+            "path": compound,
+            "sequence": 0,
+            "bytes": len(data),
+            "sha256": hashlib.sha256(data).hexdigest(),
+            "mode": "preview",
+        }
+        if citations:
+            payload["citations"] = citations
+        office_purpose.audit("office_deliver", purpose, {"path": compound, "mode": "preview"})
+        return payload
+    title = _title(args, resolved)
+    directory = _directory(compound, args)
+    sequence, target_name = _next_free(root, directory, title, suffix)
+
+    target_compound = f"{directory}/{target_name}"
     existed, target = _oc._resolve_target(root, target_compound, False)
     _oc._write_atomic(target, data, existed)
     _oc._verify_written(target, data)
     if target.read_bytes() != data:
         raise OfficeDeliverError("交付复验失败:磁盘字节与源不一致,如实失败")
-    return {
+    payload = {
         "source": compound,
         "path": target_compound,
         "sequence": sequence,
         "bytes": len(data),
         "sha256": hashlib.sha256(data).hexdigest(),
+        "mode": "deliver",
     }
+    if citations:
+        payload["citations"] = citations
+    office_purpose.audit(
+        "office_deliver", purpose, {"path": target_compound, "mode": "deliver"}
+    )
+    return payload
+
+
+def _mode(args: dict) -> str:
+    mode = args.get("mode", "deliver")
+    if mode not in {"deliver", "preview"}:
+        raise OfficeDeliverError("mode 只接受 deliver 或 preview")
+    return mode
+
+
+def _directory(compound: str, args: dict) -> str:
+    project, _, relative = compound.partition("/")
+    folder = args.get("folder")
+    if isinstance(folder, str) and folder.strip():
+        if folder in {"Desktop", "Downloads", "Documents"}:
+            allowed = {
+                item.strip()
+                for item in os.environ.get("COMPANY_AGENT_OUTPUT_ROOTS", "").split(";")
+                if item.strip()
+            }
+            if folder not in allowed:
+                raise OfficeDeliverError("该落点不在 COMPANY_AGENT_OUTPUT_ROOTS 白名单,拒绝全盘写")
+        compound_dir = f"{project}/{folder.strip('/')}"
+        workspace_files._lexical(compound_dir)
+        return compound_dir
+    explicit = args.get("explicit")
+    if isinstance(explicit, str) and explicit.strip():
+        parent = str(Path(explicit).parent).replace("\\", "/")
+        return project if parent in {"", "."} else f"{project}/{parent}"
+    if args.get("beside") is True:
+        parent = str(Path(relative).parent).replace("\\", "/")
+        return project if parent in {"", "."} else f"{project}/{parent}"
+    matter = args.get("matter")
+    if isinstance(matter, str) and re.fullmatch(r"[A-Za-z0-9_-]{1,64}", matter):
+        return f"{project}/cases/{matter}/artifacts"
+    return f"{project}/{DELIVERY_DIR}"
 
 
 def _title(args: dict, resolved: Path) -> str:
@@ -98,7 +166,7 @@ def _title(args: dict, resolved: Path) -> str:
         raise OfficeDeliverError("title 必须是干净的字符串,或缺省")
     if "/" in candidate or "\\" in candidate or ":" in candidate:
         raise OfficeDeliverError("title 不得包含路径分隔符,拒绝")
-    candidate = candidate[:60]
+    candidate = candidate[:160]
     if not candidate.strip():
         raise OfficeDeliverError("title 不能为空")
     return candidate

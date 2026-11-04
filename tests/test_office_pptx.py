@@ -66,7 +66,13 @@ def _deck() -> dict:
 
 
 def _render(content: dict, name: str = "deck.pptx", **extra):
-    args = {"project": PROJECT, "action": "render", "path": name, "content": content}
+    args = {
+        "project": PROJECT,
+        "action": "render",
+        "path": name,
+        "content": content,
+        "purpose": "测试写入",
+    }
     args.update(extra)
     return invoke("company_office_pptx", "lab", args)
 
@@ -122,9 +128,9 @@ def test_render_refuses_existing_target_without_overwrite(tmp_path: Path, monkey
 
 def test_render_caps_and_shapes_refuse(tmp_path: Path, monkeypatch) -> None:
     _workspace(tmp_path, monkeypatch)
-    many = {"slides": [{"kind": "bullets", "title": f"第{i}张", "bullets": ["一"]} for i in range(65)]}
+    many = {"slides": [{"kind": "bullets", "title": f"第{i}张", "bullets": ["一"]} for i in range(81)]}
     huge = _render(many)
-    assert huge.status == "error" and "超过上限 64" in huge.error
+    assert huge.status == "error" and "超过上限 80" in huge.error
 
     unknown = _render({"slides": [{"kind": "paper", "title": "x"}]})
     assert unknown.status == "error" and "kind 只支持" in unknown.error
@@ -149,7 +155,7 @@ def test_edit_rewrites_shape_text_and_oracle_sees(tmp_path: Path, monkeypatch) -
     result = invoke(
         "company_office_pptx",
         "lab",
-        {
+        {"purpose": "测试写入", 
             "project": PROJECT,
             "action": "edit",
             "path": "deck.pptx",
@@ -177,7 +183,7 @@ def test_edit_refuses_whole_batch_on_bad_target(tmp_path: Path, monkeypatch) -> 
     bad = invoke(
         "company_office_pptx",
         "lab",
-        {
+        {"purpose": "测试写入", 
             "project": PROJECT,
             "action": "edit",
             "path": "deck.pptx",
@@ -199,12 +205,18 @@ def test_edit_input_guards(tmp_path: Path, monkeypatch) -> None:
     assert _render(_deck()).status == "ok"
 
     def _edit(edits, **extra):
-        args = {"project": PROJECT, "action": "edit", "path": "deck.pptx", "edits": edits}
+        args = {
+            "project": PROJECT,
+            "action": "edit",
+            "path": "deck.pptx",
+            "edits": edits,
+            "purpose": "测试写入",
+        }
         args.update(extra)
         return invoke("company_office_pptx", "lab", args)
 
     newline = _edit([{"slide": 1, "shape": 1, "text": "两行\n文本"}])
-    assert newline.status == "error" and "不接受换行" in newline.error
+    assert newline.status == "ok", newline.error
 
     with_content = _edit([{"slide": 1, "shape": 1, "text": "x"}], content={"slides": []})
     assert with_content.status == "error" and "content 只用于 render" in with_content.error
@@ -220,7 +232,7 @@ def test_edit_input_guards(tmp_path: Path, monkeypatch) -> None:
     text_file = invoke(
         "company_office_pptx",
         "lab",
-        {
+        {"purpose": "测试写入", 
             "project": PROJECT,
             "action": "edit",
             "path": "note.txt",
@@ -239,7 +251,7 @@ def test_render_purity_and_edit_purity(tmp_path: Path, monkeypatch) -> None:
     with_content = invoke(
         "company_office_pptx",
         "lab",
-        {
+        {"purpose": "测试写入", 
             "project": PROJECT,
             "action": "edit",
             "path": "deck.pptx",
@@ -316,7 +328,7 @@ def test_preview_bridge_reports_pages_shapes_and_shots(tmp_path: Path, monkeypat
     result = invoke(
         "company_office_pptx",
         "lab",
-        {"project": PROJECT, "action": "preview", "path": "deck.pptx"},
+        {"purpose": "测试写入", "project": PROJECT, "action": "preview", "path": "deck.pptx"},
     )
     assert result.status == "ok", result.error
     payload = result.payload
@@ -331,7 +343,8 @@ def test_preview_bridge_reports_pages_shapes_and_shots(tmp_path: Path, monkeypat
         on_disk = project / shot["path"].split("/", 1)[1]
         raw = on_disk.read_bytes()
         assert raw.startswith(PNG_MAGIC) and shot["bytes"] == len(raw)
-        assert shot["path"] == f"deck01/preview/deck/slide-{shot['page']}.png"
+        assert shot["path"].startswith("deck01/cache/pptx-preview/")
+        assert shot["path"].endswith(f"/slide-{shot['page']}.png")
     detail = payload["shapes_detail"]
     assert detail[0] == {"slide": 1, "shape": 1, "text": "季度演练汇报"}
     assert detail[1] == {"slide": 1, "shape": 2, "text": "数据截至 2026-10-28"}
@@ -349,30 +362,22 @@ def test_preview_replaces_its_own_shots_and_drops_stale(tmp_path: Path, monkeypa
     first = invoke(
         "company_office_pptx",
         "lab",
-        {"project": PROJECT, "action": "preview", "path": "deck.pptx"},
+        {"purpose": "测试写入", "project": PROJECT, "action": "preview", "path": "deck.pptx"},
     )
     assert first.status == "ok", first.error
-    shots_dir = project / "preview" / "deck"
+    shots_dir = project / Path(first.payload["screenshots"][0]["path"]).parent.relative_to(PROJECT)
     assert (shots_dir / "slide-3.png").is_file()
+    (shots_dir / "slide-9.png").write_bytes(b"\x89PNG\r\n\x1a\nstale")
 
-    assert (
-        _render(
-            {"slides": [{"kind": "bullets", "title": "只有一张", "bullets": ["一"]}]},
-            overwrite=True,
-        ).status
-        == "ok"
-    )
-    monkeypatch.setattr(office_pptx, "_run", _happy_runner(project / "deck.pptx"))
     second = invoke(
         "company_office_pptx",
         "lab",
-        {"project": PROJECT, "action": "preview", "path": "deck.pptx"},
+        {"purpose": "测试写入", "project": PROJECT, "action": "preview", "path": "deck.pptx"},
     )
     assert second.status == "ok", second.error
-    assert [shot["page"] for shot in second.payload["screenshots"]] == [1]
+    assert [shot["page"] for shot in second.payload["screenshots"]] == [1, 2, 3]
     assert (shots_dir / "slide-1.png").is_file()
-    for stale in (2, 3):
-        assert not (shots_dir / f"slide-{stale}.png").exists()
+    assert not (shots_dir / "slide-9.png").exists()
 
 
 def test_preview_input_guards_refuse_before_the_bridge(tmp_path: Path, monkeypatch) -> None:
@@ -382,7 +387,12 @@ def test_preview_input_guards_refuse_before_the_bridge(tmp_path: Path, monkeypat
     monkeypatch.delenv(CLI_ENV, raising=False)
 
     def _preview(**extra):
-        args = {"project": PROJECT, "action": "preview", "path": "deck.pptx"}
+        args = {
+            "project": PROJECT,
+            "action": "preview",
+            "path": "deck.pptx",
+            "purpose": "测试写入",
+        }
         args.update(extra)
         return invoke("company_office_pptx", "lab", args)
 
@@ -395,13 +405,13 @@ def test_preview_input_guards_refuse_before_the_bridge(tmp_path: Path, monkeypat
     text_file = invoke(
         "company_office_pptx",
         "lab",
-        {"project": PROJECT, "action": "preview", "path": "note.txt"},
+        {"purpose": "测试写入", "project": PROJECT, "action": "preview", "path": "note.txt"},
     )
     assert text_file.status == "error" and "只支持 .pptx" in text_file.error
     missing = invoke(
         "company_office_pptx",
         "lab",
-        {"project": PROJECT, "action": "preview", "path": "absent.pptx"},
+        {"purpose": "测试写入", "project": PROJECT, "action": "preview", "path": "absent.pptx"},
     )
     assert missing.status == "error" and "not readable" in missing.error
     assert not (project / "preview").exists()
@@ -416,7 +426,7 @@ def test_preview_refuses_without_officecli(tmp_path: Path, monkeypatch) -> None:
     result = invoke(
         "company_office_pptx",
         "lab",
-        {"project": PROJECT, "action": "preview", "path": "deck.pptx"},
+        {"purpose": "测试写入", "project": PROJECT, "action": "preview", "path": "deck.pptx"},
     )
     assert result.status == "error"
     assert "未找到 officecli" in result.error and "不出替身" in result.error
@@ -433,7 +443,7 @@ def test_preview_mismatches_refuse(tmp_path: Path, monkeypatch) -> None:
     pages = invoke(
         "company_office_pptx",
         "lab",
-        {"project": PROJECT, "action": "preview", "path": "deck.pptx"},
+        {"purpose": "测试写入", "project": PROJECT, "action": "preview", "path": "deck.pptx"},
     )
     assert pages.status == "error" and "页数" in pages.error and "不一致" in pages.error
     assert not (project / "preview").exists()
@@ -453,7 +463,7 @@ def test_preview_mismatches_refuse(tmp_path: Path, monkeypatch) -> None:
     shapes = invoke(
         "company_office_pptx",
         "lab",
-        {"project": PROJECT, "action": "preview", "path": "deck.pptx"},
+        {"purpose": "测试写入", "project": PROJECT, "action": "preview", "path": "deck.pptx"},
     )
     assert shapes.status == "error" and "文本框" in shapes.error and "不一致" in shapes.error
 
@@ -461,7 +471,7 @@ def test_preview_mismatches_refuse(tmp_path: Path, monkeypatch) -> None:
     garbage = invoke(
         "company_office_pptx",
         "lab",
-        {"project": PROJECT, "action": "preview", "path": "deck.pptx"},
+        {"purpose": "测试写入", "project": PROJECT, "action": "preview", "path": "deck.pptx"},
     )
     assert garbage.status == "error" and "不是合法 JSON" in garbage.error
 
@@ -469,7 +479,7 @@ def test_preview_mismatches_refuse(tmp_path: Path, monkeypatch) -> None:
     bad_png = invoke(
         "company_office_pptx",
         "lab",
-        {"project": PROJECT, "action": "preview", "path": "deck.pptx"},
+        {"purpose": "测试写入", "project": PROJECT, "action": "preview", "path": "deck.pptx"},
     )
     assert bad_png.status == "error" and "不是合法 PNG" in bad_png.error
 
@@ -482,7 +492,7 @@ def test_preview_slide_cap_refuses_before_the_bridge(tmp_path: Path, monkeypatch
     project = _workspace(tmp_path, monkeypatch)
     _fake_cli(tmp_path, monkeypatch)
     built = []
-    for number in range(1, 66):
+    for number in range(1, 82):
         shape_xmls, texts, _sp = office_pptx._slide_shapes(
             {"kind": "bullets", "title": f"第{number}张", "bullets": ["一"]}, number
         )
@@ -493,9 +503,9 @@ def test_preview_slide_cap_refuses_before_the_bridge(tmp_path: Path, monkeypatch
     big = invoke(
         "company_office_pptx",
         "lab",
-        {"project": PROJECT, "action": "preview", "path": "big.pptx"},
+        {"purpose": "测试写入", "project": PROJECT, "action": "preview", "path": "big.pptx"},
     )
-    assert big.status == "error" and "超过上限 64" in big.error
+    assert big.status == "error" and "超过上限 80" in big.error
     assert not (project / "preview").exists()
 
 
@@ -526,7 +536,7 @@ def test_preview_shapes_cap_refuses_before_the_bridge(tmp_path: Path, monkeypatc
     dense = invoke(
         "company_office_pptx",
         "lab",
-        {"project": PROJECT, "action": "preview", "path": "dense.pptx"},
+        {"purpose": "测试写入", "project": PROJECT, "action": "preview", "path": "dense.pptx"},
     )
     assert dense.status == "error" and "超过枚举上限 200" in dense.error
 
@@ -550,7 +560,7 @@ def test_preview_detail_budget_refuses(tmp_path: Path, monkeypatch) -> None:
     budget = invoke(
         "company_office_pptx",
         "lab",
-        {"project": PROJECT, "action": "preview", "path": "deck.pptx"},
+        {"purpose": "测试写入", "project": PROJECT, "action": "preview", "path": "deck.pptx"},
     )
     assert budget.status == "error" and "回执预算" in budget.error
 
@@ -581,6 +591,6 @@ def test_preview_refuses_a_deck_mutated_mid_run(tmp_path: Path, monkeypatch) -> 
     result = invoke(
         "company_office_pptx",
         "lab",
-        {"project": PROJECT, "action": "preview", "path": "deck.pptx"},
+        {"purpose": "测试写入", "project": PROJECT, "action": "preview", "path": "deck.pptx"},
     )
     assert result.status == "error" and "并发修改" in result.error

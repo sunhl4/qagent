@@ -153,7 +153,7 @@ def test_core_runtime_reads_python_contract_catalog() -> None:
     )
     assert result.returncode == 0, result.stderr
     tools = json.loads(result.stdout)
-    assert len(tools) == 71
+    assert len(tools) == 75
     assert "quantum_algorithm_catalog" in {row["name"] for row in tools}
     assert tools[0]["name"] == "company_capabilities"
     # The lab-filtered catalog follows the preset's visible_tools order, whose
@@ -416,6 +416,10 @@ def test_core_runtime_filters_registered_catalog_by_preset() -> None:
         "company_office_open",
         "company_office_compute",
         "company_office_deliver",
+        "company_office_review_table",
+        "company_office_files",
+        "company_office_fix",
+        "company_office_surface",
         "company_portal_open",
     ]
     sign = _run_node("company-agent", program, preset="sign")

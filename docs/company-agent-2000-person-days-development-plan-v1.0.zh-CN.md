@@ -2,7 +2,7 @@
 
 版本：v1.0；日期：2026-10-26；状态：用于立项、预算和技术评审的条件性基线，不是固定报价或交付承诺。
 
-机器可读分解：[company-agent-2000-person-days-development-plan-v1.0.json](company-agent-2000-person-days-development-plan-v1.0.json)。本计划建立在 [DSH Harness v0.8 对齐设计](company-agent-harness-framework-v0.8.zh-CN.md)、[工程衔接建议](oss-survey/04-工程衔接建议.zh-CN.md)、[开源复核总报告](oss-survey/05-复核总报告.zh-CN.md)和已有 P0/P1/P2 落地记录之上。
+机器可读分解：[company-agent-2000-person-days-development-plan-v1.0.json](company-agent-2000-person-days-development-plan-v1.0.json)。本计划建立在 [DSH Harness v0.8 对齐设计](company-agent-harness-framework-v0.8.zh-CN.md)、[工程衔接建议](oss-survey/04-工程衔接建议.zh-CN.md)、[开源复核总报告](oss-survey/05-复核总报告.zh-CN.md)和已有 P0/P1/P2 落地记录之上。三个面如何一起扩展见 [公司 Super DSH 产品计划](super-dsh-product-plan.zh-CN.md)；该计划不改变这里的人天基线。
 
 ## 一、先给结论
 

@@ -190,7 +190,11 @@
         "company_office_convert",
         "company_office_open",
         "company_office_compute",
-        "company_office_deliver"
+        "company_office_deliver",
+        "company_office_review_table",
+        "company_office_files",
+        "company_office_fix",
+        "company_office_surface"
       ],
       "handles": [],
       "approval": "none",

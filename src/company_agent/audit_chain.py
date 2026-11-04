@@ -182,3 +182,29 @@ def verify() -> dict[str, Any]:
     path = _log_path()
     key = _key()
     return _chain_status(path, key)
+
+
+def export_page() -> str:
+    """One plain-text page for a compliance reader. No new tool."""
+
+    path = _log_path()
+    key = _key()
+    status = _chain_status(path, key)
+    try:
+        entries = _read_entries(path)
+    except AuditChainError:
+        entries = []
+    last_event = "-"
+    root_hmac = "-"
+    if entries:
+        last_event = str(entries[-1].get("event") or "-")[:80]
+        root_hmac = str(entries[0].get("hmac") or "")[:16] or "-"
+    intact = "true" if status["intact"] else "false"
+    lines = [
+        f"lines {status['lines']}",
+        f"intact {intact}",
+        f"first_bad_seq {status['first_bad_seq']}",
+        f"last_event {last_event}",
+        f"root_hmac {root_hmac}",
+    ]
+    return "\n".join(lines) + "\n"

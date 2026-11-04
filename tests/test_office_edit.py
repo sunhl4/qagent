@@ -31,14 +31,14 @@ def _create(project: Path, blocks: list[dict]) -> None:
     result = invoke(
         "company_office_create",
         "lab",
-        {"project": PROJECT, "path": "draft.docx", "content": {"blocks": blocks}},
+        {"project": PROJECT, "path": "draft.docx", "content": {"blocks": blocks}, "purpose": "测试写入"},
     )
     assert result.status == "ok", result.error
     assert (project / "draft.docx").is_file()
 
 
 def _edit(edits: list[dict], **extra):
-    args = {"project": PROJECT, "path": "draft.docx", "edits": edits}
+    args = {"project": PROJECT, "path": "draft.docx", "edits": edits, "purpose": "测试写入"}
     args.update(extra)
     return invoke("company_office_edit", "lab", args)
 
@@ -158,7 +158,8 @@ def test_newline_and_capped_edits_refuse(tmp_path: Path, monkeypatch) -> None:
 def test_counter_non_docx_refuses(tmp_path: Path, monkeypatch) -> None:
     _workspace(tmp_path, monkeypatch)
     invoke(
-        "company_office_create", "lab", {"project": PROJECT, "path": "notes.md", "content": {"text": "x"}}
+        "company_office_create", "lab", {"purpose": "测试写入",
+            "project": PROJECT, "path": "notes.md", "content": {"text": "x"}}
     )
     result = _edit([{"find": "x", "replace": "y"}], path="notes.md")
     assert result.status == "error"
@@ -170,7 +171,7 @@ def test_minimal_spans_properties_hold_randomly() -> None:
 
     rng = random.Random(20261028)
     alphabet = list("公司评审合同条款与工作量甲乙丙丁戊abcXYZ0123,-。、") + ["甲乙丙丁", "工作量"]
-    for _round in range(120):
+    for _round in range(200):
         before = "".join(rng.choice(alphabet) for _step in range(rng.randint(0, 60)))
         after = list(before)
         for _m in range(rng.randint(0, 3)):
@@ -190,6 +191,17 @@ def test_minimal_spans_properties_hold_randomly() -> None:
             assert hi1 <= lo2
 
 
+def test_missing_purpose_is_refused(tmp_path: Path, monkeypatch) -> None:
+    _workspace(tmp_path, monkeypatch)
+    result = invoke(
+        "company_office_edit",
+        "lab",
+        {"project": PROJECT, "path": "draft.docx", "edits": [{"find": "甲", "replace": "乙"}]},
+    )
+    assert result.status == "error"
+    assert "purpose" in (result.error or "")
+
+
 def test_audit_line_written_when_ledger_configured(tmp_path: Path, monkeypatch) -> None:
     project = _workspace(tmp_path, monkeypatch)
     _create(project, [{"kind": "paragraph", "text": "审计锚点内容甲。"}])
@@ -201,4 +213,7 @@ def test_audit_line_written_when_ledger_configured(tmp_path: Path, monkeypatch) 
     import json
 
     entries = [json.loads(line) for line in log.read_text(encoding="utf-8").splitlines() if line.strip()]
-    assert any(entry.get("event") == "office_edit" for entry in entries)
+    matched = [entry for entry in entries if entry.get("event") == "office_edit"]
+    assert matched
+    assert matched[0]["detail"]["purpose"] == "测试写入"
+    assert matched[0]["detail"]["target"].endswith("draft.docx")

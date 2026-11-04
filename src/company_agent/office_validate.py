@@ -37,13 +37,27 @@ MAX_FILE_BYTES = _ingest.MAX_FILE_BYTES
 
 _L_RE = re.compile(r"^L([0-9]{1,9})(?:-L([0-9]{1,9}))?$")
 _P_RE = re.compile(r"^P([0-9]{1,6})$")
-_S_RE = re.compile(r"^S(.{1,64})!([A-Za-z]{1,3})([0-9]{1,7})$")
+_S_RE = re.compile(
+    r"^S(.{1,64})!([A-Za-z]{1,3})([0-9]{1,7})(?::([A-Za-z]{1,3})([0-9]{1,7}))?$"
+)
 
 STATUS_PASSED = "PASSED"
 
 
 class OfficeValidateError(ValueError):
     """Refusal that names the boundary hit without hinting at external paths."""
+
+
+def require_passed(project: str, args: dict) -> list[dict[str, str]]:
+    """Block a formal export unless the caller passed no references or PASSED."""
+
+    refs = args.get("references")
+    if not refs:
+        return []
+    report = validate({"project": project, "references": refs, "sources": args.get("sources") or []})
+    if report["status"] != "PASSED":
+        raise OfficeValidateError("引用未通过闸门:拒绝正式导出")
+    return list(report["citations"])
 
 
 def validate(args: dict) -> dict:
@@ -64,6 +78,7 @@ def validate(args: dict) -> dict:
     fingerprints = _fingerprint_map(project, sources)
 
     issues: list[dict[str, str]] = []
+    citations: list[dict[str, str]] = []
     passed = failed = incomplete = 0
     for number, row in enumerate(refs, start=1):
         try:
@@ -89,6 +104,10 @@ def validate(args: dict) -> dict:
             incomplete += 1
         else:
             passed += 1
+            quote = row.get("quote") if isinstance(row, dict) else ""
+            path = row.get("path") if isinstance(row, dict) else ""
+            if isinstance(quote, str) and isinstance(path, str):
+                citations.append({"id": ref_id, "render": f"@@{path}|{quote[:200]}@@"})
         if state != "passed":
             issues.append({"id": ref_id, "code": code, "detail": detail[:200]})
     status = (
@@ -103,6 +122,7 @@ def validate(args: dict) -> dict:
         "failed": failed,
         "incomplete": incomplete,
         "issues": issues,
+        "citations": citations,
         "trust": "untrusted_reference_data",
     }
 
@@ -152,8 +172,14 @@ def _check(
     if parse is not None:
         if suffix != ".xlsx":
             return ("kind_unsupported", f"{suffix} 不支持 S! 定位:如实 INCOMPLETE", "incomplete")
-        if ":" in line_ref.split("!", 1)[1]:
-            return ("locator_unsupported", "范围定位(S!A1:B2)未接入:如实 INCOMPLETE", "incomplete")
+        if parse.group(4):
+            return _xlsx_range(
+                data,
+                parse.group(1).strip(),
+                parse.group(2) + parse.group(3),
+                parse.group(4) + parse.group(5),
+                normalized_quote,
+            )
         return _xlsx_cell(data, parse.group(1).strip(), parse.group(2) + parse.group(3), normalized_quote)
     page = _P_RE.match(line_ref)
     if page is not None:
@@ -194,8 +220,11 @@ def _single_unit(data: bytes, suffix: str, number: int, quote: str) -> tuple[str
         return ("kind_unsupported", f"{suffix} 不支持 L 定位:如实 INCOMPLETE", "incomplete")
     if number < 1 or number > len(units):
         return ("locator_out_of_range", f"L{number} 超出 {len(units)} 单元上限", "failed")
-    if quote not in _norm(units[number - 1]):
+    verdict = _quote_hits(_norm(units[number - 1]), quote)
+    if verdict == "quote_mismatch":
         return ("quote_mismatch", "L 锚点处的可见文本与引文不符", "failed")
+    if verdict == "ambiguous":
+        return ("ambiguous", "citation text is ambiguous in document", "failed")
     return ("", "", "passed")
 
 
@@ -216,8 +245,11 @@ def _range_quote(
     if last > len(units) or first < 1:
         return ("locator_out_of_range", f"L{first}-L{last} 超出 {len(units)} 单元上限", "failed")
     haystack = _norm("".join(units[first - 1 : last]))
-    if quote not in haystack:
+    verdict = _quote_hits(haystack, quote)
+    if verdict == "quote_mismatch":
         return ("quote_mismatch", "L 区间内未找到引文", "failed")
+    if verdict == "ambiguous":
+        return ("ambiguous", "citation text is ambiguous in document", "failed")
     return ("", "", "passed")
 
 
@@ -239,9 +271,7 @@ def _pdf_quote(data: bytes, number: int, quote: str) -> tuple[str, str, str]:
         page_text = reader.pages[number - 1].extract_text() or ""
     except Exception:  # noqa: BLE001 -- report honestly
         page_text = ""
-    if quote not in _norm(page_text):
-        return ("quote_mismatch", "P 锚点页的文本层与引文不符", "failed")
-    return ("", "", "passed")
+    return _judge(page_text, quote, "P 锚点页的文本层与引文不符")
 
 
 def _xlsx_cell(data: bytes, sheet: str, address: str, quote: str) -> tuple[str, str, str]:
@@ -284,10 +314,62 @@ def _xlsx_cell(data: bytes, sheet: str, address: str, quote: str) -> tuple[str, 
                 col_cursor += 1
             if col_cursor == col:
                 value = _ingest._xlsx_cell_value(cell, _shared)
-                if quote in _norm(str(value)):
-                    return ("", "", "passed")
-                return ("quote_mismatch", "S! 单元格内容与引文不符", "failed")
+                return _judge(str(value), quote, "S! 单元格内容与引文不符")
     return ("quote_mismatch", "S! 单元格不存在或为空", "failed")
+
+
+def _xlsx_range(
+    data: bytes, sheet: str, start: str, end: str, quote: str
+) -> tuple[str, str, str]:
+    try:
+        package, shared, entries = _ingest._xlsx_book(data)
+    except (_ingest.OfficeIngestError, ET.ParseError, zipfile.BadZipFile):
+        return ("file_unreadable", "xlsx 数据包损坏或缺实体,拒绝判读", "failed")
+    try:
+        raw_target = next(path for _count, name, path in entries if name == sheet)
+    except StopIteration:
+        return ("locator_out_of_range", f"工作表 {sheet[:32]!r} 不存在", "failed")
+    clean = raw_target.lstrip("/")
+    if not clean.startswith("xl/"):
+        clean = "xl/" + clean
+    try:
+        xml_root = ET.fromstring(package.read(clean))
+    except (KeyError, ET.ParseError):
+        return ("file_unreadable", "工作表定义无法解析", "failed")
+    start_match = re.fullmatch(r"([A-Za-z]{1,3})([0-9]{1,7})", start)
+    end_match = re.fullmatch(r"([A-Za-z]{1,3})([0-9]{1,7})", end)
+    if start_match is None or end_match is None:
+        return ("locator_unparsable", "范围地址无法解析", "failed")
+    c1, r1 = _column_index(start_match.group(1).upper()), int(start_match.group(2))
+    c2, r2 = _column_index(end_match.group(1).upper()), int(end_match.group(2))
+    if c2 < c1 or r2 < r1:
+        return ("locator_unparsable", "范围右下角在左上角之前", "failed")
+    values: list[str] = []
+    for position, row in enumerate(xml_root.iter(f"{_MAIN_NS}row"), start=1):
+        attr = row.get("r") or ""
+        row_number = int(attr) if attr.isascii() and attr.isdigit() else position
+        if not r1 <= row_number <= r2:
+            continue
+        col_cursor = 0
+        for cell in row:
+            reference = cell.get("r") or ""
+            if reference:
+                prefix = re.match(r"([A-Za-z]+)", reference)
+                col_cursor = _column_index(prefix.group(1).upper()) if prefix else col_cursor + 1
+            else:
+                col_cursor += 1
+            if c1 <= col_cursor <= c2:
+                values.append(_ingest._xlsx_cell_value(cell, shared))
+    return _judge("".join(values), quote, "S! 范围内容与引文不符")
+
+
+def _judge(haystack: str, quote: str, mismatch: str) -> tuple[str, str, str]:
+    verdict = _quote_hits(_norm(haystack), quote)
+    if verdict == "passed":
+        return ("", "", "passed")
+    if verdict == "ambiguous":
+        return ("ambiguous", "citation text is ambiguous in document", "failed")
+    return ("quote_mismatch", mismatch, "failed")
 
 
 def _column_index(letters: str) -> int:
@@ -328,8 +410,38 @@ def _path(value: object) -> str:
 
 
 def _norm(text: str) -> str:
-    folded = unicodedata.normalize("NFKC", text).casefold()
+    folded = unicodedata.normalize("NFKC", text).translate(_PUNCT).casefold()
     return re.sub(r"\s+", "", folded)
+
+
+_PUNCT = str.maketrans(
+    {
+        "，": ",",
+        "。": ".",
+        "：": ":",
+        "；": ";",
+        "（": "(",
+        "）": ")",
+        "“": '"',
+        "”": '"',
+        "‘": "'",
+        "’": "'",
+        "、": ",",
+        "！": "!",
+        "？": "?",
+    }
+)
+
+
+def _quote_hits(haystack: str, quote: str) -> str:
+    """Return passed, quote_mismatch, or ambiguous. Two hits never pick the first."""
+
+    count = haystack.count(quote) if quote else 0
+    if count == 0:
+        return "quote_mismatch"
+    if count > 1:
+        return "ambiguous"
+    return "passed"
 
 
 def _read_bounded(root, relative: str) -> bytes:

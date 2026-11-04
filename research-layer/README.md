@@ -1,23 +1,23 @@
 # DeepSeekHarness 企业级自主研发与自动科研平台
 
-本工程是根据本次对话中的图片、需求和公开网络/GitHub 调研重新建立的独立研究与实施工程。
+本目录是公司 Super DSH 的平台时钟。DeepSeek Harness（简称 DSH）仍是全公司唯一的 Agent 运行时；实验、租约、预算和证据在这里维护，工单和工具执行留在仓库根目录。
 
-本工程**不依赖当前其他工作区的既有资料**。目标是以 DeepSeek Harness（简称 DSH）作为公司统一的 Agent Harness，也就是统一的智能体运行框架，在其上开发公司自己的 Agent、插件、工作流和多租户服务。
+## 在全公司 Super DSH 中的位置
 
-## 与另一台电脑上 harness-core 的关系
+本目录是同一仓库里的平台时钟，不再是看不见对方代码的平行仓库。公司运行时、云、HPC、模型和工具包在仓库根目录；实验、租约、预算和证据留在这里。两边通过根目录的 Super DSH 控制面接缝，不通过互相覆盖 `contracts/`、`docs/` 或 `packages/`。
 
-公司已在另一台电脑上开发 DSH 工程，并已接入云平台、本地 HPC 和本地模型。本工程与之**平行开发，通过契约合并，不重复实现**。
+架构说明：[`../docs/super-dsh-architecture.zh-CN.md`](../docs/super-dsh-architecture.zh-CN.md)。
 
 ```text
-harness-core（对方）
-  DSH 运行时、云平台、本地 HPC、本地模型、身份、存储、凭据
-        │ 实现端口
-        ▼
-@company/dsh-contracts（唯一共享契约）
-        ▲ 消费端口
+控制面（仓库根目录 Super DSH）
+  Source → Trigger → Eval → Mandate → Ticket → Assignment
+        ▲
+        │ 只投递 research 触发，默认不开工单
+平台时钟（本目录）
+  实验、租约、预算、证据
         │
-research-platform（本工程）
-  目标、任务、实验、证据、策略、审批、预算、领域工作流、报告、前端
+执行面（仓库根目录）
+  一个 DSH 会话 + 公司工具包
 ```
 
 本工程明确不做：
@@ -131,16 +131,16 @@ PostgreSQL + 对象存储 + MLflow/DVC
 - CodeQL/Semgrep/Trivy/Syft：安全与供应链
 - OpenTelemetry：跨 DSH、工作流、资源和前端的统一观测
 
-## 双工程分工
+## 与仓库根目录的分工
 
-公司已在另一台电脑开发 `harness-core`，包含 DSH 接入、云平台、本地 HPC、本地模型、身份、存储与凭据。本工程是 `research-layer`，只做研究层，不重复基础设施。
+根目录是执行面：DSH、云、HPC、模型和公司工具。本目录是平台时钟：实验、文献、复现、租约、预算和证据。产品顺序见仓库根目录 `docs/super-dsh-product-plan.zh-CN.md`。
 
 ```text
-harness-core：能不能跑、在哪里跑、用哪个模型、谁能访问
+仓库根目录：能不能跑、在哪里跑、用哪个模型、谁能访问
 research-layer：做什么研究、怎么验证、保留还是撤销、下一步做什么
 ```
 
-两侧只通过 `contracts/` 的 9 个端口集成，契约版本 `0.1.0`。本工程可在只有桩的情况下独立编译、测试和运行；合并时替换端口实现即可，不改业务代码。
+本目录的 9 个端口仍是研究层契约，版本 `0.1.0`，不并入根目录 `contracts/`。默认装配使用 `adapters/stub/`。`adapters/company-agent/` 是可选的 `ComputePort` 翻译层，保持 `degraded`，不替换默认桩。
 
 详见 `docs/12_双轨开发与合并策略.md`、`docs/13_集成边界与不重复清单.md` 与 `contracts/README.md`。
 
@@ -202,7 +202,7 @@ research-layer：做什么研究、怎么验证、保留还是撤销、下一步
 6. 以 `docs/06_资源编排、超算与模型部署.md` 接入计算资源和模型。
 7. 以 `docs/07_多租户、安全与治理.md` 完成生产化前的安全边界。
 8. 通过 `docs/08_实施路线图与验收指标.md` 分阶段交付。
-9. 在与 harness-core 联调前读 `docs/12_双轨开发与合并策略.md` 与 `docs/13_集成边界与不重复清单.md`。
+9. 接公司执行面前读 `docs/12_双轨开发与合并策略.md`、`docs/13_集成边界与不重复清单.md` 和仓库根目录 `docs/super-dsh-product-plan.zh-CN.md`。
 10. 写代码前读 `docs/14_代码结构与开发指南.md`。
 
 ## 关键原则
@@ -244,10 +244,10 @@ research-layer：做什么研究、怎么验证、保留还是撤销、下一步
 make check
 ```
 
-当前不具备（需要 harness-core 或公司基础设施提供）：
+当前不具备（真实资源仍等待 Owner，不用本目录另写一套）：
 
 - 真实 DSH 版本锁定。
-- 真实云、HPC、模型适配器。
+- 已通过一致性、且不再标记 `degraded` 的云、HPC、模型翻译。
 - 真实身份、存储、凭据服务。
 - 生产部署脚本与压测报告。
 

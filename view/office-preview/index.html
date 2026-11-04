@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <title>Office preview</title>
+  <style>
+    body { font-family: sans-serif; margin: 1.5rem; }
+    table { border-collapse: collapse; }
+    td, th { border: 1px solid #ccc; padding: 0.25rem 0.5rem; }
+    img { max-width: 100%; }
+  </style>
+</head>
+<body>
+  <p>This page only renders a tool receipt. It does not call a model.</p>
+  <textarea id="receipt" rows="8" cols="80" placeholder="Paste a company_office_* JSON receipt"></textarea>
+  <p><button id="render" type="button">Render</button></p>
+  <div id="out"></div>
+  <script>
+    document.getElementById("render").addEventListener("click", () => {
+      const out = document.getElementById("out");
+      out.replaceChildren();
+      let data;
+      try { data = JSON.parse(document.getElementById("receipt").value); }
+      catch (error) { out.textContent = "receipt is not JSON"; return; }
+      if (Array.isArray(data.screenshots)) {
+        for (const shot of data.screenshots) {
+          const img = document.createElement("img");
+          img.alt = "slide " + shot.page;
+          img.src = shot.path;
+          out.append(img);
+        }
+      }
+      if (data.preview && Array.isArray(data.preview.rows)) {
+        const table = document.createElement("table");
+        if (Array.isArray(data.preview.widths_px)) {
+          const cols = document.createElement("colgroup");
+          for (const width of data.preview.widths_px) {
+            const col = document.createElement("col");
+            if (width) col.style.width = width + "px";
+            cols.append(col);
+          }
+          table.append(cols);
+        }
+        for (const row of data.preview.rows) {
+          const tr = document.createElement("tr");
+          if (row.height_px) tr.style.height = row.height_px + "px";
+          for (const cell of row.cells || []) {
+            const td = document.createElement("td");
+            td.textContent = cell.v || "";
+            if (cell.bold) td.style.fontWeight = "bold";
+            if (/^[0-9A-Fa-f]{6,8}$/.test(cell.color || "")) td.style.color = "#" + cell.color.slice(-6);
+            if (/^[0-9A-Fa-f]{6,8}$/.test(cell.fill || "")) td.style.background = "#" + cell.fill.slice(-6);
+            if (cell.align) td.style.textAlign = cell.align;
+            if (cell.wrap) td.style.whiteSpace = "pre-wrap";
+            if (cell.rs > 1) td.rowSpan = cell.rs;
+            if (cell.cs > 1) td.colSpan = cell.cs;
+            tr.append(td);
+          }
+          table.append(tr);
+        }
+        out.append(table);
+      }
+      if (Array.isArray(data.revisions)) {
+        const list = document.createElement("ul");
+        for (const row of data.revisions) {
+          if (row.folded) continue;
+          const item = document.createElement("li");
+          item.textContent = row.author + " " + row.kind + " " + row.text;
+          item.style.color = row.color || "inherit";
+          list.append(item);
+        }
+        out.append(list);
+      }
+      if (data.kind === "timeline" && Array.isArray(data.events)) {
+        out.append(matterList(data.events, "title"));
+      }
+      if (data.kind === "chronology" && Array.isArray(data.entries)) {
+        out.append(matterList(data.entries, "fact"));
+      }
+      if (data.kind === "matter" && Array.isArray(data.items)) {
+        const list = document.createElement("ul");
+        for (const item of data.items) {
+          const line = document.createElement("li");
+          line.textContent = (item.label ? item.label + " " : "") + (item.text || "");
+          list.append(line);
+        }
+        out.append(list);
+      }
+      if (Array.isArray(data.hunks)) {
+        const list = document.createElement("ul");
+        for (const hunk of data.hunks) {
+          const item = document.createElement("li");
+          const before = (hunk.before || []).join(" / ");
+          const after = (hunk.after || []).join(" / ");
+          item.textContent = hunk.kind + " " + before + " -> " + after;
+          list.append(item);
+        }
+        out.append(list);
+      }
+      if (data.mode) {
+        const line = document.createElement("p");
+        line.textContent = "mode " + data.mode + (data.path ? " " + data.path : "");
+        out.append(line);
+      }
+      if (typeof data.svg === "string" && data.svg.startsWith("<svg")) {
+        const parsed = new DOMParser().parseFromString(data.svg, "image/svg+xml");
+        const node = parsed.documentElement;
+        if (node && node.tagName.toLowerCase() === "svg" && !parsed.querySelector("parsererror")) {
+          out.append(document.importNode(node, true));
+        }
+      }
+      if (typeof data.note === "string") {
+        const line = document.createElement("p");
+        line.textContent = data.note;
+        out.append(line);
+      }
+      if (data.kind === "pdf" && Array.isArray(data.items)) {
+        for (const item of data.items) {
+          const line = document.createElement("p");
+          line.textContent = (item.label || ("P" + item.index)) + " " + (item.text || "");
+          out.append(line);
+        }
+      }
+      if (typeof data.svg_path === "string") {
+        const line = document.createElement("p");
+        line.textContent = "chart " + data.svg_path;
+        out.append(line);
+      }
+      if (typeof data.fence === "string") {
+        const block = document.createElement("pre");
+        block.textContent = data.fence;
+        out.append(block);
+      }
+      if (Array.isArray(data.citations)) {
+        const list = document.createElement("ul");
+        for (const row of data.citations) {
+          const item = document.createElement("li");
+          item.textContent = row.render;
+          list.append(item);
+        }
+        out.append(list);
+      }
+      if (typeof data.path === "string" && data.path) {
+        const cite = document.createElement("p");
+        cite.textContent = "@@" + data.path + "@@";
+        const explorer = document.createElement("p");
+        explorer.textContent = data.path;
+        const opener = document.createElement("p");
+        opener.textContent = "company_office_open " + data.path;
+        out.append(cite, explorer, opener);
+      }
+    });
+    function matterList(rows, titleKey) {
+      const list = document.createElement("ul");
+      for (const row of rows) {
+        const item = document.createElement("li");
+        const missing = !row.evidence || (Array.isArray(row.evidence) && !row.evidence.length);
+        const date = row.display_date || row.date || "";
+        const title = row[titleKey] || "";
+        item.textContent = date + " " + title + (missing ? " 待补出处" : "");
+        list.append(item);
+      }
+      return list;
+    }
+  </script>
+</body>
+</html>

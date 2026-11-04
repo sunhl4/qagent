@@ -276,7 +276,14 @@ def write_table(
 
 
 def emit_chart(spec: object, overwrite: bool = False) -> dict[str, object]:
-    receipt = office_chart.chart({"project": _PROJECT, "spec": spec, "overwrite": bool(overwrite)})
+    receipt = office_chart.chart(
+        {
+            "project": _PROJECT,
+            "spec": spec,
+            "overwrite": bool(overwrite),
+            "purpose": "沙箱出图",
+        }
+    )
     _accounted(2)
     _charts.append(str(receipt["json_path"]))
     return {"path": receipt["json_path"], "svg": receipt["svg_path"], "chart_id": receipt["chart_id"]}

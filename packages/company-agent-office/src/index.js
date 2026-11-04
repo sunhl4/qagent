@@ -11,10 +11,10 @@ export function apply(ctx) {
   // companion read-only format audit (baseline GB/T 9704 draft vs imported
   // describe), the §4.5 pptx slice (structured-layout render + in-place
   // shape text rewrite with a read-back B5 gate), and the L6/L7 exit:
-  // local soffice conversion (docx->pdf, doc->docx) plus the Windows
-  // open-in-WPS desktop handoff. The preset catalog filter decides visibility (boot/lab/algo
-  // see it, sign does not). Every call resolves the bounded workspace the
-  // core runtime forwards and fails closed outside it; every part is
+  // local soffice conversion, open-in-WPS, pptx preview, review tables,
+  // reversible file moves, format fix and the revision surface.
+  // The preset catalog filter decides visibility (boot/lab/algo see it, sign does not).
+  // Every call resolves the bounded workspace the core runtime forwards and fails closed outside it.
   // standard-library work over the mounted workspace, so no ask gate applies
   // (writes carry their audit line).
   registerCapabilityTools(ctx, ["company.office"]);

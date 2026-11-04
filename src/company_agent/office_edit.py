@@ -24,21 +24,29 @@ WPS-SUITE-PORTING L4 / §4.2: the hard rules implemented here 1:1 —
   re-opened from disk and the w:ins/w:del count plus every changed
   paragraph's replayed visible text are re-verified before success;
 - a batch that would produce zero tracked changes refuses before writing
-  (B5 empty-revision gate): empty revision records are never exported.
+  (B5 empty-revision gate): empty revision records are never exported;
+- ``files`` prechecks every document before the first write. Ambiguity or a
+  hard limit fails the whole batch with zero writes. A missing anchor is not
+  an error. A QA failure restores the live file and leaves a degraded copy.
 """
 from __future__ import annotations
 
+import contextlib
 import copy
 import datetime
 import difflib
 import hashlib
 import io
+import json
+import os
+import stat
 import xml.etree.ElementTree as ET
 import zipfile
+from pathlib import Path
 
 from company_agent import office_create as _oc
 from company_agent import office_ingest as _ingest
-from company_agent import workspace_files
+from company_agent import office_purpose, workspace_files
 
 _W_NS = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
 _W = f"{{{_W_NS}}}"
@@ -51,6 +59,7 @@ MAX_FIND_CHARS = 4_000
 MAX_REPLACE_CHARS = 4_000
 MAX_FILE_BYTES = _ingest.MAX_FILE_BYTES
 MAX_SKIPPED = 128
+MAX_BATCH_FILES = 16
 DEFAULT_AUTHOR = "company-agent"
 
 _SKIP_NO_CHANGE = "no_change"
@@ -66,53 +75,92 @@ class OfficeEditError(ValueError):
 
 
 def edit(args: dict) -> dict:
-    """Contract entry point: surgical tracked edits on one existing .docx."""
+    """Contract entry point: surgical tracked edits on one or more .docx files."""
 
     root = workspace_files.root()
+    stamped = {**args, "purpose": office_purpose.take(args)}
+    if stamped.get("files") is not None:
+        return _edit_files(root, stamped)
+    return _commit(root, _prepare(root, stamped))
+
+
+def _prepare(root, args: dict) -> dict:
     compound = _compound(args)
     _docx_gate(compound)
     data = _ingest._read_bounded(root, compound)
-
     edits, author, note = _edits_and_meta(args)
     root_el = _parse_document(data)
     paragraphs = list(root_el.iter(f"{_W}p"))
-    visible = [_paragraph_text(p) for p in paragraphs]
-    eligible = {index: _plain_paragraph(p) for index, p in enumerate(paragraphs)}
-
+    visible = [_paragraph_text(paragraph) for paragraph in paragraphs]
+    eligible = {index: _plain_paragraph(paragraph) for index, paragraph in enumerate(paragraphs)}
     plans, skipped = _plan_spans(edits, visible, eligible)
-    after_by_index = {
-        index: _replay(visible[index], row) for index, row in plans.items()
+    after = {index: _replay(visible[index], row) for index, row in plans.items()}
+    return {
+        "compound": compound,
+        "data": data,
+        "edits": edits,
+        "author": author,
+        "note": note,
+        "root_el": root_el,
+        "paragraphs": paragraphs,
+        "plans": plans,
+        "skipped": skipped,
+        "after": after,
+        "purpose": str(args.get("purpose") or ""),
     }
 
-    base_counts = _revision_counts(document_xml_bytes(data))
-    if not plans:
-        raise OfficeEditError(
-            "修订记录为空:没有可落盘的实际差异;拒绝写回(B5 空修订闸门)"
-        )
-    for index in sorted(plans):
-        _apply_paragraph_changes(paragraphs[index], plans[index], author)
-    planned = sum(len(row) for row in plans.values())
 
-    document_xml = _serialize(root_el)
+def _commit(root, prepared: dict) -> dict:
+    compound = prepared["compound"]
+    data = prepared["data"]
+    plans = prepared["plans"]
+    skipped = prepared["skipped"]
+    author = prepared["author"]
+    if not plans:
+        raise OfficeEditError("修订记录为空:没有可落盘的实际差异;拒绝写回(B5 空修订闸门)")
+    for index in sorted(plans):
+        _apply_paragraph_changes(prepared["paragraphs"][index], plans[index], author)
+    _repair_tracked_format(prepared["root_el"])
+    document_xml = _serialize(prepared["root_el"])
     new_data = _repackage(data, document_xml)
     if len(new_data) > MAX_FILE_BYTES:
         raise OfficeEditError("修订后的文件超过 20MB 上限:拒绝写回,请拆分编辑批次")
-
     existed, target = _oc._resolve_target(root, compound, True)
+    if target.exists() and not os.access(target, os.W_OK):
+        os.chmod(target, stat.S_IWRITE | stat.S_IREAD)
+    planned = sum(len(row) for row in plans.values())
     _oc._write_atomic(target, new_data, existed)
-    _oc._verify_written(target, new_data)
-    on_disk = target.read_bytes()
-    disk_counts = _revision_counts(document_xml_bytes(on_disk))
-    if disk_counts < base_counts + planned:
-        raise OfficeEditError(
-            f"B5 读回复核失败:磁盘修订元素 {disk_counts} 少于计划下界 {base_counts + planned};拒绝回报成功"
-        )
-    fallible = _read_back_replay(document_xml_bytes(on_disk), after_by_index)
-    if fallible:
-        raise OfficeEditError(
-            f"B5 读回复核失败:{fallible} 个改写段落的可见文本回放不符;拒绝回报成功"
-        )
-    _audit(author, note, compound, len(plans), planned, skipped)
+    try:
+        _oc._verify_written(target, new_data)
+        on_disk = target.read_bytes()
+        base_counts = _revision_counts(document_xml_bytes(data))
+        disk_counts = _revision_counts(document_xml_bytes(on_disk))
+        if disk_counts < base_counts + planned:
+            raise OfficeEditError(
+                "B5 读回复核失败:"
+                f"磁盘修订元素 {disk_counts} 少于计划下界 {base_counts + planned};拒绝回报成功"
+            )
+        fallible = _read_back_replay(document_xml_bytes(on_disk), prepared["after"])
+        if fallible:
+            raise OfficeEditError(
+                f"B5 读回复核失败:{fallible} 个改写段落的可见文本回放不符;拒绝回报成功"
+            )
+        qa = _qa_tracked(document_xml_bytes(on_disk))
+        if qa:
+            raise OfficeEditError(f"degraded:{qa}:红线未落盘;副本仅供对照,不能当修订稿交付")
+    except OfficeEditError as exc:
+        if target.is_file() and target.read_bytes() != data:
+            _restore(target, data)
+        if str(exc).startswith("degraded:"):
+            with contextlib.suppress(OSError, _oc.OfficeCreateError):
+                _write_degraded(root, compound, new_data)
+        raise
+    except Exception:
+        if target.is_file() and target.read_bytes() != data:
+            _restore(target, data)
+        raise
+    _audit(author, prepared["note"], compound, len(plans), planned, skipped, prepared["purpose"])
+    _write_manifest(root, compound, prepared, planned)
     return {
         "edited": len(plans),
         "hunks": planned,
@@ -121,6 +169,107 @@ def edit(args: dict) -> dict:
         "bytes": len(new_data),
         "sha256": hashlib.sha256(new_data).hexdigest(),
     }
+
+
+def _edit_files(root, args: dict) -> dict:
+    """Precheck every file, then write. Any ambiguity rolls nothing forward."""
+
+    project = args.get("project")
+    files = args.get("files")
+    if not isinstance(project, str) or not project.strip() or project != project.strip():
+        raise OfficeEditError("project is invalid")
+    if not isinstance(files, list) or not files or len(files) > MAX_BATCH_FILES:
+        raise OfficeEditError(f"files 必须是 1..{MAX_BATCH_FILES} 个文件")
+    author = args.get("author", DEFAULT_AUTHOR)
+    note = args.get("note")
+    prepared_rows: list[dict] = []
+    for item in files:
+        if not isinstance(item, dict):
+            raise OfficeEditError("files 条目必须是对象")
+        extra = set(item) - {"path", "edits"}
+        if extra:
+            raise OfficeEditError(f"files 条目含未知字段 {sorted(extra)[0]},拒绝")
+        one = {
+            "project": project,
+            "path": item.get("path"),
+            "edits": item.get("edits"),
+            "author": author,
+            "purpose": args.get("purpose"),
+        }
+        if note is not None:
+            one["note"] = note
+        try:
+            row = _prepare(root, one)
+        except OfficeEditError as exc:
+            raise OfficeEditError(f"跨文件预检失败:{exc};整批零写入") from exc
+        for skip in row["skipped"]:
+            if str(skip["reason"]).startswith(_SKIP_MULTI_PREFIX):
+                raise OfficeEditError(
+                    "跨文件预检失败:歧义 "
+                    + skip["reason"]
+                    + ";整批零写入。确为统一替换请对该条显式传 occurrences:'all' 后整批重来"
+                )
+        prepared_rows.append(row)
+    if not any(row["plans"] for row in prepared_rows):
+        raise OfficeEditError("修订记录为空:没有可落盘的实际差异;拒绝写回(B5 空修订闸门)")
+    written: list[tuple[Path, bytes]] = []
+    receipts: list[dict] = []
+    try:
+        for row in prepared_rows:
+            if not row["plans"]:
+                continue
+            receipts.append(_commit(root, row))
+            written.append((workspace_files.resolve(root, row["compound"]), row["data"]))
+    except Exception:
+        for target, original in reversed(written):
+            _restore(target, original)
+        raise
+    first = receipts[0]
+    skipped = [item for row in prepared_rows for item in row["skipped"]]
+    return {
+        "edited": sum(item["edited"] for item in receipts),
+        "hunks": sum(item["hunks"] for item in receipts),
+        "skipped": skipped[:MAX_SKIPPED],
+        "path": first["path"],
+        "bytes": first["bytes"],
+        "sha256": first["sha256"],
+    }
+
+
+def _restore(target: Path, data: bytes) -> None:
+    if target.exists() and not os.access(target, os.W_OK):
+        os.chmod(target, stat.S_IWRITE | stat.S_IREAD)
+    _oc._write_atomic(target, data, True)
+    _oc._verify_written(target, data)
+
+
+def _write_degraded(root, compound: str, data: bytes) -> None:
+    project = compound.split("/", 1)[0]
+    relative = f"{project}/cache/redline-degraded/{Path(compound).name}"
+    existed, target = _oc._resolve_target(root, relative, True)
+    _oc._write_atomic(target, data, existed)
+
+
+def _write_manifest(root, compound: str, prepared: dict, planned: int) -> None:
+    project = compound.split("/", 1)[0]
+    relative = f"{project}/cache/redline-manifests/{Path(compound).name}.redline-manifest.json"
+    ambiguous = [
+        row["reason"]
+        for row in prepared["skipped"]
+        if str(row["reason"]).startswith(_SKIP_MULTI_PREFIX)
+    ]
+    body = {
+        "applied": len(prepared["plans"]),
+        "attempted": len(prepared["edits"]),
+        "ambiguous": ambiguous,
+        "lastError": "",
+        "applyStatus": "tracked",
+        "openWord": False,
+        "hunks": planned,
+    }
+    raw = (json.dumps(body, ensure_ascii=False, sort_keys=True) + "\n").encode("utf-8")
+    existed, target = _oc._resolve_target(root, relative, True)
+    _oc._write_atomic(target, raw, existed)
 
 
 # ---------------------------------------------------------------- planning
@@ -436,6 +585,40 @@ def _insert_only(
 # ---------------------------------------------------------------- packaging
 
 
+def _repair_tracked_format(root_el: ET.Element) -> None:
+    """Copy font, size and bold from the nearest plain run onto revision runs."""
+
+    for paragraph in root_el.iter(f"{_W}p"):
+        donor = None
+        for child in list(paragraph):
+            if child.tag != f"{_W}r":
+                continue
+            found = child.find(f"{_W}rPr")
+            if found is not None:
+                donor = found
+                break
+        if donor is None:
+            continue
+        marks = list(paragraph.iter(f"{_W}ins")) + list(paragraph.iter(f"{_W}del"))
+        for mark in marks:
+            for run in mark.iter(f"{_W}r"):
+                current = run.find(f"{_W}rPr")
+                if current is None:
+                    run.insert(0, copy.deepcopy(donor))
+                    continue
+                for tag in ("rFonts", "sz", "b"):
+                    want = donor.find(f"{_W}{tag}")
+                    if want is None:
+                        continue
+                    have = current.find(f"{_W}{tag}")
+                    if have is None:
+                        current.append(copy.deepcopy(want))
+                        continue
+                    if have.get(f"{_W}val") != want.get(f"{_W}val"):
+                        current.remove(have)
+                        current.append(copy.deepcopy(want))
+
+
 def _serialize(root_el: ET.Element) -> bytes:
     return b'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' + ET.tostring(
         root_el, encoding="utf-8", short_empty_elements=True
@@ -528,7 +711,8 @@ def _edits_and_meta(args: dict) -> tuple[list[tuple[str, str, bool]], str, str |
     note = args.get("note")
     if note is not None and (not isinstance(note, str) or not note.strip() or len(note) > 120):
         raise OfficeEditError("note 必须是 1..120 字符")
-    extra = {k: v for k, v in args.items() if k not in {"project", "path", "edits", "author", "note"}}
+    allowed = {"project", "path", "edits", "author", "note", "purpose"}
+    extra = {k: v for k, v in args.items() if k not in allowed}
     if extra:
         raise OfficeEditError(f"未知字段 {sorted(extra)[0]},拒绝")
     return edits, author, note
@@ -541,22 +725,53 @@ def _audit(
     edited: int,
     hunks: int,
     skipped: list[dict[str, str]],
+    purpose: str,
 ) -> None:
     """Best-effort ledger line; an unconfigured ledger skips the line by design."""
 
-    try:
-        from company_agent import audit_chain  # noqa: PLC0415 -- optional ledger
+    office_purpose.audit(
+        "office_edit",
+        purpose,
+        {
+            "actor": author,
+            "target": compound,
+            "note": note or "",
+            "edited": edited,
+            "hunks": hunks,
+            "skipped": len(skipped),
+        },
+    )
 
-        audit_chain.append(
-            "office_edit",
-            {
-                "actor": author,
-                "target": compound,
-                "note": note or "",
-                "edited": edited,
-                "hunks": hunks,
-                "skipped": len(skipped),
-            },
+
+def _qa_tracked(xml: bytes) -> str | None:
+    """B5 pair and format checks. None means the tracked package may be delivered."""
+
+    if b"w:ins" not in xml and b"w:del" not in xml:
+        return "xml_qa_no_tracks"
+    try:
+        root = ET.fromstring(xml)
+    except ET.ParseError:
+        return "xml_qa_no_tracks"
+    for paragraph in root.iter(f"{_W}p"):
+        deleted = "".join(node.text or "" for node in paragraph.iter(f"{_W}delText"))
+        inserted = "".join(
+            node.text or "" for parent in paragraph.iter(f"{_W}ins") for node in parent.iter(f"{_W}t")
         )
-    except Exception:  # noqa: BLE001 -- documented best-effort boundary
-        return
+        if len(deleted) >= 12 and len(inserted) >= 12:
+            matcher = difflib.SequenceMatcher(None, deleted, inserted, autojunk=False)
+            if matcher.ratio() >= 0.6 and any(block.size >= 8 for block in matcher.get_matching_blocks()):
+                return "xml_qa_non_minimal_edits"
+        for mark in list(paragraph.iter(f"{_W}ins")) + list(paragraph.iter(f"{_W}del")):
+            marked = mark.find(f".//{_W}sz")
+            sibling = None
+            for child in list(paragraph):
+                if child.tag == f"{_W}r":
+                    sibling = child.find(f"{_W}rPr/{_W}sz")
+                    break
+            if (
+                marked is not None
+                and sibling is not None
+                and marked.get(f"{_W}val") != sibling.get(f"{_W}val")
+            ):
+                return "xml_qa_format_mismatch"
+    return None

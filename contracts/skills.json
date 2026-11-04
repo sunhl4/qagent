@@ -44,6 +44,27 @@
       ]
     },
     {
+      "name": "company-office-matter",
+      "path": "skills/company-office-matter/SKILL.md",
+      "sha256": "72b3e77c0587dbb545e8c84aab1d84a9830edbedbc542875fc2a720a63cb06fd",
+      "scripts": [],
+      "revoked": false,
+      "when": [
+        {
+          "profiles": [
+            "company-agent",
+            "company-agent-minimal"
+          ],
+          "presets": [
+            "boot",
+            "lab",
+            "algo",
+            "sign"
+          ]
+        }
+      ]
+    },
+    {
       "name": "company-software-development",
       "path": "skills/company-software-development/SKILL.md",
       "sha256": "6368751556ebe0574358bf2a16d7e8ea8ab3a722555122d05b36800270e94100",

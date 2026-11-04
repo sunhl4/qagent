@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<OfficeApp xmlns="http://schemas.microsoft.com/office/appforoffice/1.1">
+  <Id>7c3e1a20-6b4d-4f1e-9a2c-0d5e8f7a1b33</Id>
+  <Version>0.1.0</Version>
+  <ProviderName>company-agent</ProviderName>
+  <DefaultLocale>zh-CN</DefaultLocale>
+  <DisplayName DefaultValue="Company Office"/>
+  <Description DefaultValue="Loopback review pane. The port is pinned; a taskpane visit is the proof the pane loaded."/>
+  <Hosts>
+    <Host Name="Document"/>
+  </Hosts>
+  <DefaultSettings>
+    <SourceLocation DefaultValue="http://127.0.0.1:8765/word-addin/taskpane.html"/>
+  </DefaultSettings>
+  <Permissions>ReadWriteDocument</Permissions>
+</OfficeApp>

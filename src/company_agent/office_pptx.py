@@ -41,15 +41,17 @@ import hashlib
 import io
 import json
 import os
+import platform
 import re
 import shutil
 import subprocess
+import sys
 import tempfile
 import xml.etree.ElementTree as ET
 import zipfile
 from pathlib import Path
 
-from company_agent import office_convert, workspace_files
+from company_agent import office_convert, office_purpose, workspace_files
 from company_agent import office_create as _oc
 from company_agent import office_ingest as _ingest
 
@@ -57,7 +59,6 @@ ENV_OFFICECLI = "COMPANY_AGENT_OFFICECLI"
 CLI_TIMEOUT = 180
 CLI_STDOUT_CAP = 4_000_000
 CLI_PNG_MAGIC = b"\x89PNG\r\n\x1a\n"
-SCREENSHOT_DIR = "preview"
 MAX_SHAPES = 200
 DETAIL_BUDGET = 48_000
 _DETAIL_TEXT_CHARS = 200
@@ -75,13 +76,13 @@ _A = "{" + _A_NS + "}"
 _P = "{" + _P_NS + "}"
 
 MAX_FILE_BYTES = _ingest.MAX_FILE_BYTES
-MAX_SLIDES = 64
+MAX_SLIDES = 80
 MAX_EDITS = 64
 MAX_BULLETS = 8
 MAX_TITLE_CHARS = 120
 MAX_SUBTITLE_CHARS = 400
 MAX_BULLET_CHARS = 400
-MAX_SHAPE_TEXT_CHARS = 4_000
+MAX_SHAPE_TEXT_CHARS = 8_000
 MAX_MATRIX_ROWS = 6
 MAX_MATRIX_COLS = 6
 MAX_CELL_CHARS = 120
@@ -109,6 +110,7 @@ class OfficePptxError(ValueError):
 def pptx(args: dict) -> dict:
     """Contract entry point: bounded render, all-or-nothing edit, or CLI preview."""
 
+    purpose = office_purpose.take(args)
     root = workspace_files.root()
     compound = _oc._compound(args)
     action = _action(args)
@@ -132,6 +134,7 @@ def pptx(args: dict) -> dict:
         "trust": "untrusted_reference_data",
     }
     payload.update(extras)
+    office_purpose.audit("office_pptx", purpose, {"path": compound, "action": action})
     return payload
 
 
@@ -554,8 +557,8 @@ def _edit(root, compound: str, args: dict) -> tuple[bytes, int, int, int]:
             raise OfficePptxError(f"第 {number} 条 edit.slide 必须是 1..{MAX_SLIDES}")
         if not isinstance(shape, int) or isinstance(shape, bool) or shape < 1:
             raise OfficePptxError(f"第 {number} 条 edit.shape 必须是 >= 1")
-        if "\n" in text or "\r" in text:
-            raise OfficePptxError(f"第 {number} 条 edit.text 不接受换行:一个 shape 只放一个段落")
+        text = " ".join(part.strip() for part in text.replace("\r\n", "\n").replace("\r", "\n").split("\n"))
+        text = " ".join(text.split())
         plans.append((slide, shape, text))
     resolved = workspace_files.resolve(root, compound)
     if not resolved.is_file():
@@ -714,14 +717,32 @@ def _check_shape_enumeration(
             raise OfficePptxError("officecli 逐张文本框数与包内容不一致,拒绝预览")
 
 
-def _resolve_cli() -> str:
+def _resolve_cli(explicit: str | None = None) -> str:
+    """Five-step officecli lookup: argument, env, bundled resources, repo root, PATH."""
+
+    if explicit and str(explicit).strip():
+        found = Path(str(explicit).strip())
+        if not found.is_file():
+            raise OfficePptxError("显式 officecli 路径不是文件,请核对安装位置")
+        return str(found)
     configured = str(os.environ.get(ENV_OFFICECLI) or "").strip()
     if configured:
         found = Path(configured)
         if not found.is_file():
             raise OfficePptxError("COMPANY_AGENT_OFFICECLI 配置的路径不是文件,请核对 officecli 安装位置")
         return str(found)
-    for name in ("officecli", "officecli.exe"):
+    root = _repo_root()
+    names = ("officecli.exe", "officecli") if os.name == "nt" else ("officecli", "officecli.exe")
+    bundled = root / "resources" / "officecli" / _platform_tag()
+    for name in names:
+        candidate = bundled / name
+        if candidate.is_file():
+            return str(candidate)
+    for name in names:
+        candidate = root / name
+        if candidate.is_file():
+            return str(candidate)
+    for name in names:
         found = shutil.which(name)
         if found:
             return str(found)
@@ -729,6 +750,17 @@ def _resolve_cli() -> str:
         "本机未找到 officecli:pptx 视觉预览依赖 OfficeCLI 二进制,"
         "请安装后用 COMPANY_AGENT_OFFICECLI 指向绝对路径;如实拒绝,不出替身"
     )
+
+
+def _repo_root() -> Path:
+    return Path(__file__).resolve().parents[2]
+
+
+def _platform_tag() -> str:
+    system = {"win32": "win32", "darwin": "darwin", "linux": "linux"}.get(sys.platform, sys.platform)
+    machine = platform.machine().lower()
+    arch = "x64" if machine in {"amd64", "x86_64"} else machine or "x64"
+    return f"{system}-{arch}"
 
 
 _PAGE_KEYS = ("slides", "pages", "pageCount", "page_count", "slideCount", "slide_count")
@@ -795,7 +827,7 @@ def _cli_shots(
     shots: list[dict[str, object]] = []
     shots_dir: Path | None = None
     for page in range(1, pages + 1):
-        artifact = _shot_compound(compound, page)
+        artifact = _shot_compound(compound, deck, page)
         workspace_files._lexical(artifact)
         _existed, target = _oc._resolve_target(root, artifact, True)
         shots_dir = target.parent
@@ -827,10 +859,11 @@ def _cli_shots(
     return shots
 
 
-def _shot_compound(compound: str, page: int) -> str:
-    project, _, relative = compound.partition("/")
-    stem = Path(relative).stem
-    return f"{project}/{SCREENSHOT_DIR}/{stem}/slide-{page}.png"
+def _shot_compound(compound: str, deck: Path, page: int) -> str:
+    project, _, _relative = compound.partition("/")
+    stamp = str(deck.stat().st_mtime_ns).encode("ascii")
+    key = hashlib.sha1(str(deck).encode("utf-8") + b"\0" + stamp).hexdigest()[:24]
+    return f"{project}/cache/pptx-preview/{key}/slide-{page}.png"
 
 
 def _drop_stale_shots(folder: Path, pages: int) -> None:

@@ -18,16 +18,20 @@ from company_agent import office_convert as _office_convert
 from company_agent import office_create as _office_create
 from company_agent import office_deliver as _office_deliver
 from company_agent import office_edit as _office_edit
+from company_agent import office_files as _office_files
+from company_agent import office_fix as _office_fix
 from company_agent import office_ingest as _office_ingest
 from company_agent import office_matter as _office_matter
 from company_agent import office_open as _office_open
 from company_agent import office_pptx as _office_pptx
+from company_agent import office_review as _office_review
+from company_agent import office_surface as _office_surface
 from company_agent import office_validate as _office_validate
 from company_agent import plan_hub as _plan_hub
 from company_agent import portal as _portal
 from company_agent import table_profile as _table_profile
-from company_agent import workspace_reference as _workspace_reference
 from company_agent import work_items as _work_items
+from company_agent import workspace_reference as _workspace_reference
 from company_agent.capabilities import capability
 from company_agent.catalog import contract_snapshot, load_presets, load_result_policy, load_tools
 from company_agent.contracts import HANDLE_PREFIXES, HANDLES, Invocation
@@ -121,6 +125,10 @@ _LOCAL_TOOLS = {
     "company_office_open": _office_open.open_file,
     "company_office_compute": _office_compute.compute,
     "company_office_deliver": _office_deliver.deliver,
+    "company_office_review_table": _office_review.review_table,
+    "company_office_files": _office_files.files,
+    "company_office_fix": _office_fix.fix,
+    "company_office_surface": _office_surface.surface,
     "company_workflow_validate": validate,
     "company_latex_structure": _latex_workspace.structure,
     "company_latex_read": _latex_workspace.read_window,

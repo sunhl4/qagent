@@ -252,17 +252,26 @@ def _check_concurrency(base: str, key: str, model: str, timeout: float) -> dict:
             "detail": json.dumps(detail, sort_keys=True)[:120]}
 
 
-def _usage_totals(base: str, key: str, model: str, timeout: float) -> int:
+def _usage_totals(base: str, key: str, model: str, timeout: float) -> tuple[int, dict]:
+    import sys
+
+    src = str(ROOT / "src")
+    if src not in sys.path:
+        sys.path.insert(0, src)
+    from company_agent.office_usage import parse_usage
+
     status, payload = _post(base, key, {
         "model": model,
         "messages": [{"role": "user", "content": "回答一个字：是。"}],
         "max_tokens": 8,
     }, timeout)
+    absent = {"observed": "absent", "fixed": None, "cached": None, "uncached": None}
     if status == 200 and isinstance(payload, dict):
         usage = payload.get("usage") or {}
         total = usage.get("total_tokens")
-        return int(total) if isinstance(total, int) else 0
-    return 0
+        observed = parse_usage(usage if isinstance(usage, dict) else {})
+        return (int(total) if isinstance(total, int) else 0), observed
+    return 0, absent
 
 
 def _models_url_ok(base: str) -> bool:
@@ -284,6 +293,7 @@ def main(argv: list[str] | None = None) -> int:
     key = str(__import__("os").environ.get(args.api_key_env) or "").strip() if args.api_key_env else ""
     checks: list[dict[str, object]] = []
     usage_tokens = 0
+    usage_observation = {"observed": "absent", "fixed": None, "cached": None, "uncached": None}
     executed = args.live
     if executed:
         checks = [
@@ -294,7 +304,9 @@ def main(argv: list[str] | None = None) -> int:
             _check_structured(args.base_url, key, args.model, args.timeout),
             _check_concurrency(args.base_url, key, args.model, args.timeout),
         ]
-        usage_tokens = _usage_totals(args.base_url, key, args.model, args.timeout)
+        usage_tokens, usage_observation = _usage_totals(
+            args.base_url, key, args.model, args.timeout
+        )
     else:
         checks = [{"check": name, "ok": False, "detail": "not executed (offline without --live)"}
                   for name in ("tool_call_shape", "streaming", "cancellation",
@@ -307,6 +319,7 @@ def main(argv: list[str] | None = None) -> int:
         "executed": executed,
         "checks": checks,
         "usage_tokens_recorded": usage_tokens,
+        "usage_observation": usage_observation,
         "ok": executed and all(check["ok"] for check in checks),
         "note": (
             "模型费用仍以公司平台结算为准；本证据只绑定协议六项与服务报告的上下文容量，"

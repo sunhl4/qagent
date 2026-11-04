@@ -180,7 +180,7 @@ def test_tool_report_rejects_invalid_shape(tmp_path: Path) -> None:
 
 
 def test_verifier_builds_exact_tool_probe_per_profile() -> None:
-    for profile, expected_count in (("company-agent", 78), ("company-agent-minimal", 22)):
+    for profile, expected_count in (("company-agent", 83), ("company-agent-minimal", 27)):
         with VERIFY.profile_home(profile) as temporary:
             home = Path(temporary)
             VERIFY.write_session_probe(home, profile)
@@ -330,6 +330,7 @@ def test_verifier_uses_isolated_profile_copy() -> None:
         assert {path.name for path in (home / "skills").iterdir()} == {
             "company-knowledge",
             "company-docs-research",
+            "company-office-matter",
             "company-software-development",
         }
         assert copied.resolve() != (ROOT / "profiles/company-agent-minimal").resolve()

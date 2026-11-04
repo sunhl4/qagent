@@ -16,7 +16,7 @@ import json
 import math
 
 from company_agent import office_create as _oc
-from company_agent import workspace_files
+from company_agent import office_purpose, workspace_files
 
 MAX_CATEGORIES = 64
 MAX_SERIES = 8
@@ -37,6 +37,7 @@ class OfficeChartError(ValueError):
 def chart(args: dict) -> dict:
     """Contract entry point: deterministic chart artifact generation."""
 
+    purpose = office_purpose.take(args)
     root = workspace_files.root()
     compound = _compound(args)
     workspace_files._lexical(compound)
@@ -62,6 +63,10 @@ def chart(args: dict) -> dict:
     if existed_json != existed_svg:
         # 同一 chart_id 的 json/svg 只作为一对存在;半存在是脏数据,拒绝掩盖。
         raise OfficeChartError("同名图表一对文件状态不一致:请清理后以 overwrite=true 重建")
+    fence = f"```lm-chart\n{canonical}\n```"
+    if len(fence) > 20_000:
+        raise OfficeChartError("图表规格围栏超过 20000 字符上限")
+    office_purpose.audit("office_chart", purpose, {"chart_id": chart_id, "path": f"{compound}/{json_rel}"})
     return {
         "chart_id": chart_id,
         "json_path": f"{compound}/{json_rel}",
@@ -71,6 +76,7 @@ def chart(args: dict) -> dict:
         "sha256_json": hashlib.sha256(canonical_bytes).hexdigest(),
         "sha256_svg": hashlib.sha256(svg).hexdigest(),
         "overwrote": existed_json,
+        "fence": fence,
     }
 
 

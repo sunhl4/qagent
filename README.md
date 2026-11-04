@@ -10,7 +10,12 @@
 - 量子能力作为 `company-agent-quantum` capability pack 维护。
 - 公司知识库、未来业务能力和其他 capability pack 共用同一 Agent Runtime。
 
-自动科研与实验契约在 [`research-layer/`](research-layer/README.md)。它与本仓的 Agent 运行时分开开发，放在同一仓库里，避免互相覆盖 `contracts/`、`docs/` 和 `packages/`。
+全公司只用这一套 Super DSH 架构，定义在 [`docs/super-dsh-architecture.zh-CN.md`](docs/super-dsh-architecture.zh-CN.md)：
+
+- 控制面是工单时钟：Source、Trigger、Eval、Mandate、Ticket、Assignment、Subscription。Mandate 只有 `boot`、`lab`、`algo`、`sign`。
+- 执行面是现有 DSH 会话和公司工具包。不增加第二个模型循环、会话循环或 shell 工人。
+- 平台时钟在 [`research-layer/`](research-layer/README.md)。实验、租约、预算和证据留在那里，只以 `research` 触发进入控制面，默认不开工单。
+- 根目录 `contracts/` 继续是公司工具合同。研究层契约留在 `research-layer/contracts/`。
 
 ## 不变量
 

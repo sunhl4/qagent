@@ -30,6 +30,7 @@ from __future__ import annotations
 
 import os
 import subprocess
+import sys
 from pathlib import Path
 
 from company_agent import office_create as _oc
@@ -73,12 +74,17 @@ def open_file(args: dict) -> dict:
     mode = _mode()
     audit_detail: dict[str, object]
     if mode == "wps":
-        if _host() != "nt":
-            raise OfficeOpenError("wps 定位走 Windows 注册表:当前平台不支持,请用 startfile 档")
-        launcher_exe = _from_registry(suffix)
-        _launch([launcher_exe, str(resolved.absolute())])
-        launcher = _basename(launcher_exe)
-        audit_detail = {"engine": "wps", "launcher": launcher}
+        if _host() == "nt":
+            launcher_exe = _from_registry(suffix)
+            _launch([launcher_exe, str(resolved.absolute())])
+            launcher = _basename(launcher_exe)
+            audit_detail = {"engine": "wps", "launcher": launcher}
+        elif _platform() == "darwin":
+            _launch(["/usr/bin/open", "-b", "com.kingsoft.wpsoffice.mac", "--", str(resolved.absolute())])
+            launcher = "open"
+            audit_detail = {"engine": "wps", "launcher": launcher}
+        else:
+            raise OfficeOpenError("wps 定位走 Windows 注册表或 macOS bundle id:当前平台不支持")
     else:
         _shell_open(str(resolved.absolute()))
         launcher = "shell"
@@ -109,6 +115,11 @@ def _mode() -> str:
 def _host() -> str:
     """Platform seam: tests stub this instead of the real ``os`` module."""
     return os.name
+
+
+def _platform() -> str:
+    """sys.platform seam so macOS bundle-id launch can be tested without a Mac."""
+    return sys.platform
 
 
 def _from_registry(suffix: str) -> str:

@@ -11,9 +11,11 @@ from company_agent.audit_chain import (
     LOG_ENV,
     AuditChainError,
     append,
+    export_page,
     last_entry,
     verify,
 )
+from company_agent.office_usage import parse_usage
 
 
 @pytest.fixture()
@@ -109,3 +111,23 @@ def test_events_survive_process_restart_with_a_fresh_reader(ledger: Path) -> Non
     append("b")
     assert last_entry()["seq"] == 2
     assert verify()["intact"] is True
+
+
+def test_export_page_names_the_chain(ledger: Path) -> None:
+    append("office_deliver", {"purpose": "交付"})
+    page = export_page()
+    assert "lines 1" in page
+    assert "intact true" in page
+    assert "last_event office_deliver" in page
+    assert "root_hmac " in page
+
+
+def test_parse_usage_does_not_invent_missing_cache_fields() -> None:
+    assert parse_usage({"total_tokens": 9})["observed"] == "absent"
+    assert parse_usage({"total_tokens": 9})["fixed"] is None
+    present = parse_usage({"prompt_tokens": 10, "prompt_cache_hit_tokens": 4})
+    assert present == {"observed": "present", "fixed": 10, "cached": 4, "uncached": 6}
+    details = parse_usage({"prompt_tokens_details": {"cached_tokens": 3}})
+    assert details["observed"] == "present"
+    assert details["cached"] == 3
+    assert details["fixed"] is None

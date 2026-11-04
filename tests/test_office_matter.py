@@ -24,7 +24,7 @@ def _workspace(tmp_path: Path, monkeypatch) -> Path:
 
 
 def _matter(kind: str, data: dict, **extra):
-    args = {"project": PROJECT, "kind": kind, "data": data}
+    args = {"project": PROJECT, "kind": kind, "data": data, "purpose": "测试写入"}
     args.update(extra)
     return invoke("company_office_matter", "lab", args)
 
@@ -43,7 +43,8 @@ def test_timeline_upsert_merges_and_protects_reviewed_anchors(
 ) -> None:
     project = _workspace(tmp_path, monkeypatch)
     anchor = {"path": "证据.md", "line_ref": "L1", "quote": "事件甲"}
-    invoke("company_office_create", "lab", {"project": PROJECT, "path": "证据.md", "content": {"text": "事件甲原文"}})
+    invoke("company_office_create", "lab", {"purpose": "测试写入",
+        "project": PROJECT, "path": "证据.md", "content": {"text": "事件甲原文"}})
     first = _matter("timeline", {"events": [
         {"id": "e1", "date": "2026年3月1日", "title": "立项会", "kind": "procedure", "evidence": [anchor]},
         {"date": "2026/03/05", "title": "周报周会"},
@@ -55,6 +56,8 @@ def test_timeline_upsert_merges_and_protects_reviewed_anchors(
     payload = first.payload
     assert payload["item_count"] == 5
     assert payload["anchored_count"] == 1 and payload["unanchored_count"] == 4
+    assert payload["year_from"] == "2026" and payload["year_to"] == "2026"
+    assert "4 项没有出处" in payload["note"]
     stored = json.loads(_file(project, "timeline").read_text(encoding="utf-8"))
     sort_keys = [row["sort_key"] for row in stored["events"]]
     assert sort_keys == ["20260301", "20260305", "20260300", "20260000", "20260307"]
@@ -110,6 +113,37 @@ def test_empty_payload_and_pure_replace_refusals(tmp_path: Path, monkeypatch) ->
     assert "拒绝空写回" in (result.error or "")
     result = _matter("chronology", {"entries": [{"date": "日期不明", "fact": "x"}]})
     assert result.status == "error"
+
+
+def test_mindmap_svg_layout_is_stable(tmp_path: Path, monkeypatch) -> None:
+    _workspace(tmp_path, monkeypatch)
+    result = _matter(
+        "mindmap",
+        {
+            "root": {
+                "label": "根",
+                "evidence": [{"path": "证据.md"}],
+                "children": [{"label": "甲"}, {"label": "乙"}],
+            }
+        },
+    )
+    assert result.status == "ok", result.error
+    svg = result.payload["svg"]
+    assert 'x="0" y="20"' in svg
+    assert 'x="104" y="0"' in svg
+    assert 'x="104" y="40"' in svg
+    assert svg.count("待补出处") == 2
+    again = _matter(
+        "mindmap",
+        {
+            "root": {
+                "label": "根",
+                "evidence": [{"path": "证据.md"}],
+                "children": [{"label": "甲"}, {"label": "乙"}],
+            }
+        },
+    )
+    assert again.status == "error" and "完全一致" in (again.error or "")
 
 
 def test_mindmap_caps_depth_and_names_truncation(tmp_path: Path, monkeypatch) -> None:

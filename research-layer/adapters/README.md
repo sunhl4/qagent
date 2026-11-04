@@ -4,19 +4,20 @@
 
 ```text
 adapters/
-  stub/            本地桩，独立开发用
-  README.md        本文件
+  stub/              本地桩，默认装配
+  company-agent/     ComputePort 翻译层，默认不替换桩
+  README.md          本文件
 ```
 
 ## 原则
 
-本工程**不实现**云平台、本地 HPC、本地模型的真实适配器。这些由 harness-core 提供。
+本工程**不实现**第二套云平台、HPC 或模型网关。根目录已有公司 provider。`adapters/company-agent/` 实现研究层 `ComputePort`：保留资源种类，未知执行只可查询、不可重新提交，`qpu` 只生成设备审批交接。它保持 `degraded: true`，默认不替换 `adapters/stub/`。
 
-本工程只做三件事：
+本工程做这三件事：
 
 1. 定义端口（在 `contracts/`）。
-2. 在开发与测试中使用桩（在 `adapters/stub/`）。
-3. 在运行时装配 harness-core 提供的真实实现。
+2. 在开发与测试中默认使用桩（在 `adapters/stub/`）。
+3. 用一致性测试约束公司翻译层。翻译层不发起真实云、HPC 或模型调用。
 
 ## 装配点
 

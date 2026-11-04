@@ -78,6 +78,7 @@ def test_company_skills_publish_required_frontmatter() -> None:
     names = {
         "company-knowledge",
         "company-docs-research",
+        "company-office-matter",
         "company-software-development",
         "quantum-workflow",
         "company-plan",

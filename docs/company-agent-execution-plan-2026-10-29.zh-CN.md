@@ -1,6 +1,6 @@
 # Company Agent 剩余工程执行计划（2026-10-29）
 
-本文件是 `company-agent-2000-person-days-development-plan-v1.0.zh-CN.md` 的执行附录，不改变 2000 人天基线、DSH（DeepSeek Harness，唯一 Agent Runtime）边界、合同先行顺序或风险储备释放规则。
+本文件是 `company-agent-2000-person-days-development-plan-v1.0.zh-CN.md` 的执行附录，不改变 2000 人天基线、DSH（DeepSeek Harness，唯一 Agent Runtime）边界、合同先行顺序或风险储备释放规则。全公司三个面的扩展顺序见 `docs/super-dsh-product-plan.zh-CN.md`。
 
 ## 一、当前基线
 

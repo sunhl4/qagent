@@ -32,7 +32,7 @@ import json
 import re
 
 from company_agent import office_create as _oc
-from company_agent import workspace_files
+from company_agent import office_purpose, workspace_files
 
 SCHEMA_VERSION = 1
 
@@ -62,6 +62,7 @@ class OfficeMatterError(ValueError):
 def matter(args: dict) -> dict:
     """Contract entry point: fixed-file matter artifact update."""
 
+    purpose = office_purpose.take(args)
     root = workspace_files.root()
     project = args.get("project")
     if not isinstance(project, str) or not project.strip() or project != project.strip():
@@ -102,7 +103,10 @@ def matter(args: dict) -> dict:
     existed, target = _oc._resolve_target(root, compound, True)
     _oc._write_atomic(target, data_bytes, existed)
     _oc._verify_written(target, data_bytes)
-    return {
+    office_purpose.audit(
+        "office_matter", purpose, {"path": compound, "kind": kind, "mode": mode}
+    )
+    receipt = {
         "kind": kind,
         "path": compound,
         "mode": mode,
@@ -114,6 +118,22 @@ def matter(args: dict) -> dict:
         "bytes": len(data_bytes),
         "sha256": hashlib.sha256(data_bytes).hexdigest(),
     }
+    year_from, year_to = _year_span(merged if isinstance(merged, list) else [])
+    if year_from:
+        receipt["year_from"] = year_from
+        receipt["year_to"] = year_to
+    notes: list[str] = []
+    if unanchored:
+        notes.append(f"有 {unanchored} 项没有出处，请补充 evidence 后再次 upsert")
+    if kind == "mindmap" and isinstance(merged, dict):
+        svg = _mindmap_svg(merged)
+        if len(svg) <= 20_000:
+            receipt["svg"] = svg
+        else:
+            notes.append("思维导图超出回执篇幅，未内嵌 SVG")
+    if notes:
+        receipt["note"] = "；".join(notes)[:200]
+    return receipt
 
 
 # ---------------------------------------------------------------- kinds
@@ -409,3 +429,125 @@ def _clean_evidence(raw: object, marker: str, issues: list) -> list[dict[str, st
             entry["quote"] = quote
         rows.append(entry)
     return rows
+
+
+_NODE_H = 30
+_ROW_GAP = 10
+_COL_GAP = 32
+
+
+def _year_span(rows: list) -> tuple[str, str]:
+    years = [
+        str(row.get("sort_key") or "")[:4]
+        for row in rows
+        if isinstance(row, dict) and str(row.get("sort_key") or "")[:4].isdigit()
+    ]
+    if not years:
+        return "", ""
+    return min(years), max(years)
+
+
+def _mindmap_svg(root: dict) -> str:
+    """Deterministic left-to-right layout. Same tree, same SVG."""
+
+    boxes = _mindmap_boxes(root)
+    if not boxes:
+        return ""
+    width = max(box["x"] + box["w"] for box in boxes) + 8
+    height = max(box["y"] + _NODE_H for box in boxes) + 8
+    parts = [
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}">'
+    ]
+    for box in boxes:
+        if box["parent"] is not None:
+            parent = boxes[box["parent"]]
+            x1 = parent["x"] + parent["w"]
+            y1 = parent["y"] + _NODE_H // 2
+            x2 = box["x"]
+            y2 = box["y"] + _NODE_H // 2
+            parts.append(f'<line x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" stroke="#94a3b8"/>')
+    for box in boxes:
+        dash = ' stroke-dasharray="4 3"' if box["missing"] else ""
+        title = _xml_text(box["label"])
+        if box["missing"]:
+            title += " · 待补出处"
+        label = _xml_text(box["label"][:24])
+        parts.append("<g>")
+        parts.append(f"<title>{title}</title>")
+        parts.append(
+            f'<rect x="{box["x"]}" y="{box["y"]}" width="{box["w"]}" height="{_NODE_H}"'
+            f' rx="4" fill="#ffffff" stroke="#334155"{dash}/>'
+        )
+        parts.append(
+            f'<text x="{box["x"] + 8}" y="{box["y"] + 20}" font-size="12">{label}</text>'
+        )
+        parts.append("</g>")
+    parts.append("</svg>")
+    return "".join(parts)
+
+
+def _mindmap_boxes(root: dict) -> list[dict]:
+    measured = _measure_node(root)
+    widths: dict[int, int] = {}
+
+    def columns(node: dict, depth: int) -> None:
+        widths[depth] = max(widths.get(depth, 0), node["w"])
+        for child in node["children"]:
+            columns(child, depth + 1)
+
+    columns(measured, 0)
+    boxes: list[dict] = []
+
+    def place(node: dict, depth: int, y: int, parent: int | None) -> int:
+        x = sum(widths[level] + _COL_GAP for level in range(depth))
+        index = len(boxes)
+        boxes.append(
+            {
+                "label": node["label"],
+                "x": x,
+                "y": y,
+                "w": widths[depth],
+                "missing": node["missing"],
+                "parent": parent,
+            }
+        )
+        cursor = y
+        direct: list[int] = []
+        for child in node["children"]:
+            direct.append(place(child, depth + 1, cursor, index))
+            cursor += child["subtree_h"] + _ROW_GAP
+        if direct:
+            top = boxes[direct[0]]["y"]
+            bottom = boxes[direct[-1]]["y"] + _NODE_H
+            boxes[index]["y"] = top + (bottom - top - _NODE_H) // 2
+        return index
+
+    place(measured, 0, 0, None)
+    return boxes
+
+
+def _measure_node(node: dict) -> dict:
+    label = str(node.get("label") or "")
+    units = sum(2 if ord(char) > 127 else 1 for char in label)
+    width = max(72, min(220, units * 7 + 16))
+    children = [_measure_node(child) for child in node.get("children") or [] if isinstance(child, dict)]
+    if children:
+        subtree = sum(child["subtree_h"] for child in children) + _ROW_GAP * (len(children) - 1)
+    else:
+        subtree = _NODE_H
+    return {
+        "label": label,
+        "w": width,
+        "subtree_h": max(subtree, _NODE_H),
+        "missing": not node.get("evidence"),
+        "children": children,
+    }
+
+
+def _xml_text(value: str) -> str:
+    return (
+        value.replace("&", "&amp;")
+        .replace("<", "&lt;")
+        .replace(">", "&gt;")
+        .replace('"', "&quot;")
+    )

@@ -30,7 +30,11 @@ def _workspace(tmp_path: Path, monkeypatch) -> Path:
 
 
 def _run(source: str):
-    return invoke("company_office_compute", "lab", {"project": PROJECT, "source": source})
+    return invoke(
+        "company_office_compute",
+        "lab",
+        {"project": PROJECT, "source": source, "purpose": "测试写入"},
+    )
 
 
 def test_unset_allow_refuses(tmp_path: Path, monkeypatch) -> None:

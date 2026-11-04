@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1120" viewBox="0 0 1800 1120" role="img" aria-labelledby="title desc">
-  <title id="title">?2 ??????</title>
-  <desc id="desc">???????E1??R1??????????????????????????E2?????????????A2????????????????????E1???</desc>
+  <title id="title">&#x56FE;2 &#x670D;&#x52A1;&#x63A5;&#x7BA1;&#x65F6;&#x5E8F;</title>
+  <desc id="desc">&#x65E7;&#x670D;&#x52A1;&#x4EE5;E1&#x5904;&#x7406;R1&#x540E;&#x6545;&#x969C;&#xFF1B;&#x65B0;&#x670D;&#x52A1;&#x6062;&#x590D;&#x540E;&#x6301;&#x4E45;&#x5316;E2&#xFF0C;&#x53CC;&#x5165;&#x53E3;&#x786E;&#x8BA4;&#x5E76;&#x5F62;&#x6210;A2&#xFF1B;&#x7528;R1&#x539F;&#x7F16;&#x53F7;&#x67E5;&#x8BE2;&#x8BBE;&#x5907;&#xFF1B;&#x8FDF;&#x5230;E1&#x5728;&#x5165;&#x53E3;&#x88AB;&#x62D2;&#x7EDD;&#x3002;</desc>
   <defs>
     <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L12,6 L0,12 z" fill="#243746"/></marker>
     <marker id="arrow-blue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L12,6 L0,12 z" fill="#2f6f9f"/></marker>
@@ -19,7 +19,7 @@
       .axis{stroke:#d9e0e5;stroke-width:1.4}
       .flow{stroke:#243746;stroke-width:2.2;fill:none;marker-end:url(#arrow)}
       .blue{stroke:#2f6f9f;stroke-width:2.2;fill:none;marker-end:url(#arrow-blue)}
-      .green{stroke:#3c7d55;stroke-width:2.2;fill:none;marker-end:url(#arrow-green)}
+      .green{stroke:#3c7d55;stroke-width:2.2;stroke-dasharray:8 5;fill:none;marker-end:url(#arrow-green)}
       .red{stroke:#a63d40;stroke-width:2.2;stroke-dasharray:9 6;fill:none;marker-end:url(#arrow-red)}
       .event{font-family:"Microsoft YaHei","Noto Sans CJK SC",SimSun,Arial,sans-serif;font-size:14px;fill:#263746}
       .event-blue{font-family:"Microsoft YaHei","Noto Sans CJK SC",SimSun,Arial,sans-serif;font-size:14px;fill:#2f6f9f}
@@ -36,46 +36,44 @@
     </style>
   </defs>
   <rect width="1800" height="1120" fill="#ffffff"/>
-  <text x="900" y="48" text-anchor="middle" class="title">?2  ??????</text>
-  <text x="900" y="78" text-anchor="middle" class="subtitle">???????????????????????????????</text>
-
+  <text x="900" y="48" text-anchor="middle" class="title">&#x56FE;2  &#x670D;&#x52A1;&#x63A5;&#x7BA1;&#x65F6;&#x5E8F;</text>
+  <text x="900" y="78" text-anchor="middle" class="subtitle">&#x65E7;&#x6388;&#x6743;&#x6545;&#x969C; &#x2192; &#x65B0;&#x6388;&#x6743;&#x56F4;&#x680F; &#x2192; &#x53CC;&#x5165;&#x53E3;&#x786E;&#x8BA4; &#x2192; &#x8BBE;&#x5907;&#x4E8B;&#x5B9E;&#x67E5;&#x8BE2; &#x2192; &#x65E7;&#x6D88;&#x606F;&#x62D2;&#x7EDD;</text>
   <!-- participant headers -->
   <g transform="translate(55 115)">
     <rect width="175" height="74" rx="8" class="head-old"/>
-    <text x="87.5" y="31" text-anchor="middle" class="head-title">???</text>
+    <text x="87.5" y="31" text-anchor="middle" class="head-title">&#x65E7;&#x670D;&#x52A1;</text>
     <text x="87.5" y="54" text-anchor="middle" class="head-sub">E1 / R1</text>
   </g>
   <g transform="translate(285 115)">
     <rect width="175" height="74" rx="8" class="head-new"/>
-    <text x="87.5" y="31" text-anchor="middle" class="head-title">???</text>
-    <text x="87.5" y="54" text-anchor="middle" class="head-sub">??????</text>
+    <text x="87.5" y="31" text-anchor="middle" class="head-title">&#x65B0;&#x670D;&#x52A1;</text>
+    <text x="87.5" y="54" text-anchor="middle" class="head-sub">&#x63A5;&#x7BA1;&#x5B9E;&#x4F8B;</text>
   </g>
   <g transform="translate(515 115)">
     <rect width="175" height="74" rx="8" class="head-new"/>
-    <text x="87.5" y="31" text-anchor="middle" class="head-title">??????</text>
-    <text x="87.5" y="54" text-anchor="middle" class="head-sub">E1 ? E2</text>
+    <text x="87.5" y="31" text-anchor="middle" class="head-title">&#x63A5;&#x7BA1;&#x6388;&#x6743;102</text>
+    <text x="87.5" y="54" text-anchor="middle" class="head-sub">E1 &#x2192; E2</text>
   </g>
   <g transform="translate(745 115)">
     <rect width="175" height="74" rx="8" class="head-new"/>
-    <text x="87.5" y="31" text-anchor="middle" class="head-title">????????</text>
-    <text x="87.5" y="54" text-anchor="middle" class="head-sub">HPC???</text>
+    <text x="87.5" y="31" text-anchor="middle" class="head-title">&#x7ECF;&#x5178;&#x5165;&#x53E3;104</text>
+    <text x="87.5" y="54" text-anchor="middle" class="head-sub">HPC&#x786E;&#x8BA4;</text>
   </g>
   <g transform="translate(975 115)">
     <rect width="175" height="74" rx="8" class="head-new"/>
-    <text x="87.5" y="31" text-anchor="middle" class="head-title">????????</text>
-    <text x="87.5" y="54" text-anchor="middle" class="head-sub">QPU???</text>
+    <text x="87.5" y="31" text-anchor="middle" class="head-title">&#x91CF;&#x5B50;&#x5165;&#x53E3;105</text>
+    <text x="87.5" y="54" text-anchor="middle" class="head-sub">QPU&#x786E;&#x8BA4;</text>
   </g>
   <g transform="translate(1205 115)">
     <rect width="175" height="74" rx="8" class="head"/>
-    <text x="87.5" y="31" text-anchor="middle" class="head-title">??????</text>
+    <text x="87.5" y="31" text-anchor="middle" class="head-title">&#x6267;&#x884C;&#x5386;&#x53F2;106</text>
     <text x="87.5" y="54" text-anchor="middle" class="head-sub">I1 / U1 / R1</text>
   </g>
   <g transform="translate(1435 115)">
     <rect width="175" height="74" rx="8" class="head-device"/>
-    <text x="87.5" y="31" text-anchor="middle" class="head-title">????</text>
-    <text x="87.5" y="54" text-anchor="middle" class="head-sub">R1????</text>
+    <text x="87.5" y="31" text-anchor="middle" class="head-title">&#x91CF;&#x5B50;&#x8BBE;&#x5907;110</text>
+    <text x="87.5" y="54" text-anchor="middle" class="head-sub">R1&#x72B6;&#x6001;&#x67E5;&#x8BE2;</text>
   </g>
-
   <!-- lifelines -->
   <line x1="142.5" y1="189" x2="142.5" y2="930" class="life"/>
   <line x1="372.5" y1="189" x2="372.5" y2="930" class="life"/>
@@ -87,66 +85,57 @@
 
   <!-- phase strips -->
   <rect x="55" y="212" width="1560" height="166" rx="8" class="old-note"/>
-  <text x="75" y="238" class="note-title">????????????</text>
-  <text x="75" y="260" class="note-text">?????E1??R1??????????R1???????????????</text>
+  <text x="75" y="238" class="note-title">&#x9636;&#x6BB5;&#x4E00;&#xFF1A;&#x65E7;&#x6388;&#x6743;&#x4E0B;&#x7684;&#x63D0;&#x4EA4;&#x4E0E;&#x6545;&#x969C;</text>
+  <text x="75" y="260" class="note-text">&#x6545;&#x969C;&#x4E5F;&#x53EF;&#x53D1;&#x751F;&#x5728;&#x5230;&#x8FBE;&#x8BBE;&#x5907;&#x4E4B;&#x524D;&#x3002;&#x5230;110&#x7684;&#x7BAD;&#x5934;&#x4EC5;&#x5728;R1&#x5DF2;&#x7ECF;&#x63D0;&#x4EA4;&#x5230;&#x8BBE;&#x5907;&#x65F6;&#x6210;&#x7ACB;&#x3002;</text>
   <rect x="55" y="398" width="1560" height="304" rx="8" class="new-note"/>
-  <text x="75" y="424" class="note-title">????????????E2/A2</text>
-  <text x="75" y="446" class="note-text">?????I1?U1?R1??????????????E2???A2??????????</text>
+  <text x="75" y="424" class="note-title">&#x9636;&#x6BB5;&#x4E8C;&#xFF1A;&#x65B0;&#x670D;&#x52A1;&#x63A5;&#x7BA1;&#x5E76;&#x5F62;&#x6210;E2/A2</text>
+  <text x="75" y="446" class="note-text">&#x6062;&#x590D;I1&#x3001;U1&#x3001;R1&#x53CA;&#x5386;&#x53F2;&#xFF1B;&#x6301;&#x4E45;&#x5316;&#x9AD8;&#x4E8E;E1&#x7684;E2&#xFF1B;104&#x4E0E;105&#x5206;&#x522B;&#x786E;&#x8BA4;&#x540E;&#x5199;&#x5165;&#x5171;&#x540C;&#x6279;&#x51C6;A2&#x3002;</text>
   <rect x="55" y="722" width="1560" height="208" rx="8" class="device-note"/>
-  <text x="75" y="748" class="note-title">??????????????</text>
-  <text x="75" y="770" class="note-text">???????R1???????????E1??????????????????????</text>
-
+  <text x="75" y="748" class="note-title">&#x9636;&#x6BB5;&#x4E09;&#xFF1A;&#x8BBE;&#x5907;&#x4E8B;&#x5B9E;&#x67E5;&#x8BE2;&#x4E0E;&#x65E7;&#x6388;&#x6743;&#x963B;&#x65AD;</text>
+  <text x="75" y="770" class="note-text">&#x4EE5;R1&#x539F;&#x7F16;&#x53F7;&#x67E5;&#x8BE2;&#x8BBE;&#x5907;&#xFF1B;&#x8FDF;&#x5230;&#x7684;E1&#x6D88;&#x606F;&#x5728;105&#x88AB;&#x62D2;&#x7EDD;&#xFF0C;&#x4F46;R1&#x5386;&#x53F2;&#x4E0D;&#x5220;&#x9664;&#x3002;</text>
   <!-- event rows -->
   <line x1="55" y1="285" x2="1615" y2="285" class="axis"/><text x="66" y="280" class="row-no">1</text>
   <path d="M142.5 302 H1522.5" class="flow"/>
-  <text x="832.5" y="297" text-anchor="middle" class="event">????E1??R1????????R1</text>
-
+  <text x="832.5" y="297" text-anchor="middle" class="event">&#x4EC5;&#x5F53;R1&#x5DF2;&#x5230;&#x8FBE;110&#xFF1A;&#x4EE5;E1&#x63D0;&#x4EA4;&#x5E76;&#x7B49;&#x5F85;&#x56DE;&#x6267;</text>
   <line x1="55" y1="335" x2="1615" y2="335" class="axis"/><text x="66" y="330" class="row-no">2</text>
   <path d="M142.5 352 C240 352 260 352 330 352" class="red"/>
-  <text x="242" y="347" text-anchor="middle" class="event-red">????????????</text>
-
+  <text x="242" y="347" text-anchor="middle" class="event-red">&#x6545;&#x969C; / &#x9000;&#x51FA; / &#x56DE;&#x6267;&#x4E22;&#x5931;</text>
   <line x1="55" y1="468" x2="1615" y2="468" class="axis"/><text x="66" y="463" class="row-no">3</text>
   <path d="M372.5 485 H1292.5" class="blue"/>
-  <text x="832.5" y="480" text-anchor="middle" class="event-blue">?????I1?U1?R1?????</text>
-
+  <text x="832.5" y="480" text-anchor="middle" class="event-blue">&#x65B0;&#x670D;&#x52A1;&#x6062;&#x590D;I1&#x3001;U1&#x3001;R1&#x53CA;&#x5386;&#x53F2;</text>
   <line x1="55" y1="522" x2="1615" y2="522" class="axis"/><text x="66" y="517" class="row-no">4</text>
   <path d="M372.5 539 H602.5" class="blue"/>
-  <text x="487.5" y="534" text-anchor="middle" class="event-blue">??????????</text>
+  <text x="487.5" y="534" text-anchor="middle" class="event-blue">&#x8BF7;&#x6C42;&#x751F;&#x6210;&#x9AD8;&#x4E8E;E1&#x7684;&#x6388;&#x6743;</text>
   <rect x="510" y="550" width="185" height="34" rx="6" fill="#ffffff" stroke="#9fc0d4" stroke-width="1.5"/>
-  <text x="602.5" y="572" text-anchor="middle" class="event-blue">???E2</text>
-
+  <text x="602.5" y="572" text-anchor="middle" class="event-blue">&#x6301;&#x4E45;&#x5316;E2</text>
   <line x1="55" y1="612" x2="1615" y2="612" class="axis"/><text x="66" y="607" class="row-no">5</text>
   <path d="M602.5 629 H832.5" class="blue"/>
-  <text x="717.5" y="624" text-anchor="middle" class="event-blue">??E2?????</text>
+  <text x="717.5" y="624" text-anchor="middle" class="event-blue">104&#x786E;&#x8BA4;E2</text>
   <path d="M602.5 665 H1062.5" class="blue"/>
-  <text x="832.5" y="660" text-anchor="middle" class="event-blue">??E2?????</text>
-  <text x="1080" y="700" class="event-blue">??????103</text>
-
+  <text x="832.5" y="660" text-anchor="middle" class="event-blue">105&#x786E;&#x8BA4;E2</text>
+  <text x="1080" y="700" class="event-blue">&#x4E24;&#x4FA7;&#x786E;&#x8BA4;&#x540E;&#x5199;&#x5165;103</text>
   <line x1="55" y1="802" x2="1615" y2="802" class="axis"/><text x="66" y="797" class="row-no">6</text>
   <path d="M1062.5 819 H1292.5" class="green"/>
-  <text x="1177.5" y="814" text-anchor="middle" class="event-green">???????A2</text>
+  <text x="1177.5" y="814" text-anchor="middle" class="event-green">&#x590D;&#x6838;&#x540E;&#x5F62;&#x6210;A2</text>
   <path d="M1292.5 855 H1522.5" class="green"/>
-  <text x="1407.5" y="850" text-anchor="middle" class="event-green">?R1???????</text>
+  <text x="1407.5" y="850" text-anchor="middle" class="event-green">&#x4EE5;R1&#x539F;&#x7F16;&#x53F7;&#x67E5;&#x8BE2;</text>
   <path d="M1522.5 891 H1292.5" class="green"/>
-  <text x="1407.5" y="886" text-anchor="middle" class="event-green">?????????????</text>
-
+  <text x="1407.5" y="886" text-anchor="middle" class="event-green">&#x8FD4;&#x56DE;&#x8BBE;&#x5907;&#x4FA7;&#x72B6;&#x6001;&#x4E8B;&#x5B9E;</text>
   <line x1="55" y1="950" x2="1615" y2="950" class="axis"/><text x="66" y="945" class="row-no">7</text>
   <path d="M142.5 970 H1062.5" class="red"/>
-  <text x="602.5" y="965" text-anchor="middle" class="event-red">???E1???????????????????</text>
+  <text x="602.5" y="965" text-anchor="middle" class="event-red">&#x8FDF;&#x5230;E1&#x6D88;&#x606F;&#x5230;&#x8FBE;105&#xFF0C;&#x56E0;&#x6388;&#x6743;&#x4E0D;&#x5339;&#x914D;&#x88AB;&#x62D2;&#x7EDD;</text>
   <rect x="1120" y="946" width="420" height="54" rx="7" class="stop-note"/>
-  <text x="1140" y="969" class="note-title">?????????</text>
-  <text x="1140" y="989" class="note-text">R1??????????????????</text>
-
+  <text x="1140" y="969" class="note-title">&#x62D2;&#x7EDD;&#x4F46;&#x4E0D;&#x5220;&#x9664;&#x5386;&#x53F2;</text>
+  <text x="1140" y="989" class="note-text">R1&#x539F;&#x8BB0;&#x5F55;&#x3001;&#x72B6;&#x6001;&#x6765;&#x6E90;&#x4E0E;&#x65F6;&#x95F4;&#x5747;&#x4FDD;&#x7559;</text>
   <!-- decision note -->
   <rect x="55" y="1018" width="1560" height="55" rx="8" fill="#fffdf7" stroke="#d8c27a" stroke-width="1.5"/>
-  <text x="76" y="1041" class="note-title">???????</text>
-  <text x="190" y="1041" class="note-text">R1??????????R1?????????R1???????????????????????????????????</text>
-  <text x="190" y="1062" class="note-text">E1/E2?????????I1?????????U1???????R1????????A2??????????????</text>
-
+  <text x="76" y="1041" class="note-title">&#x540E;&#x7EED;&#x5224;&#x5B9A;</text>
+  <text x="190" y="1041" class="note-text">&#x6309;&#x8BBE;&#x5907;&#x4E8B;&#x5B9E;&#x5206;&#x522B;&#x8FDB;&#x5165;&#xFF1A;&#x5DF2;&#x5B8C;&#x6210;&#x5219;&#x8FD4;&#x56DE;&#x539F;&#x7ED3;&#x679C;&#xFF1B;&#x8FD0;&#x884C;&#x4E2D;&#x5219;&#x7EE7;&#x7EED;&#x8DDF;&#x8E2A;&#xFF1B;&#x672A;&#x542F;&#x52A8;&#x4E14;&#x53EF;&#x5173;&#x95ED;&#x5219;&#x8FDB;&#x5165;&#x66FF;&#x4EE3;&#x5224;&#x65AD;&#xFF1B;&#x72B6;&#x6001;&#x4E0D;&#x660E;&#x5219;&#x6682;&#x505C;&#x81EA;&#x52A8;&#x91CD;&#x53D1;&#x3002;</text>
+  <text x="190" y="1062" class="note-text">&#x7B26;&#x53F7;&#xFF1A;E1/E2=&#x6388;&#x6743;&#x5E8F;&#x53F7;&#xFF1B;I1=&#x7A33;&#x5B9A;&#x6267;&#x884C;&#x8EAB;&#x4EFD;&#xFF1B;U1=&#x6267;&#x884C;&#x5355;&#x5143;&#xFF1B;R1=&#x539F;&#x8BBE;&#x5907;&#x8BF7;&#x6C42;&#xFF1B;A2=&#x65B0;&#x5171;&#x540C;&#x6267;&#x884C;&#x6279;&#x51C6;&#x3002;</text>
   <g transform="translate(58 1094)">
-    <line x1="0" y1="0" x2="34" y2="0" class="flow"/><text x="46" y="5" class="legend">?????</text>
-    <line x1="156" y1="0" x2="190" y2="0" class="blue"/><text x="202" y="5" class="legend">?????</text>
-    <line x1="326" y1="0" x2="360" y2="0" class="green"/><text x="372" y="5" class="legend">???????</text>
-    <line x1="528" y1="0" x2="562" y2="0" class="red"/><text x="574" y="5" class="legend">?????</text>
+    <line x1="0" y1="0" x2="34" y2="0" class="flow"/><text x="46" y="5" class="legend">&#x65E7;&#x6388;&#x6743;&#x63D0;&#x4EA4;</text>
+    <line x1="156" y1="0" x2="190" y2="0" class="blue"/><text x="202" y="5" class="legend">&#x65B0;&#x670D;&#x52A1;&#x63A5;&#x7BA1;</text>
+    <line x1="326" y1="0" x2="360" y2="0" class="green"/><text x="372" y="5" class="legend">&#x8BBE;&#x5907;&#x4E8B;&#x5B9E;&#x67E5;&#x8BE2;</text>
+    <line x1="528" y1="0" x2="562" y2="0" class="red"/><text x="574" y="5" class="legend">&#x62D2;&#x7EDD;/&#x6545;&#x969C;</text>
   </g>
 </svg>

@@ -6,10 +6,11 @@ local LibreOffice headless run with a resource lease. Same behavior here:
 
 - ``.docx`` becomes a sibling ``.pdf``; ``.doc`` becomes a sibling ``.docx``;
   other suffixes refuse;
-- the engine must exist: ``COMPANY_AGENT_SOFFICE`` (absolute path) wins, then
-  ``soffice`` / ``libreoffice`` resolved from PATH; without any engine the
-  call is a hard, honest failure - the port never fakes a converted artifact
-  nor uploads anything;
+- the engine order is Word/WPS save-as first (``COMPANY_AGENT_WORD_CMD``),
+  then on macOS an AppleScript save into the Word container, then a registered
+  Word/WPS COM progid, then ``COMPANY_AGENT_SOFFICE`` / ``soffice`` /
+  ``libreoffice``; with neither engine the call is a hard, honest failure -
+  the port never fakes a converted artifact nor uploads anything;
 - the conversion holds a bounded lease (``%TEMP%`` lock file keyed by the
   workspace root) so two tasks cannot fight over the same soffice; a lock
   older than 600 seconds is assumed dead and broken;
@@ -31,6 +32,7 @@ import io
 import os
 import shutil
 import subprocess
+import sys
 import tempfile
 import time
 import zipfile
@@ -38,9 +40,10 @@ from pathlib import Path
 
 from company_agent import office_create as _oc
 from company_agent import office_ingest as _ingest
-from company_agent import workspace_files
+from company_agent import office_purpose, workspace_files
 
 ENV_SOFFICE = "COMPANY_AGENT_SOFFICE"
+ENV_WORD = "COMPANY_AGENT_WORD_CMD"
 
 MAX_FILE_BYTES = _ingest.MAX_FILE_BYTES
 STDOUT_CAP = 256_000
@@ -60,6 +63,7 @@ class OfficeConvertError(ValueError):
 def convert(args: dict) -> dict:
     """Contract entry point: bounded local conversion with a lease."""
 
+    purpose = office_purpose.take(args)
     root = workspace_files.root()
     compound = _oc._compound(args)
     resolved = workspace_files.resolve(root, compound)
@@ -71,26 +75,47 @@ def convert(args: dict) -> dict:
         raise OfficeConvertError(f"{suffix or '(无后缀)'} 不是可转换类型;支持 .docx→pdf 与 .doc→docx")
     data = _read_bounded(root, compound)
     _check_magic(suffix, data)
+    project = compound.split("/", 1)[0]
+    try:
+        from company_agent import office_validate
 
-    engine = _resolve_engine()
-    command_head = [engine, "--headless", "--nologo", "--nolockcheck"]
+        office_validate.require_passed(project, args)
+    except office_validate.OfficeValidateError as exc:
+        raise OfficeConvertError(str(exc)) from exc
+
+    engine, kind = _resolve_engine()
     lease_name = "soffice-" + hashlib.sha1(str(root).encode("utf-8")).hexdigest()[:12] + ".lock"
     with tempfile.TemporaryDirectory(prefix="office-convert-") as staging:
         staging_path = Path(staging)
-        # soffice 以 <outdir>/<stem>.<ext> 静默覆盖同名文件:先在一次性临时目录
-        # 里完成转换并三重验证,再以交付名原子落盘。两阶段,谁都不破坏谁。
-        command = [
-            *command_head,
-            "--convert-to",
-            fmt,
-            "--outdir",
-            str(staging_path),
-            str(resolved),
-        ]
         with _lease(Path(tempfile.gettempdir()) / lease_name):
-            code, _output = _run(command, cwd=str(staging_path))
-        if code != 0:
-            raise OfficeConvertError(f"soffice 退出码 {code}:产物未生成,如实失败")
+            if kind == "com":
+                _com_save(engine, resolved, staging_path, fmt)
+            elif kind == "apple":
+                script_path = staging_path / "save-as.applescript"
+                script_path.write_text(
+                    _apple_script(resolved, staging_path, fmt), encoding="utf-8"
+                )
+                code, _output = _run(["osascript", str(script_path)], cwd=str(staging_path))
+                if code != 0:
+                    raise OfficeConvertError(f"apple 退出码 {code}:产物未生成,如实失败")
+            else:
+                if kind == "word":
+                    command = [engine, "--save-as", fmt, str(staging_path), str(resolved)]
+                else:
+                    command = [
+                        engine,
+                        "--headless",
+                        "--nologo",
+                        "--nolockcheck",
+                        "--convert-to",
+                        fmt,
+                        "--outdir",
+                        str(staging_path),
+                        str(resolved),
+                    ]
+                code, _output = _run(command, cwd=str(staging_path))
+                if code != 0:
+                    raise OfficeConvertError(f"{kind} 退出码 {code}:产物未生成,如实失败")
         product = staging_path / f"{resolved.stem}.{target_ext}"
         _verify_product(product, target_ext)
         data = product.read_bytes()
@@ -99,6 +124,9 @@ def convert(args: dict) -> dict:
     _oc._verify_written(target, data)
     if target.read_bytes() != data:
         raise OfficeConvertError("交付落盘复验失败:磁盘字节与验证字节不一致,如实失败")
+    office_purpose.audit(
+        "office_convert", purpose, {"path": compound, "convert": target_ext, "engine": kind}
+    )
     return {
         "convert": target_ext,
         "source": compound,
@@ -113,21 +141,116 @@ def convert(args: dict) -> dict:
 # ---------------------------------------------------------------- engine
 
 
-def _resolve_engine() -> str:
+_COM_PROGIDS = ("Word.Application", "KWPS.Application", "wps.Application")
+
+
+def _resolve_engine() -> tuple[str, str]:
+    word = str(os.environ.get(ENV_WORD) or "").strip()
+    if word:
+        found = Path(word)
+        if not found.is_file():
+            raise OfficeConvertError("COMPANY_AGENT_WORD_CMD 配置的路径不是文件")
+        return str(found), "word"
+    if _platform() == "darwin":
+        return "osascript", "apple"
+    progid = _com_progid()
+    if progid:
+        return progid, "com"
     configured = str(os.environ.get(ENV_SOFFICE) or "").strip()
     if configured:
         found = Path(configured)
         if not found.is_file():
             raise OfficeConvertError("COMPANY_AGENT_SOFFICE 配置的路径不是文件:请核对无头引擎安装位置")
-        return str(found)
+        return str(found), "soffice"
     for name in ("soffice", "libreoffice"):
         found = _which(name)
         if found:
-            return found
+            return found, "soffice"
     raise OfficeConvertError(
-        "本机未找到无头转换引擎(LibreOffice):"
-        "请安装 LibreOffice 或用 COMPANY_AGENT_SOFFICE 指到 soffice 绝对路径;如实失败,不出替身产物"
+        "本机未找到 Word/WPS 另存引擎,也未找到无头转换引擎(LibreOffice):"
+        "请安装 Word/WPS 或 LibreOffice,"
+        "或用 COMPANY_AGENT_WORD_CMD / COMPANY_AGENT_SOFFICE 指向绝对路径;如实失败,不出替身产物"
     )
+
+
+def _platform() -> str:
+    """sys.platform seam so the macOS script can be tested on Windows."""
+
+    return sys.platform
+
+
+def _apple_script(source: Path, staging: Path, fmt: str) -> str:
+    """Copy into the Word container, then save. Never activates Word."""
+
+    dest = staging / f"{source.stem}.{fmt}"
+    container = "~/Library/Containers/com.microsoft.Word/Data/Documents"
+    return (
+        f'set containerDir to "{container}"\n'
+        "display alerts to alerts none\n"
+        f'set srcPosix to "{source}"\n'
+        f'set dstPosix to "{dest}"\n'
+        "do shell script \"cp \" & quoted form of srcPosix & \" \" & quoted form of containerDir\n"
+        "tell application \"Microsoft Word\"\n"
+        "open POSIX file srcPosix\n"
+        "save as active document file name dstPosix\n"
+        "close active document saving no\n"
+        "end tell\n"
+    )
+
+
+def _com_progid() -> str | None:
+    """Registered Word or WPS automation id, or None when this host has neither."""
+
+    if os.name != "nt":
+        return None
+    import winreg  # noqa: PLC0415 -- Windows-only lookup
+
+    for progid in _COM_PROGIDS:
+        try:
+            with winreg.OpenKey(winreg.HKEY_CLASSES_ROOT, progid + r"\CLSID"):
+                return progid
+        except OSError:
+            continue
+    return None
+
+
+def _com_save(progid: str, source: Path, staging: Path, fmt: str) -> None:
+    """Save a copy through Word/WPS COM. The live file is not the destination."""
+
+    if progid not in _COM_PROGIDS:
+        raise OfficeConvertError("COM 程序标识不在允许列表,拒绝转换")
+    if fmt not in {"pdf", "docx"}:
+        raise OfficeConvertError("COM 另存只支持 pdf 与 docx")
+    dest = staging / f"{source.stem}.{fmt}"
+    file_format = "17" if fmt == "pdf" else "16"
+    script = staging / "save-as.ps1"
+    script.write_text(
+        "param([string]$src,[string]$dst,[int]$fmt,[string]$id)\n"
+        "$app = New-Object -ComObject $id\n"
+        "$app.Visible = $false\n"
+        "$app.DisplayAlerts = 0\n"
+        "$doc = $app.Documents.Open($src)\n"
+        "$doc.SaveAs([ref]$dst, [ref]$fmt)\n"
+        "$doc.Close($false)\n"
+        "$app.Quit()\n",
+        encoding="utf-8",
+    )
+    code, _output = _run(
+        [
+            "powershell.exe",
+            "-NoProfile",
+            "-NonInteractive",
+            "-File",
+            str(script),
+            str(source),
+            str(dest),
+            file_format,
+            progid,
+        ],
+        cwd=str(staging),
+    )
+    if code != 0:
+        raise OfficeConvertError(f"word 退出码 {code}:产物未生成,如实失败")
 
 
 def _which(name: str) -> str | None:

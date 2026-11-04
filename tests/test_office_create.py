@@ -26,7 +26,7 @@ def _workspace(tmp_path: Path, monkeypatch) -> Path:
 
 
 def _create(path: str, content: dict, **extra):
-    args = {"project": PROJECT, "path": path, "content": content}
+    args = {"project": PROJECT, "path": path, "content": content, "purpose": "测试写入"}
     args.update(extra)
     return invoke("company_office_create", "lab", args)
 

@@ -23,7 +23,8 @@ def _workspace(tmp_path: Path, monkeypatch) -> Path:
 
 def _text(path: str, content: str) -> None:
     result = invoke(
-        "company_office_create", "lab", {"project": PROJECT, "path": path, "content": {"text": content}}
+        "company_office_create", "lab", {"purpose": "测试写入",
+            "project": PROJECT, "path": path, "content": {"text": content}}
     )
     assert result.status == "ok", result.error
 
@@ -68,14 +69,14 @@ def test_docx_paragraph_diff_uses_analyze_anchors(tmp_path: Path, monkeypatch) -
     _workspace(tmp_path, monkeypatch)
     invoke(
         "company_office_create", "lab",
-        {"project": PROJECT, "path": "old.docx", "content": {"blocks": [
+        {"purpose": "测试写入", "project": PROJECT, "path": "old.docx", "content": {"blocks": [
             {"kind": "paragraph", "text": "共同开头。"},
             {"kind": "paragraph", "text": "旧句甲。"},
         ]}},
     )
     invoke(
         "company_office_create", "lab",
-        {"project": PROJECT, "path": "new.docx", "content": {"blocks": [
+        {"purpose": "测试写入", "project": PROJECT, "path": "new.docx", "content": {"blocks": [
             {"kind": "paragraph", "text": "共同开头。"},
             {"kind": "paragraph", "text": "新句乙。"},
         ]}},
@@ -114,11 +115,93 @@ def test_docx_and_unknown_kind_refuse(tmp_path: Path, monkeypatch) -> None:
     _workspace(tmp_path, monkeypatch)
     invoke(
         "company_office_create", "lab",
-        {"project": PROJECT, "path": "a.xlsx", "content": {"sheets": [
+        {"purpose": "测试写入", "project": PROJECT, "path": "a.xlsx", "content": {"sheets": [
             {"name": "表1", "rows": [["头"], ["值"]]}
         ]}},
     )
     _text("b.md", "x")
     result = _compare("a.xlsx", "b.md")
     assert result.status == "error"
-    assert "不支持" in (result.error or "")
+    assert "混合类型" in (result.error or "")
+    (tmp_path / "mount" / PROJECT / "old.ppt").write_bytes(b"ppt")
+    refused = _compare("old.ppt", "old.ppt")
+    assert refused.status == "error"
+    assert "不支持" in (refused.error or "")
+
+
+def test_xlsx_rows_and_doc_text_compare(tmp_path: Path, monkeypatch) -> None:
+    import struct
+
+    from company_agent.office_binary import compound_file
+
+    project = _workspace(tmp_path, monkeypatch)
+    for name, value in (("a.xlsx", "甲"), ("b.xlsx", "乙")):
+        made = invoke(
+            "company_office_create", "lab",
+            {"purpose": "测试写入", "project": PROJECT, "path": name, "content": {
+                "sheets": [{"name": "表", "rows": [["列"], [value]]}]
+            }},
+        )
+        assert made.status == "ok", made.error
+    sheet = _compare("a.xlsx", "b.xlsx")
+    assert sheet.status == "ok", sheet.error
+    assert sheet.payload["kind"] == "xlsx"
+    assert sheet.payload["identical"] is False
+
+    def word(text: str) -> bytes:
+        body = text + "\r"
+        encoded = body.encode("utf-16-le")
+        blob = bytearray(0x800 + len(encoded))
+        struct.pack_into("<HH", blob, 0, 0xA5EC, 0x00C1)
+        struct.pack_into("<H", blob, 0x0A, 0x0200)
+        struct.pack_into("<I", blob, 0x4C, len(body))
+        blob[0x800 : 0x800 + len(encoded)] = encoded
+        plc = struct.pack("<II", 0, len(body)) + struct.pack("<HIH", 0, 0x800, 0)
+        clx = bytes([0x02]) + struct.pack("<I", len(plc)) + plc
+        table = bytearray(0x20 + len(clx))
+        table[0x20 : 0x20 + len(clx)] = clx
+        struct.pack_into("<II", blob, 0x1A2, 0x20, len(clx))
+        return compound_file({"WordDocument": bytes(blob), "1Table": bytes(table)})
+
+    (project / "a.doc").write_bytes(word("原文甲"))
+    (project / "b.doc").write_bytes(word("原文乙"))
+    binary = _compare("a.doc", "b.doc")
+    assert binary.status == "ok", binary.error
+    assert binary.payload["kind"] == "doc"
+    assert binary.payload["identical"] is False
+
+
+def test_empty_pdf_without_ocr_is_refused(tmp_path: Path, monkeypatch) -> None:
+    pytest = __import__("pytest")
+    pytest.importorskip("pypdf")
+    project = _workspace(tmp_path, monkeypatch)
+    page = b"BT ET"
+    body = b"<< /Length %d >>\nstream\n%s\nendstream" % (len(page), page)
+    objects = [
+        b"<< /Type /Catalog /Pages 2 0 R >>",
+        b"<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+        b"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R >>",
+        body,
+    ]
+    out = __import__("io").BytesIO()
+    out.write(b"%PDF-1.4\n")
+    offsets = []
+    for number, item in enumerate(objects, start=1):
+        offsets.append(out.tell())
+        out.write(f"{number} 0 obj\n".encode() + item + b"\nendobj\n")
+    xref = out.tell()
+    out.write(f"xref\n0 {len(objects) + 1}\n".encode())
+    out.write(b"0000000000 65535 f \n")
+    for offset in offsets:
+        out.write(f"{offset:010d} 00000 n \n".encode())
+    out.write(
+        f"trailer\n<< /Size {len(objects) + 1} /Root 1 0 R >>\nstartxref\n{xref}\n%%EOF\n".encode()
+    )
+    (project / "blank.pdf").write_bytes(out.getvalue())
+    (project / "blank-b.pdf").write_bytes(out.getvalue())
+    result = invoke(
+        "company_office_compare", "lab",
+        {"project": PROJECT, "file_a": "blank.pdf", "file_b": "blank-b.pdf", "ocr_mode": "off"},
+    )
+    assert result.status == "error"
+    assert "ocr_mode=off" in (result.error or "")

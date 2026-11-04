@@ -132,6 +132,8 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="company-agent")
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("capabilities")
+    sub.add_parser("harness")
+    sub.add_parser("architecture")
     tools_cmd = sub.add_parser("tools")
     tools_cmd.add_argument("--preset")
     sub.add_parser("doctor")
@@ -156,6 +158,25 @@ def main(argv: list[str] | None = None) -> int:
         parser.error("approval context requires --approved")
     if ns.command != "invoke" and os.environ.get("COMPANY_AGENT_APPROVAL_CONTEXT"):
         parser.error("approval context is only valid for invoke")
+    if ns.command == "harness":
+        from company_agent.harness_compat import HarnessCompatError, migration_manifest
+
+        try:
+            payload = migration_manifest()
+        except (HarnessCompatError, RuntimeError, OSError, ValueError, TypeError):
+            print(_dump({"compatible": False, "error": "harness contract is invalid"}))
+            return 1
+        print(_dump(payload))
+        return 0 if payload.get("compatible") is True else 1
+    if ns.command == "architecture":
+        from company_agent.super_dsh import SuperDshError, topology
+
+        try:
+            print(_dump(topology()))
+        except SuperDshError:
+            print(_dump({"error": "super-dsh architecture is invalid"}))
+            return 1
+        return 0
     if ns.command == "capabilities":
         try:
             payload = [asdict(item) for item in list_capabilities()]
@@ -231,8 +252,15 @@ def main(argv: list[str] | None = None) -> int:
         payload["skills_governance"] = _skills_governance()
         payload["tenants_governance"] = _tenants_governance()
         payload["receipts"] = _receipt_summary()
+        from company_agent.harness_compat import HarnessCompatError, harness_summary
+
+        try:
+            payload["harness"] = harness_summary()
+        except (HarnessCompatError, RuntimeError, OSError, ValueError, TypeError):
+            print(_dump({"error": "harness contract is invalid"}))
+            return 1
         print(_dump(payload))
-        return 0
+        return 0 if payload["harness"]["compatible"] else 1
     try:
         raw_arguments = _argument_text(ns.args)
         arguments = strict_json_loads(raw_arguments)

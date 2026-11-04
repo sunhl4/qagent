@@ -41,8 +41,8 @@ def test_sync_matches_registry_selection(verify_skills, mount_root) -> None:
     # company-agent + lab mirrors the historical binary selection.
     assert verify_skills.sync(root=mount_root, profile="company-agent", preset="lab") == 0
     assert {path.name for path in mount_root.iterdir()} == {
-        "company-knowledge", "company-docs-research", "quantum-workflow",
-        "company-plan",
+        "company-knowledge", "company-docs-research", "company-office-matter",
+        "quantum-workflow", "company-plan",
     }
     for name, row in _registry_digests().items():
         mounted = mount_root / name / Path(row["path"]).name
@@ -53,7 +53,8 @@ def test_sync_matches_registry_selection(verify_skills, mount_root) -> None:
 def test_sync_composes_minimal_profile_boot(verify_skills, mount_root) -> None:
     assert verify_skills.sync(root=mount_root, profile="company-agent-minimal", preset="boot") == 0
     assert {path.name for path in mount_root.iterdir()} == {
-        "company-knowledge", "company-docs-research", "company-software-development",
+        "company-knowledge", "company-docs-research", "company-office-matter",
+        "company-software-development",
     }
 
 

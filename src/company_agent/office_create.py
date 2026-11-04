@@ -32,7 +32,7 @@ import zipfile
 from pathlib import Path
 from typing import Any
 
-from company_agent import workspace_files
+from company_agent import office_purpose, workspace_files
 
 MAX_FILE_BYTES = 20_000_000
 MAX_BLOCKS = 2_000
@@ -46,6 +46,7 @@ MAX_TEXT_CHARS = 200_000
 MAX_CELL_TEXT_CHARS = 1_000
 MAX_TITLE_CHARS = 200
 MAX_SHEET_NAME_CHARS = 31
+MAX_XLSX_CELLS = 80_000
 
 _PROJECT_RE = re.compile(r"^[A-Za-z0-9_](?:[A-Za-z0-9_.-]*[A-Za-z0-9_-])?$")
 _KIND_BY_SUFFIX = {
@@ -61,6 +62,20 @@ _W_NS = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
 _CT_NS = "http://schemas.openxmlformats.org/package/2006/content-types"
 _REL_NS = "http://schemas.openxmlformats.org/package/2006/relationships"
 _M_NS = "http://schemas.openxmlformats.org/spreadsheetml/2006/main"
+_XLSX_STYLES = (
+    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+    f'<styleSheet xmlns="{_M_NS}">'
+    '<fonts count="2"><font><sz val="11"/><name val="Calibri"/></font>'
+    '<font><b/><sz val="11"/><name val="Calibri"/></font></fonts>'
+    '<fills count="2"><fill><patternFill patternType="none"/></fill>'
+    '<fill><patternFill patternType="gray125"/></fill></fills>'
+    '<borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders>'
+    '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>'
+    '<cellXfs count="2">'
+    '<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>'
+    '<xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/>'
+    "</cellXfs></styleSheet>"
+)
 _XMIND_NS = "urn:xmind:xmap:xmlns:content:2.0"
 _XMIND_MANIFEST_NS = "urn:xmind:xmap:xmlns:manifest:1.0"
 
@@ -92,11 +107,45 @@ _DOC_RELS = (
     '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument'
     '/2006/relationships/styles" Target="styles.xml"/></Relationships>'
 )
+_TEMPLATES = {
+    "legal-memo": "480",
+    "contract": "500",
+    "demand-letter": "460",
+    "research-report": "520",
+}
+
+
+def _three_line_table(block: dict) -> str:
+    rows = block.get("rows")
+    if not isinstance(rows, list) or not rows:
+        raise OfficeCreateError("table.rows 必须是非空数组")
+    rendered = []
+    for row in rows:
+        if not isinstance(row, list) or not row:
+            raise OfficeCreateError("table 的每一行必须是非空数组")
+        cells = []
+        for cell in row:
+            text = _check_text(cell, "table cell", MAX_CELL_TEXT_CHARS)
+            cells.append(
+                "<w:tc><w:p><w:r><w:t>"
+                + _esc(text)
+                + "</w:t></w:r></w:p></w:tc>"
+            )
+        rendered.append("<w:tr>" + "".join(cells) + "</w:tr>")
+    borders = (
+        '<w:tblBorders>'
+        '<w:top w:val="single" w:sz="8" w:space="0" w:color="000000"/>'
+        '<w:bottom w:val="single" w:sz="8" w:space="0" w:color="000000"/>'
+        '<w:insideH w:val="single" w:sz="4" w:space="0" w:color="000000"/>'
+        "</w:tblBorders>"
+    )
+    return "<w:tbl><w:tblPr>" + borders + "</w:tblPr>" + "".join(rendered) + "</w:tbl>"
 
 
 def create(args: dict) -> dict:
     """Contract entry point: bounded single-file artifact creation."""
 
+    purpose = office_purpose.take(args)
     root = workspace_files.root()
     compound = _compound(args)
     # The P0 lexical fence stays the single source of truth; reuse it.
@@ -108,6 +157,9 @@ def create(args: dict) -> dict:
     existed, target = _resolve_target(root, compound, _overwrite(args))
     _write_atomic(target, data, existed)
     _verify_written(target, data)
+    office_purpose.audit(
+        "office_create", purpose, {"path": compound, "kind": kind, "overwrote": existed}
+    )
     return {
         "created": True,
         "kind": kind,
@@ -254,11 +306,21 @@ def _docx_package(content: dict) -> bytes:
         raise OfficeCreateError("docx content 需要 blocks 数组")
     if len(blocks) > MAX_BLOCKS:
         raise OfficeCreateError(f"block 数 {len(blocks)} 超过上限 {MAX_BLOCKS},拒绝")
+    template = content.get("template")
+    if template is not None and template not in _TEMPLATES:
+        raise OfficeCreateError(
+            "template 只支持 legal-memo、contract、demand-letter、research-report"
+        )
+    pitch = _TEMPLATES[template] if isinstance(template, str) else ""
+    ppr = f'<w:pPr><w:spacing w:line="{pitch}" w:lineRule="auto"/></w:pPr>' if pitch else ""
     body = []
     for block in blocks:
         if not isinstance(block, dict):
             raise OfficeCreateError("每个 block 必须是对象")
         block_kind = block.get("kind")
+        if block_kind == "table":
+            body.append(_three_line_table(block))
+            continue
         text = _check_text(block.get("text"), "block.text", MAX_ITEM_TEXT_CHARS)
         if block_kind == "heading":
             level = block.get("level", 1)
@@ -280,9 +342,20 @@ def _docx_package(content: dict) -> bytes:
                     runs.append(f"<w:r><w:t>{_esc(line)}</w:t></w:r>")
                 else:
                     runs.append(f"<w:r><w:br/><w:t>{_esc(line)}</w:t></w:r>")
-            body.append(f"<w:p>{''.join(runs)}</w:p>")
+            body.append(f"<w:p>{ppr}{''.join(runs)}</w:p>")
+        elif block_kind == "table":
+            body.append(_three_line_table(block))
+            continue
         else:
-            raise OfficeCreateError("block.kind 只支持 heading / paragraph")
+            raise OfficeCreateError("block.kind 只支持 heading / paragraph / table")
+    if pitch:
+        body.append(
+            "<w:sectPr>"
+            '<w:pgSz w:w="11906" w:h="16838"/>'
+            '<w:pgMar w:top="1418" w:right="1474" w:bottom="993" w:left="2098"/>'
+            f'<w:docGrid w:linePitch="{pitch}"/>'
+            "</w:sectPr>"
+        )
     document = (
         '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
         f'<w:document xmlns:w="{_W_NS}"><w:body>{"".join(body)}</w:body></w:document>'
@@ -316,6 +389,18 @@ def _docx_package(content: dict) -> bytes:
     return buffer.getvalue()
 
 
+def _cell_count(sheets: list) -> int:
+    total = 0
+    for sheet in sheets:
+        rows = sheet.get("rows") if isinstance(sheet, dict) else None
+        if not isinstance(rows, list):
+            continue
+        for row in rows:
+            if isinstance(row, list):
+                total += sum(1 for cell in row if cell not in (None, ""))
+    return total
+
+
 def _col_ref(index: int) -> str:
     letters = ""
     while index:
@@ -330,6 +415,8 @@ def _xlsx_package(content: dict) -> bytes:
         raise OfficeCreateError("xlsx content 需要 sheets 数组")
     if len(sheets) > MAX_SHEETS:
         raise OfficeCreateError(f"sheet 数 {len(sheets)} 超过上限 {MAX_SHEETS},拒绝")
+    if _cell_count(sheets) > MAX_XLSX_CELLS:
+        raise OfficeCreateError(f"单元格超过 {MAX_XLSX_CELLS} 上限,拒绝")
     seen: set[str] = set()
     declared: list[str] = []
     sheet_xmls: list[str] = []
@@ -365,6 +452,8 @@ def _xlsx_package(content: dict) -> bytes:
             f'/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet{index}.xml"/>'
             for index in range(1, len(sheets) + 1)
         )
+        + '<Relationship Id="rIdStyles" Type="http://schemas.openxmlformats.org'
+        '/officeDocument/2006/relationships/styles" Target="styles.xml"/>'
         + "</Relationships>"
     )
     content_types = (
@@ -375,6 +464,8 @@ def _xlsx_package(content: dict) -> bytes:
         '<Default Extension="xml" ContentType="application/xml"/>'
         '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats'
         '-officedocument.spreadsheetml.sheet.main+xml"/>'
+        '<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats'
+        '-officedocument.spreadsheetml.styles+xml"/>'
         + "".join(
             f'<Override PartName="/{element}" ContentType="application/vnd.openxmlformats'
             '-officedocument.spreadsheetml.worksheet+xml"/>'
@@ -395,6 +486,7 @@ def _xlsx_package(content: dict) -> bytes:
         package.writestr("_rels/.rels", root_rels)
         package.writestr("xl/workbook.xml", workbook)
         package.writestr("xl/_rels/workbook.xml.rels", workbook_rels)
+        package.writestr("xl/styles.xml", _XLSX_STYLES)
         for index, sheet in enumerate(sheets, 1):
             package.writestr(f"xl/worksheets/sheet{index}.xml", _sheet_xml(sheet))
     return buffer.getvalue()
@@ -431,6 +523,15 @@ def _sheet_xml(sheet: dict) -> str:
                 preserve = ' xml:space="preserve"' if "\n" in text else ""
                 cells.append(
                     f'<m:c r="{ref}" t="inlineStr"><m:is><m:t{preserve}>{_esc(text)}</m:t></m:is></m:c>'
+                )
+            elif isinstance(cell, dict):
+                value = cell.get("v", "")
+                if not isinstance(value, str):
+                    raise OfficeCreateError("单元格样式对象的 v 必须是字符串")
+                text = _check_text(value, "单元格文本", MAX_CELL_TEXT_CHARS)
+                style = ' s="1"' if cell.get("bold") is True else ""
+                cells.append(
+                    f'<m:c r="{ref}"{style} t="inlineStr"><m:is><m:t>{_esc(text)}</m:t></m:is></m:c>'
                 )
             else:
                 raise OfficeCreateError("单元格只支持 字符串/数字/布尔/None")

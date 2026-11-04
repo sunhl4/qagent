@@ -9,6 +9,7 @@ from company_agent.cli import main
 
 def test_doctor_reports_model_and_contract_providers(monkeypatch, capsys) -> None:
     monkeypatch.delenv("DEEPSEEK_API_KEY", raising=False)
+    monkeypatch.delenv("COMPANY_AGENT_DSH_VERSION", raising=False)
     for name in (
         "COMPANY_QUANTUM_PLATFORM_INVOKE_URL",
         "COMPANY_QUANTUM_PLATFORM_TOKEN",
@@ -32,7 +33,11 @@ def test_doctor_reports_model_and_contract_providers(monkeypatch, capsys) -> Non
         "platform", "simulator", "compiler", "device", "compute", "cloud", "model",
         "managed_builtins", "local_model_route", "relay_model_route",
         "knowledge_governance", "skills_governance", "tenants_governance", "receipts",
+        "harness",
     }
+    assert payload["harness"]["compatible"] is True
+    assert payload["harness"]["official_status"] == "unreleased"
+    assert payload["harness"]["migration_mode"] == "dsh-plugin-pack"
     assert payload["tenants_governance"] == {
         "regime": "legacy-single-user", "configured": False, "valid": False,
         "entries": 0, "subjects": 0, "approved_services": 0,
@@ -197,10 +202,10 @@ def test_cli_rejects_non_finite_json_number(capsys) -> None:
 def test_tools_command_exposes_contract_catalog(capsys) -> None:
     assert main(["tools"]) == 0
     tools = json.loads(capsys.readouterr().out)
-    assert len(tools) == 71
+    assert len(tools) == 75
     assert "quantum_algorithm_catalog" in {row["name"] for row in tools}
     assert tools[0]["name"] == "company_work_item"
-    assert tools[-1]["name"] == "company_office_deliver"
+    assert tools[-1]["name"] == "company_office_surface"
 
 
 def test_tools_command_filters_by_preset(capsys) -> None:
@@ -228,6 +233,10 @@ def test_tools_command_filters_by_preset(capsys) -> None:
         "company_office_open",
         "company_office_compute",
         "company_office_deliver",
+        "company_office_review_table",
+        "company_office_files",
+        "company_office_fix",
+        "company_office_surface",
         "company_portal_open",
     }
     assert main(["tools", "--preset", "lab"]) == 0

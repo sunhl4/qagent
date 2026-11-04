@@ -25,7 +25,8 @@ def _workspace(tmp_path: Path, monkeypatch) -> Path:
 
 def _docx(path: str, blocks: list[dict]) -> str:
     result = invoke(
-        "company_office_create", "lab", {"project": PROJECT, "path": path, "content": {"blocks": blocks}}
+        "company_office_create", "lab", {"purpose": "测试写入",
+            "project": PROJECT, "path": path, "content": {"blocks": blocks}}
     )
     assert result.status == "ok", result.error
     look = invoke("company_office_analyze", "lab", {"project": PROJECT, "path": path})
@@ -82,7 +83,8 @@ def test_missing_fingerprint_missing_file_and_oob_are_failed(
     _workspace(tmp_path, monkeypatch)
     sha = _docx("合同.docx", [{"kind": "paragraph", "text": "双方应当友好协商。"}])
     invoke(
-        "company_office_create", "lab", {"project": PROJECT, "path": "notes.md", "content": {"text": "第1行 事件甲"}}
+        "company_office_create", "lab", {"purpose": "测试写入",
+            "project": PROJECT, "path": "notes.md", "content": {"text": "第1行 事件甲"}}
     )
     known = invoke(
         "company_office_analyze", "lab", {"project": PROJECT, "path": "notes.md"}
@@ -132,7 +134,8 @@ def test_unimplemented_locators_stay_incomplete(tmp_path: Path, monkeypatch) -> 
     _workspace(tmp_path, monkeypatch)
     sha = _docx("合同.docx", [{"kind": "paragraph", "text": "双方应当友好协商。"}])
     invoke(
-        "company_office_create", "lab", {"project": PROJECT, "path": "表.xlsx", "content": {"sheets": [
+        "company_office_create", "lab", {"purpose": "测试写入",
+            "project": PROJECT, "path": "表.xlsx", "content": {"sheets": [
             {"name": "数据", "rows": [["列头"], [7.5]]}
         ]}},
     )
@@ -160,7 +163,8 @@ def test_unimplemented_locators_stay_incomplete(tmp_path: Path, monkeypatch) -> 
 def test_xlsx_cell_and_txt_range_locators_resolve(tmp_path: Path, monkeypatch) -> None:
     _workspace(tmp_path, monkeypatch)
     invoke(
-        "company_office_create", "lab", {"project": PROJECT, "path": "表.xlsx", "content": {"sheets": [
+        "company_office_create", "lab", {"purpose": "测试写入",
+            "project": PROJECT, "path": "表.xlsx", "content": {"sheets": [
             {"name": "数据", "rows": [["位置", "计量"], ["甲点值", "8.5"]]}
         ]}},
     )
@@ -181,7 +185,12 @@ def test_xlsx_cell_and_txt_range_locators_resolve(tmp_path: Path, monkeypatch) -
 
     invoke(
         "company_office_create", "lab",
-        {"project": PROJECT, "path": "备注.md", "content": {"text": "事件甲\n事件乙\n事件丙"}},
+        {
+            "purpose": "测试写入",
+            "project": PROJECT,
+            "path": "备注.md",
+            "content": {"text": "事件甲\n事件乙\n事件丙"},
+        },
     )
     result = invoke(
         "company_office_validate", "lab",

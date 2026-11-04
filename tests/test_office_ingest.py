@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import hashlib
 import io
+import json
 import zipfile
 from pathlib import Path
 
@@ -293,9 +294,9 @@ def test_refusals_are_honest_fail_closed(tmp_path: Path, monkeypatch) -> None:
         result = invoke("company_office_analyze", "lab", {"project": PROJECT, "path": name})
         assert result.status == "error", name
     doc = invoke("company_office_analyze", "lab", {"project": PROJECT, "path": "old.doc"})
-    assert "另存为" in doc.error
+    assert "doc_needs_docx" in doc.error
     png = invoke("company_office_analyze", "lab", {"project": PROJECT, "path": "photo.png"})
-    assert "OCR 未接入" in png.error
+    assert "OCR 未配置" in png.error
     pptx = invoke("company_office_analyze", "lab", {"project": PROJECT, "path": "deck.pptx"})
     # .pptx 属合同声明的支持类型(逐片文本层);坏包必须按"损坏"fail-closed,
     # 而不能退回"未接入"的通用话术。
@@ -381,3 +382,178 @@ def _minimal_pdf_bytes() -> bytes:
         out.write(f"{offset:010d} 00000 n \n".encode())
     out.write(f"trailer\n<< /Size {len(objects) + 1} /Root 1 0 R >>\nstartxref\n{xref_at}\n%%EOF\n".encode())
     return out.getvalue()
+
+
+def _word_doc(text: str) -> bytes:
+    import struct
+
+    from company_agent.office_binary import compound_file
+
+    body = text.replace("\n", "\r") + "\r"
+    encoded = body.encode("utf-16-le")
+    word = bytearray(0x800 + len(encoded))
+    struct.pack_into("<HH", word, 0, 0xA5EC, 0x00C1)
+    struct.pack_into("<H", word, 0x0A, 0x0200)
+    struct.pack_into("<I", word, 0x4C, len(body))
+    word[0x800 : 0x800 + len(encoded)] = encoded
+    plc = struct.pack("<II", 0, len(body)) + struct.pack("<HIH", 0, 0x800, 0)
+    clx = bytes([0x02]) + struct.pack("<I", len(plc)) + plc
+    table = bytearray(0x20 + len(clx))
+    table[0x20 : 0x20 + len(clx)] = clx
+    struct.pack_into("<II", word, 0x1A2, 0x20, len(clx))
+    return compound_file({"WordDocument": bytes(word), "1Table": bytes(table)})
+
+
+def test_doc_piece_table_text_is_readable(tmp_path: Path, monkeypatch) -> None:
+    project = _workspace(tmp_path, monkeypatch)
+    (project / "legacy.doc").write_bytes(_word_doc("合同正文\r第二条"))
+    result = invoke("company_office_analyze", "lab", {"project": PROJECT, "path": "legacy.doc"})
+    assert result.status == "ok", result.error
+    assert result.payload["kind"] == "doc"
+    assert "合同正文" in result.payload["items"][0]["text"]
+    assert result.payload["revisions"] == []
+
+
+def test_xlsx_style_preview_keeps_theme_fill_border_and_widths(
+    tmp_path: Path, monkeypatch
+) -> None:
+    project = _workspace(tmp_path, monkeypatch)
+    sheet = (
+        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+        '<m:worksheet xmlns:m="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
+        '<m:cols><m:col min="1" max="2" width="18.5"/></m:cols>'
+        '<m:sheetData><m:row r="1" ht="22" spans="1:1">'
+        '<m:c r="A1" s="1" t="inlineStr"><m:is><m:t>标题</m:t></m:is></m:c>'
+        "</m:row></m:sheetData>"
+        '<m:mergeCells count="1"><m:mergeCell ref="A1:B1"/></m:mergeCells>'
+        "</m:worksheet>"
+    )
+    styles = (
+        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+        '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
+        '<fonts count="2"><font><sz val="11"/><name val="Calibri"/></font>'
+        '<font><b/><sz val="16"/><color theme="4"/><name val="宋体"/></font></fonts>'
+        '<fills count="3"><fill><patternFill patternType="none"/></fill>'
+        '<fill><patternFill patternType="gray125"/></fill>'
+        '<fill><patternFill patternType="solid"><fgColor rgb="FFFF0000"/></patternFill></fill>'
+        "</fills>"
+        '<borders count="2"><border/>'
+        '<border><left style="thin"/><right style="thin"/>'
+        '<top style="thin"/><bottom style="thin"/></border></borders>'
+        '<cellXfs count="2">'
+        '<xf fontId="0" fillId="0" borderId="0"/>'
+        '<xf fontId="1" fillId="2" borderId="1" applyFont="1" applyFill="1" applyBorder="1">'
+        '<alignment horizontal="center" vertical="center" wrapText="1"/>'
+        "</xf></cellXfs></styleSheet>"
+    )
+    theme = (
+        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+        '<a:theme xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">'
+        "<a:themeElements><a:clrScheme>"
+        '<a:lt1><a:sysClr val="window" lastClr="FFFFFF"/></a:lt1>'
+        '<a:dk1><a:sysClr val="windowText" lastClr="000000"/></a:dk1>'
+        '<a:lt2><a:srgbClr val="EEECE1"/></a:lt2>'
+        '<a:dk2><a:srgbClr val="1F497D"/></a:dk2>'
+        '<a:accent1><a:srgbClr val="4F81BD"/></a:accent1>'
+        "</a:clrScheme></a:themeElements></a:theme>"
+    )
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, "w") as package:
+        package.writestr(
+            "xl/workbook.xml",
+            '<m:workbook xmlns:m="http://schemas.openxmlformats.org/spreadsheetml/2006/main" '
+            'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
+            '<m:sheets><m:sheet name="总表" sheetId="1" r:id="rId1"/></m:sheets></m:workbook>',
+        )
+        package.writestr(
+            "xl/_rels/workbook.xml.rels",
+            '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+            '<Relationship Id="rId1" Target="worksheets/sheet1.xml"/></Relationships>',
+        )
+        package.writestr("xl/worksheets/sheet1.xml", sheet)
+        package.writestr("xl/styles.xml", styles)
+        package.writestr("xl/theme/theme1.xml", theme)
+    (project / "styled.xlsx").write_bytes(buffer.getvalue())
+    result = invoke("company_office_analyze", "lab", {"project": PROJECT, "path": "styled.xlsx"})
+    assert result.status == "ok", result.error
+    preview = result.payload["preview"]
+    assert preview["merges"] == ["A1:B1"]
+    assert preview["widths"] == ["18.5", "18.5"]
+    assert preview["widths_px"] == [129, 129]
+    assert preview["theme"][4] == "4F81BD"
+    cell = preview["rows"][0]["cells"][0]
+    assert cell["v"] == "标题"
+    assert cell["bold"] is True
+    assert cell["color"] == "4F81BD"
+    assert cell["fill"] == "FFFF0000"
+    assert cell["align"] == "center"
+    assert cell["valign"] == "center"
+    assert cell["border"] == "l:thin r:thin t:thin b:thin"
+    assert cell["name"] == "宋体"
+    assert cell["size"] == "16"
+    assert cell["wrap"] is True
+    assert cell["cs"] == 2
+    assert preview["rows"][0]["height"] == "22"
+    assert preview["rows"][0]["height_px"] == 29
+
+
+def test_theme_tint_lightens_a_positive_value() -> None:
+    from company_agent.office_ingest import _apply_tint
+
+    assert _apply_tint("4F81BD", "0.4") == "95B3D7"
+    darker = _apply_tint("4F81BD", "-0.5")
+    assert darker != "4F81BD"
+    assert int(darker, 16) < int("4F81BD", 16)
+
+
+def test_matter_files_are_read_only(tmp_path: Path, monkeypatch) -> None:
+    project = _workspace(tmp_path, monkeypatch)
+    (project / "project.company-timeline.json").write_text(
+        json.dumps(
+            {
+                "schemaVersion": 1,
+                "kind": "timeline",
+                "events": [
+                    {"date": "2026-03-01", "title": "立项", "evidence": []},
+                    {
+                        "date": "2026-03-02",
+                        "title": "签约",
+                        "evidence": [{"path": "证据.md"}],
+                    },
+                ],
+            },
+            ensure_ascii=False,
+        ),
+        encoding="utf-8",
+    )
+    (project / "project.company-mindmap.json").write_text(
+        json.dumps(
+            {
+                "schemaVersion": 1,
+                "kind": "mindmap",
+                "root": {
+                    "label": "根",
+                    "evidence": [{"path": "证据.md"}],
+                    "children": [{"label": "甲"}],
+                },
+            },
+            ensure_ascii=False,
+        ),
+        encoding="utf-8",
+    )
+    timeline = invoke(
+        "company_office_analyze", "lab",
+        {"project": PROJECT, "path": "project.company-timeline.json"},
+    )
+    assert timeline.status == "ok", timeline.error
+    assert timeline.payload["kind"] == "matter"
+    assert timeline.payload["items"][0]["label"] == "待补出处"
+    assert "立项" in timeline.payload["items"][0]["text"]
+    assert "1 项没有出处" in timeline.payload["note"]
+    mind = invoke(
+        "company_office_analyze", "lab",
+        {"project": PROJECT, "path": "project.company-mindmap.json"},
+    )
+    assert mind.status == "ok", mind.error
+    assert mind.payload["svg"].startswith("<svg")
+    assert "待补出处" in mind.payload["svg"]

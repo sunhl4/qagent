@@ -12,9 +12,221 @@
       "operation": "work-item.dispatch",
       "input_handles": [],
       "output_handles": [],
-      "description": "Manage the bounded SuperAgent-compatible work-item ledger. Local state only; never starts a model, shell, scheduler or provider operation.",
-      "parameters": {"type":"object","required":["action"],"properties":{"action":{"type":"string","enum":["receive","evaluate","recover","summary"]},"source":{"type":"string"},"kind":{"type":"string","enum":["company","github","feishu","workspace"]},"thread_id":{"type":"string"},"actor_id":{"type":"string"},"text":{"type":"string"},"human":{"type":"boolean"},"addressed":{"type":"string","enum":["mention","direct"]},"trigger_id":{"type":"string"},"mode":{"type":"string","enum":["off","observe","auto"]},"scope":{"type":"string"},"title":{"type":"string"},"reason":{"type":"string"},"evidence":{"type":"string"},"strength":{"type":"string","enum":["explicit","inferred"]},"worktree_name":{"type":"string"}},"additionalProperties":false},
-      "output": {"type":"object","required":["action","status","authority","items","work_item_id","trigger_id","thread_key","decision_id","mandate_id","ticket_id","assignment_id","source","kind","count","available"],"properties":{"action":{"type":"string"},"status":{"type":"string","const":"ok"},"authority":{"type":"string","enum":["none","candidate","mandate"]},"items":{"type":"array","items":{"type":"object","properties":{},"additionalProperties":true}},"work_item_id":{"type":"string"},"trigger_id":{"type":"string"},"thread_key":{"type":"string"},"decision_id":{"type":"string"},"mandate_id":{"type":"string"},"ticket_id":{"type":"string"},"assignment_id":{"type":"string"},"source":{"type":"string"},"kind":{"type":"string"},"count":{"type":"integer","minimum":0},"available":{"type":"boolean"}},"additionalProperties":false}
+      "description": "Record a Super DSH trigger, mandate, platform signal, execution binding, or unknown-execution close. receive, evaluate, recover, bind and reconcile require tenant_id. evaluate opens a ticket only when mode is auto and strength is explicit. bind stores only a dsh: session reference and a company tool pack, and only while that reference is empty. reconcile closes an unknown execution as ended and does not submit a new session. recover returns that short record, including unknown executions, and does not return session text or results. Closed channels and unknown schema versions are rejected. Local ledger only; never starts a model, shell, scheduler or provider operation.",
+      "parameters": {
+        "type": "object",
+        "required": [
+          "action"
+        ],
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "receive",
+              "evaluate",
+              "recover",
+              "summary",
+              "signal",
+              "bind",
+              "reconcile"
+            ]
+          },
+          "source": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "company",
+              "github",
+              "feishu",
+              "workspace",
+              "research"
+            ]
+          },
+          "thread_id": {
+            "type": "string"
+          },
+          "actor_id": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "human": {
+            "type": "boolean"
+          },
+          "addressed": {
+            "type": "string",
+            "enum": [
+              "mention",
+              "direct"
+            ]
+          },
+          "trigger_id": {
+            "type": "string"
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "off",
+              "observe",
+              "auto"
+            ]
+          },
+          "scope": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "evidence": {
+            "type": "string"
+          },
+          "strength": {
+            "type": "string",
+            "enum": [
+              "explicit",
+              "inferred"
+            ]
+          },
+          "worktree_name": {
+            "type": "string"
+          },
+          "signal_type": {
+            "type": "string",
+            "enum": [
+              "experiment.completed.v1",
+              "lease.changed.v1",
+              "budget.exhausted.v1"
+            ]
+          },
+          "tenant_id": {
+            "type": "string"
+          },
+          "idempotency_key": {
+            "type": "string"
+          },
+          "subject_id": {
+            "type": "string"
+          },
+          "policy_version": {
+            "type": "string"
+          },
+          "schema_version": {
+            "type": "string"
+          },
+          "project_id": {
+            "type": "string"
+          },
+          "resource_id": {
+            "type": "string"
+          },
+          "resource_version": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "time": {
+            "type": "string"
+          },
+          "session_ref": {
+            "type": "string"
+          },
+          "tool_pack": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "output": {
+        "type": "object",
+        "required": [
+          "action",
+          "status",
+          "authority",
+          "items",
+          "work_item_id",
+          "trigger_id",
+          "thread_key",
+          "decision_id",
+          "mandate_id",
+          "ticket_id",
+          "assignment_id",
+          "source",
+          "kind",
+          "count",
+          "available"
+        ],
+        "properties": {
+          "action": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "const": "ok"
+          },
+          "authority": {
+            "type": "string",
+            "enum": [
+              "none",
+              "candidate",
+              "mandate"
+            ]
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {},
+              "additionalProperties": true
+            }
+          },
+          "work_item_id": {
+            "type": "string"
+          },
+          "trigger_id": {
+            "type": "string"
+          },
+          "thread_key": {
+            "type": "string"
+          },
+          "decision_id": {
+            "type": "string"
+          },
+          "mandate_id": {
+            "type": "string"
+          },
+          "ticket_id": {
+            "type": "string"
+          },
+          "assignment_id": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "count": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "available": {
+            "type": "boolean"
+          },
+          "session_ref": {
+            "type": "string"
+          },
+          "tool_pack": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      }
     },
     {
       "name": "company_capabilities",
@@ -5980,7 +6192,8 @@
         "required": [
           "project",
           "path",
-          "content"
+          "content",
+          "purpose"
         ],
         "properties": {
           "project": {
@@ -6004,6 +6217,12 @@
             "type": "boolean",
             "default": false,
             "description": "Replace an existing file; absent/false refuses with an explicit error."
+          },
+          "purpose": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80,
+            "description": "One Chinese sentence of at most 80 characters, written onto the HMAC audit line with a short argument summary."
           }
         },
         "additionalProperties": false
@@ -6062,7 +6281,7 @@
       "operation": "office.analyze",
       "input_handles": [],
       "output_handles": [],
-      "description": "Read-only text ingestion for one file inside a project directory of the mounted workspace (COMPANY_AGENT_TOOL_WORKSPACE): docx paragraph text (paragraph-number anchors), xlsx per-sheet bounded previews (32 sheets, 5000 rows per sheet, explicit row omission), pptx per-slide text layers (32 slides, slide anchors), pdf text-layer pages (page anchors) and .txt/.md lines. 20MB file cap, result-budget paging via offset, always returns sha256/bytes and explicit truncated flags; legacy binaries (.doc/.xls/.ppt/.wps/.et/.dps), images and unknown suffixes fail closed honestly; no OCR, no conversion, no execution, no external calls, no quantum handles.",
+      "description": "Read-only text ingestion for one file inside a project directory of the mounted workspace (COMPANY_AGENT_TOOL_WORKSPACE): docx paragraph text (paragraph-number anchors), xlsx per-sheet bounded previews plus column type/empty/min/max/sum/avg and a bounded style preview, pptx per-slide text layers (32 slides, slide anchors), pdf text-layer pages (page anchors; an empty text layer is OCR), .txt/.md lines, in-process .doc piece-table text and .xls cached BIFF values. Images and empty PDF text layers use COMPANY_AGENT_OCR_CMD and refuse when it is absent. 20MB file cap, result-budget paging via offset, always returns sha256/bytes and explicit truncated flags; .ppt and unknown suffixes fail closed; no conversion, no execution, no external calls, no quantum handles.",
       "parameters": {
         "type": "object",
         "required": [
@@ -6108,11 +6327,15 @@
           "kind": {
             "type": "string",
             "enum": [
+              "doc",
               "docx",
-              "xlsx",
-              "pptx",
+              "image",
               "pdf",
-              "text"
+              "pptx",
+              "text",
+              "matter",
+              "xls",
+              "xlsx"
             ]
           },
           "path": {
@@ -6170,6 +6393,229 @@
           "truncated": {
             "type": "boolean"
           },
+          "svg": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "note": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "revisions": {
+            "type": "array",
+            "maxItems": 32,
+            "description": ".doc only: revision marks found in the piece-table CLX.",
+            "items": {
+              "type": "object",
+              "required": [
+                "author",
+                "when",
+                "kind"
+              ],
+              "properties": {
+                "author": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 80
+                },
+                "when": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 40
+                },
+                "kind": {
+                  "type": "string",
+                  "enum": [
+                    "ins",
+                    "del"
+                  ]
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "columns": {
+            "type": "array",
+            "maxItems": 64,
+            "description": "xlsx only: first-sheet column type and numeric summary.",
+            "items": {
+              "type": "object",
+              "required": [
+                "name",
+                "type",
+                "empty"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "maxLength": 128
+                },
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "date",
+                    "number",
+                    "text"
+                  ]
+                },
+                "empty": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "min": {
+                  "type": "number"
+                },
+                "max": {
+                  "type": "number"
+                },
+                "sum": {
+                  "type": "number"
+                },
+                "avg": {
+                  "type": "number"
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "preview": {
+            "type": "object",
+            "description": "xlsx only: bounded style preview of the first sheet.",
+            "required": [
+              "sheet",
+              "merges",
+              "rows"
+            ],
+            "properties": {
+              "sheet": {
+                "type": "string",
+                "maxLength": 128
+              },
+              "merges": {
+                "type": "array",
+                "maxItems": 32,
+                "items": {
+                  "type": "string",
+                  "maxLength": 32
+                }
+              },
+              "rows": {
+                "type": "array",
+                "maxItems": 8,
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "cells"
+                  ],
+                  "properties": {
+                    "height": {
+                      "type": "string",
+                      "maxLength": 16
+                    },
+                    "height_px": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 4096
+                    },
+                    "cells": {
+                      "type": "array",
+                      "maxItems": 64,
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "v"
+                        ],
+                        "properties": {
+                          "v": {
+                            "type": "string",
+                            "maxLength": 200
+                          },
+                          "bold": {
+                            "type": "boolean"
+                          },
+                          "color": {
+                            "type": "string",
+                            "maxLength": 16
+                          },
+                          "fill": {
+                            "type": "string",
+                            "maxLength": 16
+                          },
+                          "align": {
+                            "type": "string",
+                            "maxLength": 16
+                          },
+                          "valign": {
+                            "type": "string",
+                            "maxLength": 16
+                          },
+                          "border": {
+                            "type": "string",
+                            "maxLength": 64
+                          },
+                          "name": {
+                            "type": "string",
+                            "maxLength": 32
+                          },
+                          "size": {
+                            "type": "string",
+                            "maxLength": 16
+                          },
+                          "wrap": {
+                            "type": "boolean"
+                          },
+                          "rs": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 5000
+                          },
+                          "cs": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 64
+                          }
+                        },
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "widths": {
+                "type": "array",
+                "maxItems": 64,
+                "items": {
+                  "type": "string",
+                  "maxLength": 16
+                }
+              },
+              "widths_px": {
+                "type": "array",
+                "maxItems": 64,
+                "items": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 4096
+                }
+              },
+              "theme": {
+                "type": "array",
+                "maxItems": 12,
+                "items": {
+                  "type": "string",
+                  "maxLength": 16
+                }
+              },
+              "truncated": {
+                "type": "boolean",
+                "description": "True when the style model omitted rows, columns, merges or widths past its bound."
+              }
+            },
+            "additionalProperties": false
+          },
           "trust": {
             "type": "string",
             "const": "untrusted_reference_data"
@@ -6184,7 +6630,7 @@
       "operation": "office.compare",
       "input_handles": [],
       "output_handles": [],
-      "description": "Read-only line-level comparison for two same-kind files inside a project directory of the mounted workspace: .txt/.md lines or .docx visible paragraphs (the company_office_analyze L{n} anchors). Bounded to 4000 units per side: more refuses instead of comparing a stand-in; the receipt carries exact added/removed line counts, at most 40 hunk samples with an explicit truncated flag and 200 characters per shown line. Mixed kinds, unsupported kinds, non-UTF-8 text and corrupt packages fail closed; no conversion, no OCR, no external calls, no quantum handles.",
+      "description": "Read-only comparison for two same-kind files inside a project directory of the mounted workspace: .txt/.md lines, .docx paragraphs, .pdf pages, .xlsx rows, or .doc text. Default granularity is line; word adds equal/changed/removed/added/moved and may write a .comp.json when output_path is set. ocr_mode=on is the only path that OCRs an empty PDF text layer; off refuses that file. Sources are never modified. Bounded to 4000 units per side: more refuses instead of comparing a stand-in; the receipt carries exact added/removed/moved counts, at most 40 hunk samples with an explicit truncated flag and 200 characters per shown line. Mixed kinds, unsupported kinds, non-UTF-8 text and corrupt packages fail closed; no conversion, no quantum handles.",
       "parameters": {
         "type": "object",
         "required": [
@@ -6208,6 +6654,23 @@
             "type": "string",
             "pattern": "^[^\\\\:*?\"<>|\\u0000-\\u001f]{1,256}$",
             "description": "Workspace path relative to the project directory; forward slashes only, no .. segments, no absolute paths."
+          },
+          "granularity": {
+            "type": "string",
+            "enum": ["line", "word"],
+            "default": "line",
+            "description": "line compares visible lines or paragraphs. word compares CJK runs and ASCII words and can mark a unique relocation as moved."
+          },
+          "output_path": {
+            "type": "string",
+            "pattern": "^[^\\\\:*?\"<>|\\u0000-\\u001f]{1,256}$",
+            "description": "Optional relative .comp.json path. The two source files are not modified."
+          },
+          "ocr_mode": {
+            "type": "string",
+            "enum": ["off", "on"],
+            "default": "off",
+            "description": "on OCRs an empty PDF text layer. off refuses that PDF. Other kinds ignore it."
           }
         },
         "additionalProperties": false
@@ -6223,6 +6686,8 @@
           "identical",
           "added",
           "removed",
+          "moved",
+          "granularity",
           "hunks",
           "truncated",
           "trust"
@@ -6231,8 +6696,11 @@
           "kind": {
             "type": "string",
             "enum": [
+              "doc",
+              "docx",
+              "pdf",
               "text",
-              "docx"
+              "xlsx"
             ]
           },
           "file_a": {
@@ -6271,6 +6739,24 @@
             "minimum": 0,
             "description": "Lines present in A and absent in B."
           },
+          "moved": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Units that left one place and appear once on the other side."
+          },
+          "granularity": {
+            "type": "string",
+            "enum": [
+              "line",
+              "word"
+            ]
+          },
+          "comp_path": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256,
+            "description": "Workspace path of the written .comp.json when output_path was set."
+          },
           "hunks": {
             "type": "array",
             "maxItems": 40,
@@ -6294,7 +6780,8 @@
                   "enum": [
                     "changed",
                     "added",
-                    "removed"
+                    "removed",
+                    "moved"
                   ]
                 },
                 "at_a": {
@@ -6347,13 +6834,14 @@
       "operation": "office.edit",
       "input_handles": [],
       "output_handles": [],
-      "description": "Surgical tracked-changes editing for one existing .docx inside a project directory of the mounted workspace: each edit matches its find text inside a single paragraph's visible text, the before/after pair is reduced to minimal edit spans (common runs of 4+ characters stay untouched, no 6+ unchanged run inside a change), and the result lands as standard w:ins/w:del revisions with the given author and UTC date, so Word/WPS show Word-native accept/reject tracks. Anchors that miss are reported, anchors that hit more than once skip the whole edit unless occurrences=all, unchanged and newline-carrying finds/replace skip, and an edit batch that produces no tracked change refuses without writing anything. The written package is re-opened and the on-disk w:ins/w:del counts plus every changed paragraph's replayed visible text are re-verified before success (the B5 gate). Standard library only, atomic temp+replace write with sha256 re-verified by re-read, cap overshoot (128 edits, 4000 chars per find/replace) refuses; no conversion, no template execution, no external calls, no quantum handles.",
+      "description": "Surgical tracked-changes editing for one existing .docx inside a project directory of the mounted workspace: each edit matches its find text inside a single paragraph's visible text, the before/after pair is reduced to minimal edit spans (common runs of 4+ characters stay untouched, no 6+ unchanged run inside a change), and the result lands as standard w:ins/w:del revisions with the given author and UTC date, so Word/WPS show Word-native accept/reject tracks. Anchors that miss are reported, anchors that hit more than once skip the whole edit unless occurrences=all, unchanged and newline-carrying finds/replace skip, and an edit batch that produces no tracked change refuses without writing anything. Optional files prechecks every document first: ambiguity or a hard limit writes nothing, and a missing anchor is not an error. A QA failure restores the live file, writes a degraded copy, and does not report redline success. The written package is re-opened and the on-disk w:ins/w:del counts plus every changed paragraph's replayed visible text are re-verified before success (the B5 gate). Standard library only, atomic temp+replace write with sha256 re-verified by re-read, cap overshoot (128 edits, 4000 chars per find/replace) refuses; no conversion, no template execution, no external calls, no quantum handles.",
       "parameters": {
         "type": "object",
         "required": [
           "project",
           "path",
-          "edits"
+          "edits",
+          "purpose"
         ],
         "properties": {
           "project": {
@@ -6412,6 +6900,44 @@
             "minLength": 1,
             "maxLength": 120,
             "description": "One-line reason for the audit ledger when COMPANY_AGENT_AUDIT_* is configured; missing ledger skips the line without changing the edit."
+          },
+          "purpose": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80,
+            "description": "One Chinese sentence of at most 80 characters, written onto the HMAC audit line with a short argument summary."
+          },
+          "files": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 16,
+            "description": "When present, path and edits are ignored and every file is prechecked before the first write.",
+            "items": {
+              "type": "object",
+              "required": ["path", "edits"],
+              "additionalProperties": false,
+              "properties": {
+                "path": {
+                  "type": "string",
+                  "pattern": "^[^\\\\:*?\"<>|\\u0000-\\u001f]{1,256}$"
+                },
+                "edits": {
+                  "type": "array",
+                  "minItems": 1,
+                  "maxItems": 128,
+                  "items": {
+                    "type": "object",
+                    "required": ["find", "replace"],
+                    "additionalProperties": false,
+                    "properties": {
+                      "find": {"type": "string", "minLength": 1, "maxLength": 4000},
+                      "replace": {"type": "string", "maxLength": 4000},
+                      "occurrences": {"type": "string", "enum": ["all"]}
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "additionalProperties": false
@@ -6636,6 +7162,31 @@
               "additionalProperties": false
             }
           },
+          "citations": {
+            "type": "array",
+            "maxItems": 128,
+            "description": "Passed references rendered as @@path|quote@@ for the preview page.",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "render"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 64
+                },
+                "render": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 400
+                }
+              },
+              "additionalProperties": false
+            }
+          },
           "trust": {
             "type": "string",
             "const": "untrusted_reference_data"
@@ -6655,7 +7206,8 @@
         "type": "object",
         "required": [
           "project",
-          "spec"
+          "spec",
+          "purpose"
         ],
         "properties": {
           "project": {
@@ -6743,6 +7295,12 @@
           "overwrite": {
             "type": "boolean",
             "default": false
+          },
+          "purpose": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80,
+            "description": "One Chinese sentence of at most 80 characters, written onto the HMAC audit line with a short argument summary."
           }
         },
         "additionalProperties": false
@@ -6757,7 +7315,8 @@
           "bytes_svg",
           "sha256_json",
           "sha256_svg",
-          "overwrote"
+          "overwrote",
+          "fence"
         ],
         "properties": {
           "chart_id": {
@@ -6798,6 +7357,12 @@
           },
           "overwrote": {
             "type": "boolean"
+          },
+          "fence": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 20000,
+            "description": "Canonical spec inside an lm-chart fence for the caller to echo."
           }
         },
         "additionalProperties": false
@@ -6815,7 +7380,8 @@
         "required": [
           "project",
           "kind",
-          "data"
+          "data",
+          "purpose"
         ],
         "properties": {
           "project": {
@@ -6845,6 +7411,12 @@
             "properties": {},
             "additionalProperties": true,
             "description": "timeline -> {events:[{id?,date,title,summary?,kind?,evidence?:[{path,line_ref?,quote?}]}]}; chronology -> {entries:[{id?,date,fact,people?,evidence?:[...]}]}; mindmap -> {root:{id?,label,kind?,children:[...]}}. The adapter validates each shape and refuses overshoot."
+          },
+          "purpose": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80,
+            "description": "One Chinese sentence of at most 80 characters, written onto the HMAC audit line with a short argument summary."
           }
         },
         "additionalProperties": false
@@ -6933,6 +7505,27 @@
             "type": "string",
             "pattern": "^[0-9a-f]{64}$",
             "maxLength": 64
+          },
+          "year_from": {
+            "type": "string",
+            "pattern": "^[0-9]{4}$",
+            "maxLength": 4
+          },
+          "year_to": {
+            "type": "string",
+            "pattern": "^[0-9]{4}$",
+            "maxLength": 4
+          },
+          "note": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "svg": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 20000,
+            "description": "Deterministic mindmap SVG. Omitted when the drawing would exceed the receipt."
           }
         },
         "additionalProperties": false
@@ -6968,9 +7561,10 @@
             "type": "string",
             "enum": [
               "baseline",
-              "imported"
+              "imported",
+              "retemplate"
             ],
-            "description": "baseline = audit against the GB/T 9704-2012 draft rule table (also the scope for an explicit full re-template request); imported = describe the file's own dominant format, no template applied."
+            "description": "baseline = audit against the GB/T 9704-2012 draft rule table; retemplate = the same rules when the user asked for a full reflow; imported = describe the file's own dominant format, no template applied."
           }
         },
         "additionalProperties": false
@@ -6997,7 +7591,8 @@
             "type": "string",
             "enum": [
               "baseline",
-              "imported"
+              "imported",
+              "retemplate"
             ]
           },
           "path": {
@@ -7161,13 +7756,14 @@
       "operation": "office.pptx",
       "input_handles": [],
       "output_handles": [],
-      "description": "Structured pptx generation and in-place shape text rewrite for one project directory of the mounted workspace, the stdlib port of the §4.5 slice (no officecli, no conversion): action=render writes one .pptx from a slide array where each slide is a structured layout - title (heading plus optional subtitle), agenda (numbered), bullets, two_column, matrix (a real PowerPoint table, up to 6x6 cells), checklist (checkbox-prefixed) - over named textboxes at fixed 16:9 geometry, so the deck opens in WPS/PowerPoint with page structure a human can edit rather than one full-page text box; action=edit rewrites the visible text of one shape per edit addressed as slide/shape (1-based document order of p:sp textboxes only, tables excluded) and refuses an edit batch entirely when any target is invalid - all-or-nothing, never a silent skip; every written package is re-opened and per-shape texts are replayed against what was built before the receipt returns (the B5 gate), and a failed edit verification restores the original bytes; action=preview is the §4.1 officecli visual path: it needs the binary resolved through COMPANY_AGENT_OFFICECLI or the adjacent search and honestly refuses when it is absent, then bounds one headless run (180s, 4MB stdout, minimal env) to per-page screenshots into preview/<stem>/ plus the editable shape enumeration. Caps are refusals, never stand-ins: 64 slides, 4000 characters per shape text (newlines refuse for edit), 8 bullets per column, 6x6 matrix cells; the written file reuses the P0 fences with atomic temp+replace, overwrite needs an explicit argument. Standard library only; no quantum handles.",
+      "description": "Structured pptx generation, in-place shape text rewrite and officecli preview for one project directory of the mounted workspace (§4.5): action=render writes one .pptx from a slide array of structured layouts (title, agenda, bullets, two_column, matrix, checklist) at fixed 16:9 geometry; action=edit rewrites one p:sp textbox per edit (1-based, tables excluded), all-or-nothing, newlines normalized into one paragraph, and re-reads the package before the receipt (B5); action=preview resolves officecli in five steps (explicit argument, COMPANY_AGENT_OFFICECLI, resources/officecli/<platform>, repository root, PATH) and honestly refuses when the binary is absent, then bounds one headless run (180s, 4MB stdout, minimal env) to per-page screenshots under cache/pptx-preview/<sha1>/ plus the editable shape enumeration. Caps are refusals: 80 slides, 8000 characters per shape text, 8 bullets per column, 6x6 matrix cells. Standard library only; no quantum handles.",
       "parameters": {
         "type": "object",
         "required": [
           "project",
           "action",
-          "path"
+          "path",
+          "purpose"
         ],
         "properties": {
           "project": {
@@ -7199,7 +7795,7 @@
           "edits": {
             "type": "array",
             "maxItems": 64,
-            "description": "edit payload: [{slide: 1..64, shape: >=1, text: <=4000 chars without newlines}] ; slide/shape use the 1-based document order of p:sp textboxes the render action produces and WPS reports.",
+            "description": "edit payload: [{slide: 1..80, shape: >=1, text: <=8000 chars; newlines are normalized into one paragraph}] ; slide/shape use the 1-based document order of p:sp textboxes.",
             "items": {
               "type": "object",
               "required": [
@@ -7211,7 +7807,7 @@
                 "slide": {
                   "type": "integer",
                   "minimum": 1,
-                  "maximum": 64
+                  "maximum": 80
                 },
                 "shape": {
                   "type": "integer",
@@ -7220,7 +7816,7 @@
                 "text": {
                   "type": "string",
                   "minLength": 0,
-                  "maxLength": 4000
+                  "maxLength": 8000
                 }
               },
               "additionalProperties": false
@@ -7230,6 +7826,12 @@
             "type": "boolean",
             "default": false,
             "description": "Replace an existing file on render; absent/false refuses with an explicit error. Never applies to edit."
+          },
+          "purpose": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80,
+            "description": "One Chinese sentence of at most 80 characters, written onto the HMAC audit line with a short argument summary."
           }
         },
         "additionalProperties": false
@@ -7273,7 +7875,7 @@
           "slides": {
             "type": "integer",
             "minimum": 0,
-            "maximum": 64,
+            "maximum": 80,
             "description": "render: slides written. preview: page count from officecli stats."
           },
           "shapes": {
@@ -7294,8 +7896,8 @@
           },
           "screenshots": {
             "type": "array",
-            "maxItems": 64,
-            "description": "preview only: per-page PNG artifacts written under preview/<stem>/, page order 1..N.",
+            "maxItems": 80,
+            "description": "preview only: per-page PNG artifacts written under cache/pptx-preview/<sha1>/, page order 1..N.",
             "items": {
               "type": "object",
               "required": [
@@ -7307,7 +7909,7 @@
                 "page": {
                   "type": "integer",
                   "minimum": 1,
-                  "maximum": 64
+                  "maximum": 80
                 },
                 "path": {
                   "type": "string",
@@ -7365,12 +7967,13 @@
       "operation": "office.convert",
       "input_handles": [],
       "output_handles": [],
-      "description": "Local conversion inside one project directory of the mounted workspace, the L6 exit of the suite: .docx becomes a sibling .pdf and .doc becomes a sibling .docx through an explicitly configured headless LibreOffice (COMPANY_AGENT_SOFFICE, or soffice/libreoffice found on PATH); no engine found is a hard, honest failure - never a stand-in copy, nothing is uploaded anywhere. The converter holds a bounded lease so two tasks cannot fight over soffice; the child runs with a whitelisted environment, arrayed arguments and bounded stdout, and the produced file must pass the three-way check (exists, non-empty, right magic bytes and for docx an openable package with word/document.xml). Output naming stays next to the source as <stem>.<ext>, then <stem>_01.._99; overwriting the source is impossible by construction. 20MB input cap with honest refusal; no OCR, no template execution, no quantum handles.",
+      "description": "Local conversion inside one project directory of the mounted workspace, the L6 exit of the suite: .docx becomes a sibling .pdf and .doc becomes a sibling .docx through Word/WPS save-as first (COMPANY_AGENT_WORD_CMD or a registered Word/WPS COM progid), then headless LibreOffice (COMPANY_AGENT_SOFFICE, or soffice/libreoffice found on PATH); no engine found is a hard, honest failure - never a stand-in copy, nothing is uploaded anywhere. The converter holds a bounded lease so two tasks cannot fight over soffice; the child runs with a whitelisted environment, arrayed arguments and bounded stdout, and the produced file must pass the three-way check (exists, non-empty, right magic bytes and for docx an openable package with word/document.xml). Output naming stays next to the source as <stem>.<ext>, then <stem>_01.._99; overwriting the source is impossible by construction. 20MB input cap with honest refusal; no OCR, no template execution, no quantum handles.",
       "parameters": {
         "type": "object",
         "required": [
           "project",
-          "path"
+          "path",
+          "purpose"
         ],
         "properties": {
           "project": {
@@ -7384,10 +7987,34 @@
             "pattern": "^[^\\\\:*?\"<>|\\u0000-\\u001f]{1,256}$",
             "description": "Source path relative to the project directory; must be .docx (to pdf) or .doc (to docx); any other suffix refuses."
           },
+          "purpose": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80,
+            "description": "One Chinese sentence of at most 80 characters, written onto the HMAC audit line with a short argument summary."
+          },
           "overwrite": {
             "type": "boolean",
             "default": false,
             "description": "Left absent/false the tool picks the next free sibling name; true allows replacing an existing <stem>.<ext> sibling of the same kind, never the source itself."
+          },
+          "references": {
+            "type": "array",
+            "maxItems": 128,
+            "items": {
+              "type": "object",
+              "additionalProperties": true,
+              "properties": {}
+            }
+          },
+          "sources": {
+            "type": "array",
+            "maxItems": 128,
+            "items": {
+              "type": "object",
+              "additionalProperties": true,
+              "properties": {}
+            }
           }
         },
         "additionalProperties": false
@@ -7527,7 +8154,8 @@
         "type": "object",
         "required": [
           "project",
-          "source"
+          "source",
+          "purpose"
         ],
         "properties": {
           "project": {
@@ -7541,6 +8169,12 @@
             "minLength": 1,
             "maxLength": 80000,
             "description": "The batch program: whitelisted helpers + curated builtins; print(...) is captured."
+          },
+          "purpose": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80,
+            "description": "One Chinese sentence of at most 80 characters, written onto the HMAC audit line with a short argument summary."
           }
         },
         "additionalProperties": false
@@ -7642,12 +8276,13 @@
       "operation": "office.deliver",
       "input_handles": [],
       "output_handles": [],
-      "description": "Delivery naming for one workspace file (the MeWork present/named-deliverable port): the file is copied atomically into the project-level deliverables/ directory as <title>_<UTC YYYYMMDD>_<NN>.<ext>, where title defaults to the source stem (stripped of old date stamps like _20260101 or _20260101_02), NN is the next free two-digit sequence for that title and date, 1..99, and 99 breaks the tool honestly. The source file is never touched; an existing delivery name is never overwritten; the receipt carries project/relative paths only. Copy size cap 20MB. Standard library only.",
+      "description": "Delivery naming for one workspace file (the MeWork present/named-deliverable port). mode=deliver copies the file atomically into the project as <title>_<UTC YYYYMMDD>_<NN>.<ext>. mode=preview returns the source path and does not write a copy. Non-PASSED references still block both modes. The source file is never touched; an existing delivery name is never overwritten. Copy size cap 20MB. Standard library only. purpose is required.",
       "parameters": {
         "type": "object",
         "required": [
           "project",
-          "path"
+          "path",
+          "purpose"
         ],
         "properties": {
           "project": {
@@ -7664,8 +8299,61 @@
           "title": {
             "type": "string",
             "minLength": 1,
-            "maxLength": 60,
-            "description": "Delivery title; defaults to the source stem after stripping old date stamps; forbids path separators."
+            "maxLength": 160,
+            "description": "Delivery title; defaults to the source stem after stripping old date stamps; forbids path separators. Stem cap is 160."
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "deliver",
+              "preview"
+            ],
+            "default": "deliver",
+            "description": "deliver writes a sequenced copy. preview only names the source."
+          },
+          "folder": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "description": "Optional project-relative folder. Desktop/Downloads/Documents require COMPANY_AGENT_OUTPUT_ROOTS."
+          },
+          "explicit": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200,
+            "description": "Optional relative file path whose parent becomes the delivery directory."
+          },
+          "beside": {
+            "type": "boolean",
+            "description": "When true, write next to the source file."
+          },
+          "matter": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "When set, write under cases/<matter>/artifacts/."
+          },
+          "purpose": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "references": {
+            "type": "array",
+            "maxItems": 128,
+            "items": {
+              "type": "object",
+              "additionalProperties": true,
+              "properties": {}
+            }
+          },
+          "sources": {
+            "type": "array",
+            "maxItems": 128,
+            "items": {
+              "type": "object",
+              "additionalProperties": true,
+              "properties": {}
+            }
           }
         },
         "additionalProperties": false
@@ -7677,7 +8365,8 @@
           "path",
           "sequence",
           "bytes",
-          "sha256"
+          "sha256",
+          "mode"
         ],
         "properties": {
           "source": {
@@ -7694,8 +8383,16 @@
           },
           "sequence": {
             "type": "integer",
-            "minimum": 1,
-            "maximum": 99
+            "minimum": 0,
+            "maximum": 99,
+            "description": "0 means preview and no copy. 1..99 is the delivery sequence."
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "deliver",
+              "preview"
+            ]
           },
           "bytes": {
             "type": "integer",
@@ -7705,9 +8402,417 @@
             "type": "string",
             "pattern": "^[0-9a-f]{64}$",
             "maxLength": 64
+          },
+          "citations": {
+            "type": "array",
+            "maxItems": 128,
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "render"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "maxLength": 64
+                },
+                "render": {
+                  "type": "string",
+                  "maxLength": 400
+                }
+              },
+              "additionalProperties": false
+            }
           }
         },
         "additionalProperties": false
+      }
+    },
+    {
+      "name": "company_office_review_table",
+      "capability": "company.office",
+      "operation": "office.review_table",
+      "input_handles": [],
+      "output_handles": [],
+      "description": "Write an xlsx analysis table: each column is followed by a {{name}}_依据 column (lineRef：summary) and a provenance sheet. Optional table_id also writes analysis_tables settled JSON; changing a column type or prompt clears that column. purpose is required. 20MB cap. No quantum handles.",
+      "parameters": {
+        "type": "object",
+        "required": [
+          "project",
+          "path",
+          "purpose",
+          "columns"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "project": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_](?:[A-Za-z0-9_.-]*[A-Za-z0-9_-])?$",
+            "maxLength": 128,
+            "description": "Project directory inside the mounted workspace root."
+          },
+          "path": {
+            "type": "string",
+            "pattern": "^[^\\\\:*?\"<>|\\u0000-\\u001f]{1,256}$",
+            "description": "Workspace path relative to the project directory."
+          },
+          "purpose": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80,
+            "description": "One-line reason recorded on the audit line."
+          },
+          "overwrite": {
+            "type": "boolean",
+            "default": false
+          },
+          "table_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "description": "When set, write analysis_tables/{table_id}.ana.json plus row and source JSON."
+          },
+          "columns": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 32,
+            "items": {
+              "type": "object",
+              "additionalProperties": true,
+              "properties": {}
+            }
+          }
+        }
+      },
+      "output": {
+        "type": "object",
+        "required": [
+          "path",
+          "rows",
+          "bytes",
+          "sha256",
+          "trust"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "rows": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "bytes": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$",
+            "maxLength": 64
+          },
+          "trust": {
+            "type": "string",
+            "const": "untrusted_reference_data"
+          },
+          "settled": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "cleared": {
+            "type": "array",
+            "maxItems": 32,
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "company_office_files",
+      "capability": "company.office",
+      "operation": "office.files",
+      "input_handles": [],
+      "output_handles": [],
+      "description": "Move, rename or copy files inside one project without changing bytes, or revert the last journalled batch. Deletes are refused. purpose is required.",
+      "parameters": {
+        "type": "object",
+        "required": [
+          "project",
+          "purpose",
+          "action"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "project": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_](?:[A-Za-z0-9_.-]*[A-Za-z0-9_-])?$",
+            "maxLength": 128,
+            "description": "Project directory inside the mounted workspace root."
+          },
+          "purpose": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80,
+            "description": "One-line reason recorded on the audit line."
+          },
+          "action": {
+            "type": "string",
+            "enum": [
+              "copy",
+              "move",
+              "rename",
+              "revert"
+            ]
+          },
+          "ops": {
+            "type": "array",
+            "maxItems": 32,
+            "items": {
+              "type": "object",
+              "required": [
+                "source",
+                "target"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "source": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200
+                },
+                "target": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200
+                }
+              }
+            }
+          }
+        }
+      },
+      "output": {
+        "type": "object",
+        "required": [
+          "action",
+          "applied",
+          "ops",
+          "trust"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "type": "string"
+          },
+          "applied": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "ops": {
+            "type": "array",
+            "maxItems": 32,
+            "items": {
+              "type": "object",
+              "additionalProperties": true,
+              "properties": {}
+            }
+          },
+          "trust": {
+            "type": "string",
+            "const": "untrusted_reference_data"
+          }
+        }
+      }
+    },
+    {
+      "name": "company_office_fix",
+      "capability": "company.office",
+      "operation": "office.fix",
+      "input_handles": [],
+      "output_handles": [],
+      "description": "Apply page geometry and default font from the format audit without changing paragraph text, then re-audit. purpose is required.",
+      "parameters": {
+        "type": "object",
+        "required": [
+          "project",
+          "path",
+          "purpose"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "project": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_](?:[A-Za-z0-9_.-]*[A-Za-z0-9_-])?$",
+            "maxLength": 128,
+            "description": "Project directory inside the mounted workspace root."
+          },
+          "path": {
+            "type": "string",
+            "pattern": "^[^\\\\:*?\"<>|\\u0000-\\u001f]{1,256}$",
+            "description": "Workspace path relative to the project directory."
+          },
+          "purpose": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80,
+            "description": "One-line reason recorded on the audit line."
+          }
+        }
+      },
+      "output": {
+        "type": "object",
+        "required": [
+          "path",
+          "before_issues",
+          "after_issues",
+          "bytes",
+          "sha256",
+          "trust"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "before_issues": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "after_issues": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "bytes": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$",
+            "maxLength": 64
+          },
+          "trust": {
+            "type": "string",
+            "const": "untrusted_reference_data"
+          }
+        }
+      }
+    },
+    {
+      "name": "company_office_surface",
+      "capability": "company.office",
+      "operation": "office.surface",
+      "input_handles": [],
+      "output_handles": [],
+      "description": "Read w:ins/w:del with author colors that are not stored in the file. accept writes word/company-disposition.xml and leaves the track; a legacy word/lawmind-disposition.xml is ignored. reject removes the caller's own revision. Other authors are read-only. purpose is required.",
+      "parameters": {
+        "type": "object",
+        "required": [
+          "project",
+          "path",
+          "purpose",
+          "action"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "project": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_](?:[A-Za-z0-9_.-]*[A-Za-z0-9_-])?$",
+            "maxLength": 128,
+            "description": "Project directory inside the mounted workspace root."
+          },
+          "path": {
+            "type": "string",
+            "pattern": "^[^\\\\:*?\"<>|\\u0000-\\u001f]{1,256}$",
+            "description": "Workspace path relative to the project directory."
+          },
+          "purpose": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80,
+            "description": "One-line reason recorded on the audit line."
+          },
+          "action": {
+            "type": "string",
+            "enum": [
+              "accept",
+              "read",
+              "reject"
+            ]
+          },
+          "author": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          },
+          "revision_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 32
+          }
+        }
+      },
+      "output": {
+        "type": "object",
+        "required": [
+          "path",
+          "changed",
+          "revisions",
+          "bytes",
+          "sha256",
+          "purpose",
+          "trust"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "changed": {
+            "type": "boolean"
+          },
+          "revisions": {
+            "type": "array",
+            "maxItems": 64,
+            "items": {
+              "type": "object",
+              "additionalProperties": true,
+              "properties": {
+                "folded": {
+                  "type": "boolean"
+                }
+              }
+            }
+          },
+          "bytes": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$",
+            "maxLength": 64
+          },
+          "purpose": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "trust": {
+            "type": "string",
+            "const": "untrusted_reference_data"
+          }
+        }
       }
     }
   ],

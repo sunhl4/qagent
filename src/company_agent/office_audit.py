@@ -173,6 +173,7 @@ def audit(args: dict) -> dict:
     if resolved.suffix.casefold() != ".docx":
         raise OfficeAuditError("格式体检只支持 .docx:旧二进制请先在 Word/WPS 另存为 .docx")
     mode = _mode(args)
+    rules = _rules(mode)
     data = _read_bounded(root, compound)
 
     styles, run_defaults, para_defaults = _style_tables(data)
@@ -188,22 +189,22 @@ def audit(args: dict) -> dict:
         issues.add(
             "section_multiple", "sect", f"正文包含 {sections} 个分节(sectPr);多节间版面差异(页眉/页码)未检查"
         )
-    if sections == 0 and mode == "baseline":
+    if sections == 0 and rules == "baseline":
         facts.append({"key": "page_size", "value": "(正文无 sectPr,页面几何不可得)", "source": "none"})
         issues.add(
             "sect_missing",
             "document",
             "正文没有 sectPr:页面与页边距基线不判定,如实记录不通过;仅 structural 事实照常输出",
         )
-    if mode == "baseline" and sections > 0:
+    if rules == "baseline" and sections > 0:
         _baseline_page_checks(last_sect, issues)
-    _walk_checks(mode, paragraphs, styles, run_defaults, para_defaults, facts, issues, unchecked)
+    _walk_checks(rules, paragraphs, styles, run_defaults, para_defaults, facts, issues, unchecked)
     if total > MAX_PARAGRAPHS:
         unchecked.add(
             "paragraph_tail",
             f"第 {MAX_PARAGRAPHS + 1}-{total} 段超过检查上限:{total - MAX_PARAGRAPHS} 段未检查",
         )
-    if mode == "imported":
+    if rules == "imported":
         unchecked.add("rule_table", "imported 口径不套 GB/T 9704 基线:facts 即该文件自身主流格式")
     return {
         "mode": mode,
@@ -240,9 +241,13 @@ def _compound(args: dict) -> str:
 
 def _mode(args: dict) -> str:
     mode = args.get("mode")
-    if mode not in {"baseline", "imported"}:
-        raise OfficeAuditError("mode 必须是 baseline 或 imported")
+    if mode not in {"baseline", "imported", "retemplate"}:
+        raise OfficeAuditError("mode 必须是 baseline、imported 或 retemplate")
     return str(mode)
+
+
+def _rules(mode: str) -> str:
+    return "baseline" if mode == "retemplate" else mode
 
 
 def _read_bounded(root, relative: str) -> bytes:

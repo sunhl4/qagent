@@ -24,7 +24,7 @@ def _workspace(tmp_path: Path, monkeypatch) -> Path:
 
 
 def _chart(spec: dict, **extra):
-    args = {"project": PROJECT, "spec": spec}
+    args = {"project": PROJECT, "spec": spec, "purpose": "测试写入"}
     args.update(extra)
     return invoke("company_office_chart", "lab", args)
 
@@ -45,6 +45,8 @@ def test_deterministic_pairs_written_and_rerun_protected(
     assert first.status == "ok", first.error
     payload = first.payload
     assert len(payload["chart_id"]) == 16
+    assert payload["fence"].startswith("```lm-chart\n")
+    assert payload["fence"].rstrip().endswith("```")
     (project / "artifacts" / "charts" / f"{payload['chart_id']}.json").is_file()
     svg_file = project / "artifacts" / "charts" / f"{payload['chart_id']}.svg"
     assert svg_file.is_file()

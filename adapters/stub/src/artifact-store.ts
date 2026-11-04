@@ -28,6 +28,7 @@ export class StubArtifactStorePort extends StubBase implements ArtifactStorePort
   private readonly objects = new Map<string, StoredObject>();
   private readonly byId = new Map<string, string>();
   private readonly idempotency = new Map<string, ArtifactRef>();
+  private readonly signed = new Map<string, { expiresAtMs: number; uri?: string; tenantId: string }>();
   private readonly maxObjectBytes: number;
   private counter = 0;
 
@@ -155,11 +156,37 @@ export class StubArtifactStorePort extends StubBase implements ArtifactStorePort
         return fail("PERMISSION_DENIED", "跨租户访问");
       }
     }
+    const token = randomUUID();
+    const expiresAtMs = this.clock().getTime() + input.ttlSeconds * 1000;
+    const stored = input.method === "GET" ? this.resolve(input) : undefined;
+    this.signed.set(token, {
+      expiresAtMs,
+      uri: stored?.ref.uri,
+      tenantId: input.tenantId,
+    });
     return ok({
-      url: `stub://signed/${randomUUID()}?method=${input.method}`,
-      expiresAt: new Date(this.clock().getTime() + input.ttlSeconds * 1000).toISOString(),
+      url: `stub://signed/${token}?method=${input.method}`,
+      expiresAt: new Date(expiresAtMs).toISOString(),
       method: input.method,
     });
+  }
+
+  /**
+   * 测试辅助：端口没有兑付预签名的方法，真实存储在 HTTP 层校验 TTL。
+   * 只用于一致性用例 OS-05，不进入契约。
+   */
+  accessSignedUrl(url: string): PortResult<{ ref: ArtifactRef; bytes: Uint8Array }> {
+    const matched = /^stub:\/\/signed\/([^?]+)/.exec(url);
+    if (!matched) return fail("INVALID_ARGUMENT", "不是桩签发的 URL");
+    const ticket = this.signed.get(matched[1]);
+    if (!ticket) return fail("UNAUTHENTICATED", "签名无效");
+    if (this.clock().getTime() >= ticket.expiresAtMs) {
+      return fail("PERMISSION_DENIED", "预签名已过期");
+    }
+    if (!ticket.uri) return fail("NOT_SUPPORTED", "该签名不能读回内容");
+    const stored = this.objects.get(ticket.uri);
+    if (!stored || stored.tenantId !== ticket.tenantId) return fail("NOT_FOUND", "产物不存在");
+    return ok({ ref: stored.ref, bytes: stored.bytes });
   }
 
   async list(input: {

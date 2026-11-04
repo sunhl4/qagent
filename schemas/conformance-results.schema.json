@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://company.example/schemas/conformance-results.schema.json",
+  "title": "PortConformanceResults",
+  "description": "跨工程端口一致性用例结果交换记录。v0.1 为交换格式草案：harness-core 确认前不得写入生产契约。provenance=stub 表示结果产生于本工程本地桩；provenance=harness-core 表示产生于真实端口。pending 表示该用例在此 provenance 上尚未判定，既不是通过也不是失败。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "contract_version",
+    "generated_at",
+    "provenance",
+    "run_context",
+    "results"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "enum": ["0.1"],
+      "description": "交换格式自身的版本；跨主版本的结果文件不可互换。"
+    },
+    "contract_version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+      "description": "被测的端口契约版本，必须与 contracts/VERSION 一致。"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "provenance": {
+      "type": "string",
+      "enum": ["stub", "harness-core"],
+      "description": "结果来源：stub 仅用于开发样例与格式说明，正式验收必须由 harness-core 产生。"
+    },
+    "run_context": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["env"],
+      "properties": {
+        "env": {
+          "type": "string",
+          "minLength": 1,
+          "description": "运行环境一句话描述，如 local stub adapters。"
+        },
+        "runner": {
+          "type": "string",
+          "description": "执行器与入口命令。"
+        },
+        "notes": {
+          "type": "string",
+          "description": "对结果的解释边界，如用例与测试的映射状态。"
+        }
+      }
+    },
+    "results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["case_id", "port", "level", "status"],
+        "properties": {
+          "case_id": {
+            "type": "string",
+            "pattern": "^[A-Z]+-[0-9]+$"
+          },
+          "port": {
+            "type": "string",
+            "minLength": 1,
+            "description": "与 cases.yaml 中的 port 字段一致，如 identity、object、hpc。"
+          },
+          "level": {
+            "type": "string",
+            "enum": ["MUST", "SHOULD"]
+          },
+          "status": {
+            "type": "string",
+            "enum": ["passed", "failed", "pending", "blocked"]
+          },
+          "notes": {
+            "type": "string",
+            "description": "failed 或 blocked 必须写明原因。"
+          }
+        }
+      }
+    }
+  }
+}

@@ -14,6 +14,15 @@ export interface StubSecretOptions extends Partial<StubBaseOptions> {
   maxTtlSeconds?: number;
 }
 
+function embedsLongLivedSecret(input: IssueCredentialInput): boolean {
+  const values: string[] = [input.audience, ...input.scope];
+  for (const value of Object.values(input.binding ?? {})) {
+    if (typeof value === "string") values.push(value);
+  }
+  values.push(...Object.values(input.subject.attributes ?? {}));
+  return values.some((value) => value.startsWith("sk-"));
+}
+
 export class StubSecretPort extends StubBase implements SecretPort {
   private readonly credentials = new Map<string, IssuedCredential>();
   private readonly revoked = new Set<string>();
@@ -59,11 +68,19 @@ export class StubSecretPort extends StubBase implements SecretPort {
     if (input.scope.length === 0) {
       return fail("INVALID_ARGUMENT", "scope 不能为空");
     }
+    if (embedsLongLivedSecret(input)) {
+      return fail("INVALID_ARGUMENT", "请求包含明文长期密钥");
+    }
     if (input.scope.includes("*") || input.scope.includes("admin")) {
       return fail("PERMISSION_DENIED", "不允许申请通配或管理 scope");
     }
     if (input.subject.type !== "agent" && input.subject.type !== "service") {
       return fail("PERMISSION_DENIED", "只有 agent 或 service 可以申请短期凭据");
+    }
+    const granted = input.subject.scopes ?? [];
+    const exceeded = input.scope.filter((scope) => !granted.includes(scope));
+    if (exceeded.length > 0) {
+      return fail("PERMISSION_DENIED", "申请的 scope 超出主体权限", { exceeded });
     }
 
     this.counter += 1;

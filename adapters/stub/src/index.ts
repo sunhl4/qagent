@@ -60,19 +60,21 @@ export interface StubStack {
 
 export function createStubStack(options: StubStackOptions = {}): StubStack {
   const clock = options.clock;
-  const withClock = <T extends { clock?: Clock }>(item: T | undefined): T | undefined =>
-    item ? { ...item, clock: item.clock ?? clock } : item;
+  const withClock = <T extends { clock?: Clock }>(item: T | undefined): T => ({
+    ...(item ?? ({} as T)),
+    clock: item?.clock ?? clock,
+  });
 
   return {
     contractVersion: options.contractVersion ?? CONTRACT_VERSION,
-    identity: new StubIdentityPort(withClock(options.identity) ?? {}),
-    secrets: new StubSecretPort(withClock(options.secrets) ?? {}),
-    artifacts: new StubArtifactStorePort(withClock(options.artifacts) ?? {}),
-    model: new StubModelGateway(withClock(options.model) ?? {}),
-    compute: new StubComputePort(withClock(options.compute) ?? {}),
+    identity: new StubIdentityPort(withClock(options.identity)),
+    secrets: new StubSecretPort(withClock(options.secrets)),
+    artifacts: new StubArtifactStorePort(withClock(options.artifacts)),
+    model: new StubModelGateway(withClock(options.model)),
+    compute: new StubComputePort(withClock(options.compute)),
     events: new StubEventPort({ clock }),
-    session: new StubSessionPort(withClock(options.session) ?? {}),
-    telemetry: new StubTelemetryPort(withClock(options.telemetry) ?? {}),
+    session: new StubSessionPort(withClock(options.session)),
+    telemetry: new StubTelemetryPort(withClock(options.telemetry)),
   };
 }
 

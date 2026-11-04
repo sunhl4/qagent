@@ -14,6 +14,8 @@ export interface StubSessionOptions extends Partial<StubBaseOptions> {
   turns?: number;
   exceedBudget?: boolean;
   fail?: boolean;
+  /** 注入一次不在 allowedTools 中的工具名；命中时记录拒绝且不执行。 */
+  unauthorizedTool?: string;
 }
 
 interface LiveSession {
@@ -28,6 +30,7 @@ export class StubSessionPort extends StubBase implements SessionPort {
   private readonly turns: number;
   private readonly exceedBudget: boolean;
   private readonly fail: boolean;
+  private readonly unauthorizedTool?: string;
 
   constructor(options: StubSessionOptions = {}) {
     super({
@@ -41,6 +44,7 @@ export class StubSessionPort extends StubBase implements SessionPort {
     this.turns = Math.max(1, options.turns ?? 1);
     this.exceedBudget = options.exceedBudget ?? false;
     this.fail = options.fail ?? false;
+    this.unauthorizedTool = options.unauthorizedTool;
   }
 
   async describe(): Promise<PortResult<SessionCapabilities>> {
@@ -106,6 +110,44 @@ export class StubSessionPort extends StubBase implements SessionPort {
         toolCalls: 0,
         artifacts: [],
         usage: {},
+      });
+    }
+
+    if (this.unauthorizedTool && !session.request.allowedTools.includes(this.unauthorizedTool)) {
+      const name = this.unauthorizedTool;
+      emit({ type: "turn_started", turn: 1, at: this.now() });
+      emit({
+        type: "tool_call",
+        turn: 1,
+        callId: "call-unauth",
+        name,
+        arguments: {},
+        at: this.now(),
+      });
+      emit({
+        type: "tool_result",
+        turn: 1,
+        callId: "call-unauth",
+        ok: false,
+        summary: "拒绝：工具不在 allowedTools，未执行",
+        at: this.now(),
+      });
+      emit({
+        type: "error",
+        code: "PERMISSION_DENIED",
+        message: "未授权工具",
+        retryable: false,
+        at: this.now(),
+      });
+      session.state = "failed";
+      return ok({
+        sessionId,
+        state: "failed",
+        turns: 1,
+        toolCalls: 0,
+        artifacts: [],
+        usage: {},
+        error: { code: "PERMISSION_DENIED", message: "未授权工具", retryable: false },
       });
     }
 

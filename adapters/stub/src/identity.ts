@@ -136,6 +136,15 @@ export class StubIdentityPort extends StubBase implements IdentityPort {
       });
     }
 
+    const scopes = subject.scopes ?? [];
+    if (scopes.length > 0 && !scopes.includes(action)) {
+      return ok({
+        decision: "DENY",
+        reason: `主体缺少 scope: ${action}`,
+        matchedRules: ["R-SCOPE"],
+      });
+    }
+
     if (
       typeof context?.estimatedCost === "number" &&
       typeof context.currency === "string" &&
@@ -161,15 +170,6 @@ export class StubIdentityPort extends StubBase implements IdentityPort {
           scope: action,
           expiresAt: new Date(this.clock().getTime() + 3600_000).toISOString(),
         },
-      });
-    }
-
-    const scopes = subject.scopes ?? [];
-    if (scopes.length > 0 && !scopes.includes(action)) {
-      return ok({
-        decision: "DENY",
-        reason: `主体缺少 scope: ${action}`,
-        matchedRules: ["R-SCOPE"],
       });
     }
 

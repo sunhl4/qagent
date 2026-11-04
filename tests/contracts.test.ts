@@ -114,9 +114,10 @@ test("身份端口：校验、撤销、越权", async () => {
   const afterRevoke = await stack.identity.verify({ token: "stub-token" });
   assert.equal(afterRevoke.ok, false);
 
+  const approver: Subject = { ...agent, id: "agent-qpu", scopes: [...(agent.scopes ?? []), "qpu:control"] };
   const denied = unwrap(
     await stack.identity.authorize({
-      subject: agent,
+      subject: approver,
       action: "qpu:control",
       resource: { type: "qpu", tenantId: "tenant-demo" },
     }),
@@ -156,7 +157,7 @@ test("凭据端口：拒绝通配 scope、TTL 上限与撤销", async () => {
     await stack.secrets.issue({
       subject: agent,
       audience: "hpc",
-      scope: ["submit"],
+      scope: ["experiment:submit"],
       ttlSeconds: 60,
       idempotencyKey: "cred-1",
     }),
@@ -165,7 +166,7 @@ test("凭据端口：拒绝通配 scope、TTL 上限与撤销", async () => {
     await stack.secrets.issue({
       subject: agent,
       audience: "hpc",
-      scope: ["submit"],
+      scope: ["experiment:submit"],
       ttlSeconds: 60,
       idempotencyKey: "cred-1",
     }),

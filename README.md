@@ -169,9 +169,13 @@ research-layer：做什么研究、怎么验证、保留还是撤销、下一步
 - `docs/12_双轨开发与合并策略.md`：与 harness-core 的边界、契约冻结、合并五阶段
 - `docs/13_集成边界与不重复清单.md`：本工程不做什么、如何防止重复
 - `docs/14_代码结构与开发指南.md`：包结构、端口开发、测试与提交规范
+- `docs/16_研究章程.md`：阶段 0 研究章程——问题、基线、指标、预算、停止与回滚
+- `docs/17_Temporal持久工作流实施方案.md`：持久工作流接入设计——映射、决定论、重试与验收
+- `docs/18_决策请求单.md`：docs/11 全部问题的可发出决策请求与工程默认立场
+- `docs/19_执行计划.md`：复审缺口的处置——已完成项、外部触发条件与遗留池
 - `schemas/`：ExperimentSpec、Task、PluginContract、PolicyDecision 等机器可读契约
 - `configs/`：示例 DSH/Cordis 配置和模型路由配置
-- `examples/`：实验、复现和软件任务示例
+- `examples/`：实验、复现、软件任务示例，一致性结果交换样例，文献插件返回样例
 - `research/公开来源登记.md`：公开来源、链接和证据说明
 - `canvas/`：研究方案 Canvas 副本
 - `deploy/`：部署、环境和运维说明
@@ -179,8 +183,14 @@ research-layer：做什么研究、怎么验证、保留还是撤销、下一步
 - `tests/`：契约、状态机、策略和流水线测试
 - `scripts/validate.py`：工程自检脚本
 - `scripts/typecheck.mjs`：契约与包可加载性检查
+- `scripts/conformance.mjs`：一致性用例与结果交换的解析/校验库
+- `scripts/gen-stub-results.mjs`：逐条跑桩并写出一致性结果（passed / blocked）
+- `scripts/check-conformance-results.mjs`：校验一致性结果交换文件并打印汇总
+- `scripts/contract-bundle.mjs`：联调交换包体检与交接清单
+- `scripts/demo.mjs`：桩上跑一次有界实验循环演示
 - `AGENTS.md`：本工程内 Agent 与开发者必须遵守的规则
 - `Makefile`：常用自检命令
+- `.github/workflows/ci.yml`：GitHub Actions 自检工作流（Node 22 / 24 矩阵，跑 `make check` 与 `make demo`）
 
 ## 使用顺序
 

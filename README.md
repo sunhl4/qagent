@@ -10,6 +10,8 @@
 - 量子能力作为 `company-agent-quantum` capability pack 维护。
 - 公司知识库、未来业务能力和其他 capability pack 共用同一 Agent Runtime。
 
+自动科研与实验契约在 [`research-layer/`](research-layer/README.md)。它与本仓的 Agent 运行时分开开发，放在同一仓库里，避免互相覆盖 `contracts/`、`docs/` 和 `packages/`。
+
 ## 不变量
 
 - 对外科学句柄只有 `asset_id`、`circuit_id`、`twin_id`。

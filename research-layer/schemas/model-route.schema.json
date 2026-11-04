@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://company.example/schemas/model-route.schema.json",
+  "title": "ModelRoute",
+  "description": "Routing rule and capability record for one model deployment.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["model_id", "provider", "version", "capabilities", "residency", "status"],
+  "properties": {
+    "model_id": {"type": "string", "minLength": 1},
+    "provider": {"type": "string", "enum": ["deepseek_api", "self_hosted", "purchased", "local_test"]},
+    "version": {"type": "string"},
+    "endpoint_ref": {"type": ["string", "null"], "description": "Reference to a secret-managed endpoint, never a literal key"},
+    "capabilities": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string", "enum": ["chat", "tools", "json", "streaming", "vision", "long_context", "code", "embedding"]}
+    },
+    "context_tokens": {"type": ["integer", "null"], "minimum": 1},
+    "residency": {"type": "string", "enum": ["cn", "eu", "us", "on_prem", "external", "unknown"]},
+    "data_classification_max": {"type": "string", "enum": ["public", "internal", "confidential", "restricted"]},
+    "cost": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "input_per_million": {"type": "number", "minimum": 0},
+        "output_per_million": {"type": "number", "minimum": 0},
+        "currency": {"type": "string", "minLength": 3, "maxLength": 3}
+      }
+    },
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "rpm": {"type": ["integer", "null"]},
+        "tpm": {"type": ["integer", "null"]},
+        "max_concurrency": {"type": ["integer", "null"]}
+      }
+    },
+    "quality": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "eval_suite": {"type": ["string", "null"]},
+        "eval_score": {"type": ["number", "null"]},
+        "tool_call_success": {"type": ["number", "null"]},
+        "json_compliance": {"type": ["number", "null"]},
+        "last_evaluated_at": {"type": ["string", "null"], "format": "date-time"}
+      }
+    },
+    "status": {"type": "string", "enum": ["active", "degraded", "disabled", "canary"]},
+    "fallback_order": {"type": "array", "items": {"type": "string"}, "default": []},
+    "task_types": {
+      "type": "array",
+      "items": {"type": "string", "enum": ["planning", "coding", "literature", "extraction", "review", "report", "classification", "embedding"]},
+      "default": []
+    }
+  }
+}

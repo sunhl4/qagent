@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://company.example/schemas/literature-plugin-payload.schema.json",
+  "title": "LiteraturePluginPayload",
+  "description": "One literature-plugin response. This repo does not search or parse papers. records and edges feed ingestLiterature; each method_cards item must satisfy method-card.schema.json, including evidence locations.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["plugin", "retrieved_at", "records", "edges", "method_cards"],
+  "properties": {
+    "plugin": {"type": "string", "enum": ["literature-search"]},
+    "retrieved_at": {"type": "string", "format": "date-time"},
+    "records": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["paper_id", "title", "authors", "year", "source"],
+        "properties": {
+          "paper_id": {"type": "string", "minLength": 1},
+          "title": {"type": "string", "minLength": 1},
+          "authors": {"type": "array", "items": {"type": "string"}, "minItems": 1},
+          "year": {"type": "integer"},
+          "doi": {"type": ["string", "null"]},
+          "arxiv_id": {"type": ["string", "null"]},
+          "venue": {"type": ["string", "null"]},
+          "source": {"type": "string", "minLength": 1},
+          "code_url": {"type": ["string", "null"]},
+          "topics": {"type": "array", "items": {"type": "string"}}
+        }
+      }
+    },
+    "edges": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["from_paper_id", "to_paper_id", "direction"],
+        "properties": {
+          "from_paper_id": {"type": "string", "minLength": 1},
+          "to_paper_id": {"type": "string", "minLength": 1},
+          "direction": {"type": "string", "enum": ["backward", "forward"]}
+        }
+      }
+    },
+    "method_cards": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "object"}
+    }
+  }
+}

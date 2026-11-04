@@ -1,0 +1,15 @@
+{
+  "name": "@company/research-layer-pipeline",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Experiment execution pipeline that depends only on cross-project ports.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@company/dsh-contracts": "workspace:*",
+    "@company/research-layer-domain": "workspace:*",
+    "@company/research-layer-workspace": "workspace:*"
+  }
+}

@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://company.example/schemas/policy-decision.schema.json",
+  "title": "PolicyDecision",
+  "description": "Result of a server-side policy evaluation for one action.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["decision_id", "subject", "action", "decision", "reason", "evaluated_at"],
+  "properties": {
+    "decision_id": {"type": "string", "minLength": 1},
+    "subject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "id", "tenant_id"],
+      "properties": {
+        "type": {"type": "string", "enum": ["user", "service", "agent", "operator"]},
+        "id": {"type": "string"},
+        "tenant_id": {"type": "string"},
+        "project_id": {"type": ["string", "null"]}
+      }
+    },
+    "action": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name"],
+      "properties": {
+        "name": {"type": "string"},
+        "target_type": {"type": ["string", "null"]},
+        "target_id": {"type": ["string", "null"]},
+        "risk": {"type": "string", "enum": ["low", "medium", "high", "critical"], "default": "low"},
+        "reversible": {"type": "boolean", "default": true},
+        "estimated_cost": {"type": ["number", "null"]},
+        "currency": {"type": ["string", "null"]}
+      }
+    },
+    "decision": {"type": "string", "enum": ["ALLOW", "DENY", "REQUIRE_APPROVAL", "ALLOW_WITH_LIMIT", "DEFER"]},
+    "reason": {"type": "string", "minLength": 1},
+    "matched_rules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["rule_id", "effect"],
+        "properties": {
+          "rule_id": {"type": "string"},
+          "effect": {"type": "string", "enum": ["allow", "deny", "require_approval", "limit"]},
+          "detail": {"type": ["string", "null"]}
+        }
+      },
+      "default": []
+    },
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "max_cost": {"type": ["number", "null"]},
+        "max_wall_clock_seconds": {"type": ["integer", "null"]},
+        "max_gpu_count": {"type": ["integer", "null"]},
+        "allowed_models": {"type": "array", "items": {"type": "string"}},
+        "allowed_regions": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "approval": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "required_by": {"type": "array", "items": {"type": "string"}},
+        "approval_id": {"type": ["string", "null"]},
+        "expires_at": {"type": ["string", "null"], "format": "date-time"},
+        "scope": {"type": ["string", "null"]}
+      }
+    },
+    "evaluated_at": {"type": "string", "format": "date-time"},
+    "policy_version": {"type": ["string", "null"]},
+    "trace_id": {"type": ["string", "null"]}
+  }
+}

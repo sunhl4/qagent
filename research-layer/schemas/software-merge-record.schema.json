@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://company.example/schemas/software-merge-record.schema.json",
+  "title": "SoftwareMergeRecord",
+  "description": "阶段 4 降级路径的一次合并门禁决定。不是 Super-agent 工单。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "record_id",
+    "work_id",
+    "author_id",
+    "workspace_id",
+    "runtime",
+    "degraded",
+    "upstream_version",
+    "spec_id",
+    "session_id",
+    "decision",
+    "reason",
+    "checks",
+    "evaluated_at"
+  ],
+  "properties": {
+    "record_id": {"type": "string", "minLength": 1},
+    "work_id": {"type": "string", "minLength": 1},
+    "author_id": {"type": "string", "minLength": 1},
+    "workspace_id": {"type": "string", "minLength": 1},
+    "runtime": {"type": "string", "enum": ["degraded", "upstream"]},
+    "degraded": {"type": "boolean"},
+    "upstream_version": {"type": ["string", "null"]},
+    "spec_id": {"type": "string", "minLength": 1},
+    "session_id": {"type": ["string", "null"]},
+    "decision": {
+      "type": "string",
+      "enum": ["allow_merge", "deny", "record_only", "needs_approval"]
+    },
+    "reason": {"type": "string", "minLength": 1},
+    "checks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "passed", "detail"],
+        "properties": {
+          "name": {"type": "string", "minLength": 1},
+          "passed": {"type": "boolean"},
+          "detail": {"type": "string"}
+        }
+      }
+    },
+    "evaluated_at": {"type": "string", "format": "date-time"}
+  }
+}

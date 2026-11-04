@@ -1,0 +1,111 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://company.example/schemas/failure-library.schema.json",
+  "title": "FailureLibrary",
+  "description": "Deduplicated, queryable failure entries for one experiment loop.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["entries", "stats"],
+  "properties": {
+    "entries": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "entry_id",
+          "task_id",
+          "experiment_id",
+          "run_id",
+          "category",
+          "code",
+          "message",
+          "retryable",
+          "stage",
+          "decision",
+          "occurred_at"
+        ],
+        "properties": {
+          "entry_id": {"type": "string", "minLength": 1},
+          "task_id": {"type": "string"},
+          "experiment_id": {"type": "string"},
+          "run_id": {"type": "string"},
+          "category": {
+            "type": "string",
+            "enum": [
+              "implementation",
+              "data",
+              "metric",
+              "resource",
+              "hypothesis",
+              "environment",
+              "instability",
+              "policy",
+              "unknown"
+            ]
+          },
+          "code": {"type": "string", "minLength": 1},
+          "message": {"type": "string"},
+          "retryable": {"type": "boolean"},
+          "stage": {
+            "type": "string",
+            "enum": [
+              "compile",
+              "policy",
+              "quote",
+              "submit",
+              "execution",
+              "artifacts",
+              "decision",
+              "unknown_execution",
+              "loop"
+            ]
+          },
+          "decision": {
+            "type": ["string", "null"],
+            "enum": ["keep", "discard", "extend", "stop", "escalate", null]
+          },
+          "occurred_at": {"type": "string", "format": "date-time"}
+        }
+      }
+    },
+    "stats": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["total", "byCategory", "byCode"],
+      "properties": {
+        "total": {"type": "integer", "minimum": 0},
+        "byCategory": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "implementation",
+            "data",
+            "metric",
+            "resource",
+            "hypothesis",
+            "environment",
+            "instability",
+            "policy",
+            "unknown"
+          ],
+          "properties": {
+            "implementation": {"type": "integer", "minimum": 0},
+            "data": {"type": "integer", "minimum": 0},
+            "metric": {"type": "integer", "minimum": 0},
+            "resource": {"type": "integer", "minimum": 0},
+            "hypothesis": {"type": "integer", "minimum": 0},
+            "environment": {"type": "integer", "minimum": 0},
+            "instability": {"type": "integer", "minimum": 0},
+            "policy": {"type": "integer", "minimum": 0},
+            "unknown": {"type": "integer", "minimum": 0}
+          }
+        },
+        "byCode": {
+          "type": "object",
+          "additionalProperties": {"type": "integer", "minimum": 0}
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://company.example/schemas/cost-ledger.schema.json",
+  "title": "CostLedger",
+  "description": "Three-stage cost ledger snapshot: reservation, actual usage, and released reservation.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["entries", "totals"],
+  "properties": {
+    "entries": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "entry_id",
+          "kind",
+          "tenant_id",
+          "currency",
+          "amount",
+          "at"
+        ],
+        "properties": {
+          "entry_id": {"type": "string", "minLength": 1},
+          "kind": {"type": "string", "enum": ["reserve", "actual", "release"]},
+          "tenant_id": {"type": "string", "minLength": 1},
+          "project_id": {"type": ["string", "null"]},
+          "task_id": {"type": ["string", "null"]},
+          "lease_id": {"type": ["string", "null"]},
+          "currency": {"type": "string", "minLength": 3, "maxLength": 3},
+          "amount": {"type": "number", "minimum": 0},
+          "at": {"type": "string", "format": "date-time"},
+          "source": {"type": ["string", "null"]}
+        }
+      }
+    },
+    "totals": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "currency",
+          "reserved",
+          "actual",
+          "released",
+          "committed",
+          "entries"
+        ],
+        "properties": {
+          "currency": {"type": "string", "minLength": 3, "maxLength": 3},
+          "reserved": {"type": "number", "minimum": 0},
+          "actual": {"type": "number", "minimum": 0},
+          "released": {"type": "number", "minimum": 0},
+          "committed": {"type": "number", "minimum": 0},
+          "entries": {"type": "integer", "minimum": 0}
+        }
+      }
+    }
+  }
+}

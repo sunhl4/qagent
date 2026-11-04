@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://company.example/schemas/platform-signal.schema.json",
+  "title": "PlatformSignal",
+  "description": "平台时钟发出的事实事件。以后可映射为上游 Source 的输入，本身不是 Trigger。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "type",
+    "source",
+    "tenant_id",
+    "project_id",
+    "resource_id",
+    "resource_version",
+    "time",
+    "data"
+  ],
+  "properties": {
+    "id": {"type": "string", "minLength": 1},
+    "type": {
+      "type": "string",
+      "enum": ["experiment.completed.v1", "lease.changed.v1", "budget.exhausted.v1"]
+    },
+    "source": {"type": "string", "enum": ["research-layer"]},
+    "tenant_id": {"type": "string", "minLength": 1},
+    "project_id": {"type": ["string", "null"]},
+    "resource_id": {"type": "string", "minLength": 1},
+    "resource_version": {"type": "integer", "minimum": 1},
+    "time": {"type": "string", "format": "date-time"},
+    "data": {
+      "type": "object",
+      "additionalProperties": {
+        "type": ["string", "number", "boolean", "null"]
+      }
+    }
+  }
+}

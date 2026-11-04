@@ -1,0 +1,106 @@
+{
+  "implementation": {
+    "name": "research-layer-stub",
+    "version": "0.1.0",
+    "owner": "research-platform",
+    "repository": null,
+    "contact": null
+  },
+  "contractVersion": "0.1.0",
+  "environment": "local",
+  "generatedAt": "2026-10-29T00:00:00Z",
+  "ports": [
+    {
+      "name": "identity",
+      "version": "0.1.0",
+      "transport": "in_process",
+      "endpointRef": null,
+      "features": ["verify", "authorize", "revoke"],
+      "degraded": true,
+      "notes": "内存桩：无真实 IdP"
+    },
+    {
+      "name": "secrets",
+      "version": "0.1.0",
+      "transport": "in_process",
+      "endpointRef": null,
+      "features": ["issue", "revoke", "status"],
+      "degraded": true,
+      "notes": "内存桩：凭据未签名"
+    },
+    {
+      "name": "artifact-store",
+      "version": "0.1.0",
+      "transport": "in_process",
+      "endpointRef": null,
+      "features": ["put", "get", "stat", "signedUrl", "list"],
+      "degraded": true,
+      "notes": "内存桩：无持久化"
+    },
+    {
+      "name": "model-gateway",
+      "version": "0.1.0",
+      "transport": "in_process",
+      "endpointRef": null,
+      "features": ["complete", "stream", "health"],
+      "degraded": true,
+      "notes": "确定性假模型"
+    },
+    {
+      "name": "compute",
+      "version": "0.1.0",
+      "transport": "in_process",
+      "endpointRef": null,
+      "features": ["quote", "submit", "status", "cancel", "reconcile", "logs", "release"],
+      "limits": {
+        "maxConcurrentJobs": 8,
+        "maxWallClockSeconds": 86400
+      },
+      "degraded": true,
+      "notes": "内存模拟：不产生真实计算"
+    },
+    {
+      "name": "hpc-scheduler",
+      "version": "0.1.0",
+      "transport": "in_process",
+      "endpointRef": null,
+      "features": ["reserve", "releaseReservation", "queueInfo"],
+      "degraded": true,
+      "notes": "内存模拟：无真实 Slurm 预留"
+    },
+    {
+      "name": "events",
+      "version": "0.1.0",
+      "transport": "in_process",
+      "endpointRef": null,
+      "features": ["publish", "subscribe"],
+      "degraded": true,
+      "notes": "内存实现：无持久化与重放"
+    },
+    {
+      "name": "session",
+      "version": "0.1.0",
+      "transport": "in_process",
+      "endpointRef": null,
+      "features": ["start", "subscribe", "wait", "cancel"],
+      "degraded": true,
+      "notes": "脚本化会话：不调用真实 DSH"
+    },
+    {
+      "name": "telemetry",
+      "version": "0.1.0",
+      "transport": "in_process",
+      "endpointRef": null,
+      "features": ["emit"],
+      "degraded": true,
+      "notes": "内存实现：不导出 OTel"
+    }
+  ],
+  "dataResidency": ["local_process"],
+  "knownLimitations": [
+    "所有端口均为内存桩，仅用于本工程独立开发",
+    "不支持跨进程调用",
+    "不支持真实租户隔离与审计",
+    "不得用于生产或性能结论"
+  ]
+}

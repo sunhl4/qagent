@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://company.example/schemas/method-card.schema.json",
+  "title": "MethodCard",
+  "description": "Structured extraction of one paper's method. Conclusions without evidence locations must not enter downstream stages.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "method_card_id",
+    "paper",
+    "problem",
+    "method_summary",
+    "claims",
+    "metrics",
+    "reproduction_status",
+    "evidence_locations",
+    "created_at"
+  ],
+  "properties": {
+    "method_card_id": {"type": "string", "minLength": 1},
+    "paper": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["paper_id", "title", "authors", "year"],
+      "properties": {
+        "paper_id": {"type": "string", "minLength": 1},
+        "title": {"type": "string", "minLength": 1},
+        "authors": {"type": "array", "items": {"type": "string"}, "minItems": 1},
+        "year": {"type": "integer"},
+        "doi": {"type": ["string", "null"]},
+        "arxiv_id": {"type": ["string", "null"]},
+        "venue": {"type": ["string", "null"]},
+        "source": {"type": ["string", "null"]},
+        "code_url": {"type": ["string", "null"]}
+      }
+    },
+    "problem": {"type": "string", "minLength": 1},
+    "method_summary": {"type": "string", "minLength": 1},
+    "claims": {"type": "array", "items": {"type": "string"}},
+    "inputs": {"type": "array", "items": {"type": "string"}},
+    "outputs": {"type": "array", "items": {"type": "string"}},
+    "datasets": {"type": "array", "items": {"type": "string"}},
+    "preprocessing": {"type": "array", "items": {"type": "string"}},
+    "model_or_algorithm": {"type": ["string", "null"]},
+    "hyperparameters": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "value"],
+        "properties": {
+          "name": {"type": "string", "minLength": 1},
+          "value": {}
+        }
+      }
+    },
+    "baselines": {"type": "array", "items": {"type": "string"}},
+    "metrics": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "direction"],
+        "properties": {
+          "name": {"type": "string", "minLength": 1},
+          "direction": {"type": "string", "enum": ["minimize", "maximize"]}
+        }
+      }
+    },
+    "train_test_split": {"type": ["string", "null"]},
+    "hardware": {"type": ["string", "null"]},
+    "runtime": {"type": ["string", "null"]},
+    "original_code_url": {"type": ["string", "null"]},
+    "reproduction_status": {
+      "type": "string",
+      "enum": ["not_attempted", "in_progress", "succeeded", "partial", "failed"]
+    },
+    "reproduction_difficulty": {"type": ["string", "null"]},
+    "missing_information": {"type": "array", "items": {"type": "string"}},
+    "suspicious_assumptions": {"type": "array", "items": {"type": "string"}},
+    "improvement_opportunities": {"type": "array", "items": {"type": "string"}},
+    "evidence_locations": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["type", "location"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["paper_page", "paper_section", "figure", "table", "equation", "code_line", "issue", "abstract"]
+          },
+          "location": {"type": "string", "minLength": 1},
+          "quote": {"type": ["string", "null"]},
+          "ref": {"type": ["string", "null"]}
+        }
+      }
+    },
+    "created_at": {"type": "string", "format": "date-time"},
+    "revision": {"type": "integer", "minimum": 1, "default": 1}
+  }
+}

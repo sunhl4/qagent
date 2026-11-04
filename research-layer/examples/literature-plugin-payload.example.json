@@ -1,0 +1,107 @@
+{
+  "plugin": "literature-search",
+  "retrieved_at": "2026-11-03T00:00:00.000Z",
+  "records": [
+    {
+      "paper_id": "P-2401",
+      "title": "Contrastive pretraining for molecular property prediction",
+      "authors": ["A. Chen", "B. Singh"],
+      "year": 2024,
+      "doi": "10.1000/mol.2024.1",
+      "arxiv_id": "2401.00001",
+      "venue": "NeurIPS",
+      "source": "openalex",
+      "code_url": "https://github.com/example/mol-pretrain",
+      "topics": ["molecular-property"]
+    },
+    {
+      "paper_id": "P-arxiv",
+      "title": "Contrastive pretraining for molecular property prediction",
+      "authors": ["A. Chen", "B. Singh"],
+      "year": 2024,
+      "doi": null,
+      "arxiv_id": "2401.00001",
+      "venue": null,
+      "source": "arxiv",
+      "code_url": null,
+      "topics": ["molecular-property"]
+    },
+    {
+      "paper_id": "P-dup-a",
+      "title": "Graph kernels for reaction yield",
+      "authors": ["C. Lopez"],
+      "year": 2023,
+      "doi": null,
+      "arxiv_id": null,
+      "venue": null,
+      "source": "openalex",
+      "code_url": null,
+      "topics": ["reaction-yield"]
+    },
+    {
+      "paper_id": "P-dup-b",
+      "title": "Graph kernels for reaction yield",
+      "authors": ["C. Lopez"],
+      "year": 2023,
+      "doi": null,
+      "arxiv_id": null,
+      "venue": "workshop",
+      "source": "crossref",
+      "code_url": null,
+      "topics": ["reaction-yield"]
+    }
+  ],
+  "edges": [
+    {
+      "from_paper_id": "P-2401",
+      "to_paper_id": "P-dup-a",
+      "direction": "backward"
+    }
+  ],
+  "method_cards": [
+    {
+      "method_card_id": "MC-2401",
+      "paper": {
+        "paper_id": "P-2401",
+        "title": "Contrastive pretraining for molecular property prediction",
+        "authors": ["A. Chen", "B. Singh"],
+        "year": 2024,
+        "doi": "10.1000/mol.2024.1",
+        "arxiv_id": "2401.00001",
+        "venue": "NeurIPS",
+        "source": "openalex",
+        "code_url": "https://github.com/example/mol-pretrain"
+      },
+      "problem": "分子性质预测缺少可复现的对比学习基线",
+      "method_summary": "用对比预训练得到分子表征，再在下游性质上做线性探测",
+      "claims": ["对比预训练相对从头训练降低验证损失"],
+      "inputs": ["SMILES"],
+      "outputs": ["分子表征", "性质预测"],
+      "datasets": ["MoleculeNet"],
+      "preprocessing": ["规范化 SMILES"],
+      "model_or_algorithm": "contrastive graph encoder",
+      "hyperparameters": [{ "name": "learning_rate", "value": 0.001 }],
+      "baselines": ["从头训练"],
+      "metrics": [{ "name": "val_loss", "direction": "minimize" }],
+      "train_test_split": "scaffold split",
+      "hardware": "1x GPU",
+      "runtime": "2h",
+      "original_code_url": "https://github.com/example/mol-pretrain",
+      "reproduction_status": "not_attempted",
+      "reproduction_difficulty": null,
+      "missing_information": [],
+      "suspicious_assumptions": [],
+      "improvement_opportunities": [],
+      "evidence_locations": [
+        {
+          "type": "table",
+          "location": "Table 2",
+          "quote": "val_loss 0.41 vs 0.55",
+          "ref": "10.1000/mol.2024.1"
+        }
+      ],
+      "created_at": "2026-11-03T00:00:00.000Z",
+      "revision": 1
+    }
+  ]
+}

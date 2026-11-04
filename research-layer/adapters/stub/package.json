@@ -1,0 +1,10 @@
+{
+  "name": "@company/research-layer-adapters-stub",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "In-memory test doubles for the cross-project ports. Never for production.",
+  "exports": {
+    ".": "./src/index.ts"
+  }
+}

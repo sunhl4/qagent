@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://company.example/schemas/checkpoint-record.schema.json",
+  "title": "CheckpointRecord",
+  "description": "Reproducible checkpoint for one experiment attempt. New attempts never overwrite older checkpoint keys.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "checkpoint_id",
+    "experiment_id",
+    "attempt",
+    "uri",
+    "sha256",
+    "step",
+    "created_at",
+    "code_commit",
+    "environment_hash"
+  ],
+  "properties": {
+    "checkpoint_id": {"type": "string", "minLength": 1},
+    "experiment_id": {"type": "string", "minLength": 1},
+    "attempt": {"type": "integer", "minimum": 1},
+    "uri": {"type": "string", "minLength": 1},
+    "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "step": {"type": "integer", "minimum": 0},
+    "created_at": {"type": "string", "format": "date-time"},
+    "code_commit": {"type": "string", "minLength": 1},
+    "environment_hash": {"type": "string", "minLength": 1},
+    "seed": {"type": ["integer", "null"]},
+    "size_bytes": {"type": ["integer", "null"], "minimum": 0},
+    "valid": {"type": "boolean", "default": true}
+  }
+}

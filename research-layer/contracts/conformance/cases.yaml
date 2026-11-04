@@ -1,0 +1,357 @@
+version: 1
+contract: "1.0.0"
+description: 跨工程端口一致性用例。双方实现必须通过同一组 MUST 用例。
+
+cases:
+  - id: ID-01
+    port: identity
+    level: MUST
+    title: 有效 token 校验
+    given: 一个未过期的用户 token
+    when: 调用 verifyToken
+    then:
+      - 返回 subject
+      - subject 带 tenantId 与 scopes
+
+  - id: ID-02
+    port: identity
+    level: MUST
+    title: 过期 token
+    given: 一个已过期 token
+    when: 调用 verifyToken
+    then:
+      - 抛出 POLICY_DENIED
+      - retryable 为 false
+
+  - id: ID-03
+    port: identity
+    level: MUST
+    title: 跨租户访问
+    given: tenant A 的 token
+    when: expectedTenantId 为 tenant B
+    then:
+      - 抛出 POLICY_DENIED
+
+  - id: ID-04
+    port: identity
+    level: MUST
+    title: Agent grant 越权
+    given: 父主体只有 read scope
+    when: 申请 qpu:control
+    then:
+      - 抛出 POLICY_DENIED
+
+  - id: ID-05
+    port: identity
+    level: MUST
+    title: 撤销后立即失效
+    given: 已签发 grant
+    when: 调用 revokeGrant 后再次使用
+    then:
+      - 调用失败
+
+  - id: OS-01
+    port: object_store
+    level: MUST
+    title: 写入并读回
+    given: 合法 body 与 sha256
+    when: put 后 get
+    then:
+      - 返回同一 sha256
+      - 内容一致
+
+  - id: OS-02
+    port: object_store
+    level: MUST
+    title: 哈希不匹配
+    given: 声明的 sha256 与实际不符
+    when: 调用 put
+    then:
+      - 抛出 INVALID_REQUEST
+      - 不写入对象
+
+  - id: OS-03
+    port: object_store
+    level: MUST
+    title: 超过内联上限
+    given: 超过阈值的 body
+    when: 调用 put
+    then:
+      - 抛出 INVALID_REQUEST
+      - 不得静默截断
+
+  - id: OS-04
+    port: object_store
+    level: MUST
+    title: 不存在对象
+    given: 未写入的 uri
+    when: 调用 get
+    then:
+      - 抛出 NOT_FOUND
+
+  - id: OS-05
+    port: object_store
+    level: MUST
+    title: 预签名过期
+    given: read 预签名 URL
+    when: 超过 TTL 后访问
+    then:
+      - 访问失败
+
+  - id: CR-01
+    port: credentials
+    level: MUST
+    title: 签发短期 token
+    given: agent 主体与允许的 actions
+    when: 调用 issueScopedToken
+    then:
+      - 返回 token
+      - TTL 不超过请求值
+
+  - id: CR-02
+    port: credentials
+    level: MUST
+    title: 超出权限
+    given: actions 超出主体 scopes
+    when: 调用 issueScopedToken
+    then:
+      - 抛出 POLICY_DENIED
+
+  - id: CR-03
+    port: credentials
+    level: MUST
+    title: 明文长期密钥
+    given: 请求中包含 sk- 开头的密钥
+    when: 调用 issueScopedToken
+    then:
+      - 抛出 INVALID_REQUEST
+
+  - id: CR-04
+    port: credentials
+    level: MUST
+    title: 撤销
+    given: 已签发 token
+    when: 调用 revoke 后再次使用
+    then:
+      - 立即失效
+
+  - id: MD-01
+    port: model
+    level: MUST
+    title: 普通补全
+    given: 合法 messages
+    when: 调用 complete
+    then:
+      - 返回 content
+      - 返回 modelId 与 modelVersion
+      - 返回 usage
+
+  - id: MD-02
+    port: model
+    level: MUST
+    title: 结构化输出
+    given: 提供 responseSchema
+    when: 调用 complete
+    then:
+      - content 可解析
+      - 符合 schema
+
+  - id: MD-03
+    port: model
+    level: MUST
+    title: 数据等级
+    given: restricted 数据但实现仅支持 internal
+    when: 调用 complete
+    then:
+      - 抛出 POLICY_DENIED
+      - 不得降级到外部模型
+
+  - id: MD-04
+    port: model
+    level: MUST
+    title: 不支持流式
+    given: 实现无流式能力
+    when: 调用 stream
+    then:
+      - 抛出 NOT_SUPPORTED
+      - 不得用非流式结果冒充
+
+  - id: MD-05
+    port: model
+    level: SHOULD
+    title: 回退可见
+    given: 首选模型不可用
+    when: 调用 complete
+    then:
+      - 返回 fallbackFrom
+      - usage 记录成本
+
+  - id: HP-01
+    port: hpc
+    level: MUST
+    title: 提交作业
+    given: 合法 JobRequest
+    when: 调用 submit
+    then:
+      - 返回 jobId
+      - 状态为 submitted
+
+  - id: HP-02
+    port: hpc
+    level: MUST
+    title: 幂等提交
+    given: 相同 idempotencyKey
+    when: 重复调用 submit
+    then:
+      - 返回同一 jobId
+      - 不创建新作业
+
+  - id: HP-03
+    port: hpc
+    level: MUST
+    title: 报价
+    given: JobRequest
+    when: 调用 quote
+    then:
+      - 返回估计成本与预计排队时间
+      - 不可行时给出原因
+
+  - id: HP-04
+    port: hpc
+    level: MUST
+    title: 取消
+    given: running 作业
+    when: 调用 cancel
+    then:
+      - 返回 cancelled 或 CONFLICT
+
+  - id: HP-05
+    port: hpc
+    level: MUST
+    title: 未知执行
+    given: 无法确认是否执行的作业
+    when: 调用 status 或 reconcile
+    then:
+      - 返回 unknown_execution
+      - 上层不得自动重试
+
+  - id: HP-06
+    port: hpc
+    level: MUST
+    title: 日志
+    given: 存在的 jobId
+    when: 调用 logs
+    then:
+      - 返回行数组
+      - 标明是否截断
+
+  - id: CL-01
+    port: cloud
+    level: MUST
+    title: 云作业未知执行
+    given: 云 API 超时且无法确认执行
+    when: 调用 reconcile
+    then:
+      - 返回 unknown_execution
+      - 不触发重复提交
+
+  - id: SS-01
+    port: session
+    level: MUST
+    title: 启动会话
+    given: 合法 SessionRequest
+    when: 调用 start
+    then:
+      - 返回 sessionId
+      - 状态为 started 或 queued
+
+  - id: SS-02
+    port: session
+    level: MUST
+    title: 事件顺序
+    given: 正常会话
+    when: 订阅事件
+    then:
+      - turn_started 先于 message
+      - turn_finished 在后
+      - 轮次单调
+
+  - id: SS-03
+    port: session
+    level: MUST
+    title: 预算超限
+    given: 超过 maxCost
+    when: 会话运行
+    then:
+      - 状态为 budget_exceeded
+      - 停止后续轮次
+
+  - id: SS-04
+    port: session
+    level: MUST
+    title: 取消
+    given: running 会话
+    when: 调用 cancel
+    then:
+      - 状态为 cancelled
+      - 事件停止
+
+  - id: SS-05
+    port: session
+    level: MUST
+    title: 工具越权
+    given: 未授权工具
+    when: 尝试调用
+    then:
+      - 记录拒绝
+      - 不执行该工具
+
+  - id: TL-01
+    port: telemetry
+    level: MUST
+    title: 未脱敏遥测
+    given: redactionApplied=false
+    when: 调用 emit
+    then:
+      - 抛出 INVALID_REQUEST
+
+  - id: TL-02
+    port: telemetry
+    level: MUST
+    title: 敏感字段名
+    given: attributes 含 api_key
+    when: 调用 emit
+    then:
+      - 拒绝或脱敏
+      - 标记 redactionApplied
+
+  - id: XP-01
+    port: cross
+    level: MUST
+    title: 端到端链路
+    given: identity → grant → credentials → hpc.submit → status → object_store.put
+    when: 执行完整链路
+    then:
+      - 每步都有 traceId
+      - 每步都有幂等键
+      - 失败可定位
+
+  - id: XP-02
+    port: cross
+    level: MUST
+    title: 未知执行后重试
+    given: 上一步返回 unknown_execution
+    when: 上层尝试重新提交
+    then:
+      - 策略拒绝
+      - 进入人工对账
+
+  - id: XP-03
+    port: cross
+    level: MUST
+    title: 降级声明
+    given: 加载桩实现
+    when: 读取 manifest
+    then:
+      - degraded 为 true
+      - 提供 degradedReason

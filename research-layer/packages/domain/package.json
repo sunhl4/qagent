@@ -1,0 +1,13 @@
+{
+  "name": "@company/research-layer-domain",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Pure domain logic: experiment validation, decision rules, policy, task state machine.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@company/dsh-contracts": "workspace:*"
+  }
+}

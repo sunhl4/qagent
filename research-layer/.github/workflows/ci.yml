@@ -1,0 +1,27 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: ["22", "24"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: 安装 Python 校验库（失败不阻断，validate.py 会跳过需要库的检查）
+        run: |
+          python3 -m pip install jsonschema pyyaml --break-system-packages \
+            || python3 -m pip install jsonschema pyyaml || true
+      - name: make check（validate + contracts-typecheck + test + 一致性结果检查）
+        run: make check
+      - name: make demo（桩上烟测）
+        run: make demo

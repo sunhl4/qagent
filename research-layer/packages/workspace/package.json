@@ -1,0 +1,10 @@
+{
+  "name": "@company/research-layer-workspace",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Local Git worktree workspace manager for experiment attempts.",
+  "exports": {
+    ".": "./src/index.ts"
+  }
+}

@@ -1,0 +1,265 @@
+{
+  "schema_version": "0.1",
+  "contract_version": "0.1.0",
+  "generated_at": "2026-11-03T00:00:00.000Z",
+  "provenance": "stub",
+  "run_context": {
+    "env": "本工程本地桩 adapters/stub（声明 degraded，仅供本地开发）",
+    "runner": "node scripts/gen-stub-results.mjs（执行 tests/conformance-run.ts）",
+    "notes": "用例文案与端口契约的对应：POLICY_DENIED 为 PERMISSION_DENIED 或 authorize=DENY；INVALID_REQUEST 为 INVALID_ARGUMENT；submitted 为 queued 且带 submittedAt。blocked 不是通过。正式验收须由 harness-core 以 provenance=harness-core 重跑，并用 --require-pass。"
+  },
+  "results": [
+    {
+      "case_id": "ID-01",
+      "port": "identity",
+      "level": "MUST",
+      "status": "passed",
+      "notes": "verify 返回 subject，含 tenantId 与 scopes。"
+    },
+    {
+      "case_id": "ID-02",
+      "port": "identity",
+      "level": "MUST",
+      "status": "passed",
+      "notes": "过期 token 返回 PERMISSION_DENIED 且 retryable=false。用例文案 POLICY_DENIED 对应该错误码。"
+    },
+    {
+      "case_id": "ID-03",
+      "port": "identity",
+      "level": "MUST",
+      "status": "passed",
+      "notes": "verify 没有 expectedTenantId。跨租户由 authorize 返回 DENY，对应用例的 POLICY_DENIED。"
+    },
+    {
+      "case_id": "ID-04",
+      "port": "identity",
+      "level": "MUST",
+      "status": "passed",
+      "notes": "父主体只有 read scope 时，申请 qpu:control 得到 DENY，不再升成审批。"
+    },
+    {
+      "case_id": "ID-05",
+      "port": "identity",
+      "level": "MUST",
+      "status": "passed",
+      "notes": "revoke 之后再次 verify 失败。"
+    },
+    {
+      "case_id": "OS-01",
+      "port": "object_store",
+      "level": "MUST",
+      "status": "passed",
+      "notes": "put 后 get，sha256 与内容一致。"
+    },
+    {
+      "case_id": "OS-02",
+      "port": "object_store",
+      "level": "MUST",
+      "status": "passed",
+      "notes": "声明哈希不符时返回 INVALID_ARGUMENT（用例文案 INVALID_REQUEST），对象数不变。"
+    },
+    {
+      "case_id": "OS-03",
+      "port": "object_store",
+      "level": "MUST",
+      "status": "passed",
+      "notes": "超过上限时返回 INVALID_ARGUMENT，不截断写入。"
+    },
+    {
+      "case_id": "OS-04",
+      "port": "object_store",
+      "level": "MUST",
+      "status": "passed",
+      "notes": "不存在的 uri 返回 NOT_FOUND。"
+    },
+    {
+      "case_id": "OS-05",
+      "port": "object_store",
+      "level": "MUST",
+      "status": "passed",
+      "notes": "端口没有兑付方法；桩的 accessSignedUrl 在 TTL 之后拒绝。真实存储在 HTTP 层做同样的事。"
+    },
+    {
+      "case_id": "CR-01",
+      "port": "credentials",
+      "level": "MUST",
+      "status": "passed",
+      "notes": "签发的凭据 TTL 不超过请求的 60 秒。"
+    },
+    {
+      "case_id": "CR-02",
+      "port": "credentials",
+      "level": "MUST",
+      "status": "passed",
+      "notes": "scope 超出主体权限时返回 PERMISSION_DENIED。"
+    },
+    {
+      "case_id": "CR-03",
+      "port": "credentials",
+      "level": "MUST",
+      "status": "passed",
+      "notes": "scope 中带 sk- 开头的密钥时返回 INVALID_ARGUMENT。"
+    },
+    {
+      "case_id": "CR-04",
+      "port": "credentials",
+      "level": "MUST",
+      "status": "passed",
+      "notes": "revoke 后 status.active 为 false。"
+    },
+    {
+      "case_id": "MD-01",
+      "port": "model",
+      "level": "MUST",
+      "status": "passed",
+      "notes": "complete 返回 content、modelId、modelVersion 与 usage。"
+    },
+    {
+      "case_id": "MD-02",
+      "port": "model",
+      "level": "MUST",
+      "status": "blocked",
+      "notes": "桩忽略 responseSchema，固定返回 {stub:true, echo}，不符合要求 answer 的 schema。补齐校验前不能记为通过。"
+    },
+    {
+      "case_id": "MD-03",
+      "port": "model",
+      "level": "MUST",
+      "status": "passed",
+      "notes": "restricted 数据在仅支持 internal 的实现上返回 PERMISSION_DENIED，没有响应可降级到外部模型。"
+    },
+    {
+      "case_id": "MD-04",
+      "port": "model",
+      "level": "MUST",
+      "status": "passed",
+      "notes": "无流式能力时首个事件是 NOT_SUPPORTED，没有 done 事件冒充流式结果。"
+    },
+    {
+      "case_id": "MD-05",
+      "port": "model",
+      "level": "SHOULD",
+      "status": "blocked",
+      "notes": "桩不实现模型回退，响应没有 fallbackFrom。SHOULD，调用方按 describe() 降级。"
+    },
+    {
+      "case_id": "HP-01",
+      "port": "hpc",
+      "level": "MUST",
+      "status": "passed",
+      "notes": "契约状态没有 submitted。受理态是 queued，并带 submittedAt。"
+    },
+    {
+      "case_id": "HP-02",
+      "port": "hpc",
+      "level": "MUST",
+      "status": "passed",
+      "notes": "相同 idempotencyKey 返回同一个 jobId，list 仍只有一条。"
+    },
+    {
+      "case_id": "HP-03",
+      "port": "hpc",
+      "level": "MUST",
+      "status": "passed",
+      "notes": "可行报价含估计成本与排队时间；不支持的 kind 返回 NOT_SUPPORTED 原因。"
+    },
+    {
+      "case_id": "HP-04",
+      "port": "hpc",
+      "level": "MUST",
+      "status": "passed",
+      "notes": "running 作业调用 cancel 后状态为 cancelled。"
+    },
+    {
+      "case_id": "HP-05",
+      "port": "hpc",
+      "level": "MUST",
+      "status": "passed",
+      "notes": "status.state=unknown，reconcile.verdict=unknown。UNKNOWN_EXECUTION 不可重试，策略拒绝自动再提交。"
+    },
+    {
+      "case_id": "HP-06",
+      "port": "hpc",
+      "level": "MUST",
+      "status": "passed",
+      "notes": "logs 返回行数组，并带 truncated 标记。"
+    },
+    {
+      "case_id": "CL-01",
+      "port": "cloud",
+      "level": "MUST",
+      "status": "passed",
+      "notes": "云作业对账为 unknown 后，同一幂等键再次 submit 不产生新作业。"
+    },
+    {
+      "case_id": "SS-01",
+      "port": "session",
+      "level": "MUST",
+      "status": "passed",
+      "notes": "start 返回 sessionId，状态为 started。"
+    },
+    {
+      "case_id": "SS-02",
+      "port": "session",
+      "level": "MUST",
+      "status": "passed",
+      "notes": "事件顺序为 turn_started、message、turn_finished，轮次不回退。"
+    },
+    {
+      "case_id": "SS-03",
+      "port": "session",
+      "level": "MUST",
+      "status": "passed",
+      "notes": "桩用 exceedBudget 注入超限。状态为 budget_exceeded，且停在第 1 轮，不再跑后续轮次。"
+    },
+    {
+      "case_id": "SS-04",
+      "port": "session",
+      "level": "MUST",
+      "status": "passed",
+      "notes": "cancel 后 wait 状态为 cancelled，不再产生事件。"
+    },
+    {
+      "case_id": "SS-05",
+      "port": "session",
+      "level": "MUST",
+      "status": "passed",
+      "notes": "未授权工具被记录为拒绝，toolCalls 仍为 0。"
+    },
+    {
+      "case_id": "TL-01",
+      "port": "telemetry",
+      "level": "MUST",
+      "status": "passed",
+      "notes": "redactionApplied=false 时返回 INVALID_ARGUMENT。"
+    },
+    {
+      "case_id": "TL-02",
+      "port": "telemetry",
+      "level": "MUST",
+      "status": "passed",
+      "notes": "attributes 含 api_key 时拒绝，不写入已采集事件。"
+    },
+    {
+      "case_id": "XP-01",
+      "port": "cross",
+      "level": "MUST",
+      "status": "blocked",
+      "notes": "链路能跑通，失败带稳定错误码。成功结果类型没有 traceId；verify、authorize、status 也没有幂等键。要验收这两条须双方改契约，本工程不单改 contracts/。"
+    },
+    {
+      "case_id": "XP-02",
+      "port": "cross",
+      "level": "MUST",
+      "status": "passed",
+      "notes": "unknown 之后 evaluatePolicy(retryAfterUnknown) 返回 DENY，原因要求人工对账。"
+    },
+    {
+      "case_id": "XP-03",
+      "port": "cross",
+      "level": "MUST",
+      "status": "passed",
+      "notes": "describe() 的 degraded 为 true 且有 degradedReason。集成清单用 notes 写原因，其 schema 没有 degradedReason 字段。"
+    }
+  ]
+}

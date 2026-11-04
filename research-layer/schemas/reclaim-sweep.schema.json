@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://company.example/schemas/reclaim-sweep.schema.json",
+  "title": "ReclaimSweep",
+  "description": "One pass over open leases: reconcile, reclaim, or escalate. This is not a durable workflow log of a resident loop.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "sweep_id",
+    "at",
+    "grace_seconds",
+    "alert_after_seconds",
+    "examined",
+    "reclaimed",
+    "expired",
+    "escalated",
+    "alerts",
+    "items"
+  ],
+  "properties": {
+    "sweep_id": {"type": "string", "minLength": 1},
+    "at": {"type": "string", "format": "date-time"},
+    "grace_seconds": {"type": "integer", "minimum": 0},
+    "alert_after_seconds": {"type": "integer", "minimum": 0},
+    "examined": {"type": "integer", "minimum": 0},
+    "reclaimed": {"type": "integer", "minimum": 0},
+    "expired": {"type": "integer", "minimum": 0},
+    "escalated": {"type": "integer", "minimum": 0},
+    "alerts": {"type": "integer", "minimum": 0},
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["lease_id", "action", "alert", "code", "reason", "lease_state"],
+        "properties": {
+          "lease_id": {"type": "string", "minLength": 1},
+          "action": {
+            "type": "string",
+            "enum": ["keep", "expire", "reclaim", "escalate", "reconciled"]
+          },
+          "alert": {"type": "boolean"},
+          "code": {"type": "string", "minLength": 1},
+          "reason": {"type": "string", "minLength": 1},
+          "lease_state": {
+            "type": "string",
+            "enum": ["REQUESTED", "PREPARED", "ACTIVE", "DRAINING", "RELEASED", "REVOKED", "EXPIRED", "FAILED"]
+          }
+        }
+      }
+    }
+  }
+}

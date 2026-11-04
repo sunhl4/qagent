@@ -1,0 +1,156 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://company.example/contracts/integration-manifest.schema.json",
+  "title": "IntegrationManifest",
+  "description": "Declares which ports an implementation provides, at which contract version, and with which limits. Produced by harness-core, consumed by research-platform.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "implementation",
+    "contractVersion",
+    "environment",
+    "ports"
+  ],
+  "properties": {
+    "implementation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "version",
+        "owner"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "owner": {
+          "type": "string"
+        },
+        "repository": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "contact": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "contractVersion": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "environment": {
+      "type": "string",
+      "enum": [
+        "local",
+        "staging",
+        "production"
+      ]
+    },
+    "generatedAt": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "ports": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "version",
+          "transport",
+          "features"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "enum": [
+              "model-gateway",
+              "compute",
+              "hpc-scheduler",
+              "artifact-store",
+              "identity",
+              "secrets",
+              "events",
+              "session",
+              "telemetry"
+            ]
+          },
+          "version": {
+            "type": "string"
+          },
+          "transport": {
+            "type": "string",
+            "enum": [
+              "in_process",
+              "stdio_jsonrpc",
+              "http",
+              "grpc"
+            ]
+          },
+          "endpointRef": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Reference to a secret-managed endpoint, never a literal credential"
+          },
+          "features": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "limits": {
+            "type": "object",
+            "additionalProperties": {
+              "type": [
+                "number",
+                "string",
+                "boolean"
+              ]
+            }
+          },
+          "degraded": {
+            "type": "boolean",
+            "default": false
+          },
+          "notes": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "dataResidency": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "knownLimitations": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    }
+  }
+}

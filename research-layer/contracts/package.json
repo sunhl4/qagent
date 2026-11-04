@@ -1,0 +1,16 @@
+{
+  "name": "@company/dsh-contracts",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Versioned cross-project ports shared by harness-core and the research layer.",
+  "exports": {
+    ".": "./src/index.ts",
+    "./types": "./src/types.ts"
+  },
+  "files": [
+    "src",
+    "VERSION",
+    "README.md"
+  ]
+}

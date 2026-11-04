@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>算法组 × AI for Science 初步合作方向</title>
+  <style>
+    :root {
+      --bg: #f6f4ef;
+      --ink: #1c2a38;
+      --muted: #6d7478;
+      --line: #d9d7d0;
+      --accent: #c85432;
+      --blue: #365d79;
+      --blue-light: #e1e9ed;
+      --warm: #eee6d9;
+      --white: #fffefa;
+      --serif: Georgia, "Songti SC", "STSong", serif;
+      --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", Arial, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; background: var(--bg); color: var(--ink); }
+    body { font-family: var(--sans); overflow: hidden; }
+    button { font: inherit; }
+
+    .deck { width: 100vw; height: 100vh; overflow: hidden; position: relative; background: var(--bg); }
+    .slides { height: 100%; display: flex; transition: transform 480ms cubic-bezier(.22,.8,.24,1); }
+    .slide {
+      position: relative; flex: 0 0 100vw; width: 100vw; height: 100vh; min-height: 620px;
+      overflow: hidden; padding: 52px 8vw 48px; display: flex; flex-direction: column;
+      background: var(--bg);
+    }
+    .slide::before { content: ""; position: absolute; inset: 20px; border: 1px solid rgba(28,42,56,.12); pointer-events: none; }
+    .slide.warm { background: var(--warm); }
+    .slide.blue { background: var(--blue); color: var(--white); }
+    .blue::before { border-color: rgba(255,254,250,.22); }
+
+    .topline { position: relative; z-index: 1; display: flex; justify-content: space-between; align-items: center; margin-bottom: 44px; }
+    .label { color: var(--accent); font-size: 12px; line-height: 1; letter-spacing: .16em; font-weight: 800; text-transform: uppercase; }
+    .blue .label { color: #f2b29c; }
+    .page { color: var(--muted); font-size: 12px; letter-spacing: .12em; }
+    .blue .page { color: rgba(255,254,250,.62); }
+
+    h1, h2, h3, p { margin: 0; }
+    h1 { font-size: clamp(46px, 6vw, 82px); line-height: .98; letter-spacing: -.065em; font-weight: 760; }
+    h2 { font-size: clamp(36px, 4.4vw, 63px); line-height: 1.03; letter-spacing: -.055em; font-weight: 740; }
+    h3 { font-size: 23px; line-height: 1.2; letter-spacing: -.03em; }
+    .serif { font-family: var(--serif); font-weight: 400; }
+    .accent { color: var(--accent); }
+    .lead { color: var(--muted); font-size: clamp(17px, 1.6vw, 23px); line-height: 1.55; max-width: 650px; }
+    .blue .lead { color: rgba(255,254,250,.75); }
+
+    .cover { justify-content: space-between; padding-top: 64px; }
+    .cover .topline { margin-bottom: 0; }
+    .cover-main { position: relative; z-index: 1; display: grid; grid-template-columns: 1.15fr .85fr; gap: 8vw; align-items: end; margin: auto 0 10vh; }
+    .cover-kicker { color: var(--blue); font-size: 16px; font-weight: 700; margin-bottom: 25px; letter-spacing: .03em; }
+    .cover h1 { max-width: 780px; margin-bottom: 28px; }
+    .cover-note { border-top: 2px solid var(--ink); padding-top: 17px; }
+    .cover-note strong { display: block; font-size: 29px; line-height: 1.25; letter-spacing: -.045em; margin-bottom: 22px; }
+    .cover-note p { color: var(--muted); font-size: 15px; line-height: 1.6; max-width: 310px; }
+    .cover-foot { position: relative; z-index: 1; border-top: 1px solid var(--line); padding-top: 14px; display: flex; justify-content: space-between; color: var(--muted); font-size: 12px; }
+
+    .intro-head { position: relative; z-index: 1; display: grid; grid-template-columns: 120px 1fr; gap: 4vw; align-items: start; margin-bottom: 44px; }
+    .intro-number { color: var(--accent); font: 78px/.75 var(--serif); }
+    .intro-head .lead { margin-top: 22px; }
+    .three-lines { position: relative; z-index: 1; border-top: 1px solid var(--line); }
+    .three-line { display: grid; grid-template-columns: 74px 1fr 1.25fr; gap: 25px; align-items: center; padding: 24px 0; border-bottom: 1px solid var(--line); }
+    .three-line .no { color: var(--accent); font: 29px/1 var(--serif); }
+    .three-line h3 { font-size: 24px; }
+    .three-line p { color: var(--muted); font-size: 15px; line-height: 1.55; max-width: 560px; }
+    .bottom-note { position: relative; z-index: 1; margin-top: auto; border-left: 3px solid var(--accent); padding: 9px 0 9px 17px; font-size: 18px; line-height: 1.45; max-width: 800px; }
+
+    .scene-head { position: relative; z-index: 1; display: grid; grid-template-columns: .85fr 1.15fr; gap: 7vw; align-items: end; margin-bottom: 46px; }
+    .scene-tag { color: var(--accent); font-size: 12px; letter-spacing: .15em; font-weight: 800; margin-bottom: 24px; }
+    .scene-title { font-size: clamp(34px, 4vw, 58px); line-height: 1.04; letter-spacing: -.055em; max-width: 470px; }
+    .scene-intro { border-top: 2px solid var(--ink); padding-top: 15px; color: var(--muted); font-size: 17px; line-height: 1.65; max-width: 600px; }
+    .scene-body { position: relative; z-index: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--line); border: 1px solid var(--line); }
+    .scene-column { background: var(--white); padding: 25px 28px 28px; min-height: 250px; }
+    .scene-column h3 { font-size: 18px; margin-bottom: 22px; }
+    .scene-column ul { list-style: none; padding: 0; margin: 0; }
+    .scene-column li { position: relative; padding: 11px 0 11px 18px; border-top: 1px solid var(--line); color: var(--muted); font-size: 15px; line-height: 1.55; }
+    .scene-column li::before { content: ""; position: absolute; left: 0; top: 19px; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+    .expected { position: relative; z-index: 1; display: flex; gap: 13px; align-items: baseline; margin-top: 24px; color: var(--blue); font-size: 15px; line-height: 1.5; }
+    .expected b { font-size: 12px; letter-spacing: .12em; white-space: nowrap; }
+
+    .plan { position: relative; z-index: 1; display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); margin-top: 22px; }
+    .plan-step { background: var(--white); padding: 26px 25px 29px; min-height: 220px; }
+    .plan-step .step-no { color: var(--accent); font: 36px/1 var(--serif); margin-bottom: 34px; }
+    .plan-step h3 { font-size: 21px; margin-bottom: 13px; }
+    .plan-step p { color: var(--muted); font-size: 14px; line-height: 1.6; }
+    .plan-foot { position: relative; z-index: 1; margin-top: 27px; color: var(--muted); font-size: 15px; line-height: 1.55; }
+
+    .blue .scene-head { align-items: start; }
+    .blue .scene-intro { border-color: var(--white); color: rgba(255,254,250,.75); }
+    .blue .scene-body { background: rgba(255,254,250,.2); border-color: rgba(255,254,250,.2); }
+    .blue .scene-column { background: var(--blue); }
+    .blue .scene-column h3 { color: var(--white); }
+    .blue .scene-column li { border-color: rgba(255,254,250,.22); color: rgba(255,254,250,.73); }
+    .blue .expected { color: #f2c6b5; }
+    .blue .plan { background: rgba(255,254,250,.2); border-color: rgba(255,254,250,.2); }
+    .blue .plan-step { background: var(--blue); }
+    .blue .plan-step p { color: rgba(255,254,250,.72); }
+    .blue .plan-foot { color: rgba(255,254,250,.72); }
+
+    .controls { position: fixed; z-index: 10; left: 8vw; right: 8vw; bottom: 17px; display: flex; justify-content: space-between; align-items: center; pointer-events: none; }
+    .controls button { pointer-events: auto; width: 34px; height: 29px; border: 1px solid rgba(28,42,56,.28); color: var(--ink); background: rgba(246,244,239,.9); cursor: pointer; font-size: 17px; line-height: 1; }
+    .controls button:hover { color: var(--accent); border-color: var(--accent); }
+    .progress { pointer-events: auto; display: flex; gap: 6px; }
+    .progress button { width: 25px; height: 4px; border: 0; padding: 0; background: var(--line); cursor: pointer; }
+    .progress button.active { background: var(--accent); }
+    .hint { position: fixed; z-index: 10; right: 8vw; top: 17px; color: var(--muted); font-size: 11px; letter-spacing: .04em; }
+
+    @media screen and (max-width: 850px) {
+      body { overflow: auto; }
+      .deck { height: auto; overflow: visible; }
+      .slides { display: block; transform: none !important; }
+      .slide { height: auto; min-height: 100vh; padding: 42px 8vw 70px; overflow: visible; }
+      .slide::before { inset: 12px; }
+      .cover-main, .intro-head, .scene-head { grid-template-columns: 1fr; gap: 30px; }
+      .cover-main { margin-top: 15vh; }
+      .cover-note { margin-top: 12px; }
+      .three-line { grid-template-columns: 45px 1fr; gap: 15px; }
+      .three-line p { grid-column: 2; }
+      .scene-body, .plan { grid-template-columns: 1fr; }
+      .scene-column, .plan-step { min-height: auto; }
+      .controls, .hint { display: none; }
+    }
+
+    .deck.capturing .controls, .deck.capturing .hint { display: none; }
+
+    @media print {
+      @page { size: 20in 11.25in; margin: 0; }
+      * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      body { overflow: visible; }
+      .deck { height: auto; overflow: visible; }
+      .slides { display: block; transform: none !important; }
+      .slide {
+        break-before: page; page-break-before: always;
+        break-inside: avoid; page-break-inside: avoid;
+        height: 11.25in; min-height: 0; overflow: hidden;
+      }
+      .slide:first-child { break-before: auto; page-break-before: auto; }
+      .controls, .hint { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="deck">
+    <div class="slides" id="slides">
+      <section class="slide cover" data-title="封面">
+        <div class="topline"><span class="label">算法组 / 初步合作方向</span><span class="page">01 / 06</span></div>
+        <div class="cover-main">
+          <div>
+            <div class="cover-kicker">算法组 × AI for Science</div>
+            <h1>从具体问题<br><span class="serif accent">开始合作</span></h1>
+            <p class="lead">我们希望先围绕已有算法问题做一个小范围试点，再根据结果决定合作范围。</p>
+          </div>
+          <div class="cover-note">
+            <strong>先解决一个真实问题。</strong>
+            <p>以下是目前希望优先沟通的三个应用方向，不代表最终项目范围，具体课题可在双方交流后共同确定。</p>
+          </div>
+        </div>
+        <div class="cover-foot"><span>初步沟通材料</span><span>2026.11</span></div>
+      </section>
+
+      <section class="slide" data-title="合作方向">
+        <div class="topline"><span class="label">01 / 合作方向</span><span class="page">02 / 06</span></div>
+        <div class="intro-head">
+          <div class="intro-number">01</div>
+          <div><h2>我们想先讨论<br><span class="serif accent">三类具体问题</span></h2><p class="lead">这些问题都基于我们已有的算法任务，合作重点是帮助我们更快判断方法、改进算法和验证适用范围。</p></div>
+        </div>
+        <div class="three-lines">
+          <div class="three-line"><div class="no">01</div><h3>论文与外部方法复现</h3><p>把值得关注的方法在我们的任务和数据上跑起来，形成可比较的基线。</p></div>
+          <div class="three-line"><div class="no">02</div><h3>现有算法改进</h3><p>针对当前效果、效率或稳定性上的问题，去做高性能的自动化优化等。</p></div>
+          <div class="three-line"><div class="no">03</div><h3>端到端算法服务工作流</h3><p>覆盖算法定制选型、算法测试、含噪声模拟、真机计算和交付。</p></div>
+        </div>
+        <div class="bottom-note">合作方式上，我们更关注“能否帮助算法组得到可信结果”，而不是单独展示某个模型的能力。</div>
+      </section>
+
+      <section class="slide warm" data-title="场景一">
+        <div class="topline"><span class="label">02 / 应用场景一</span><span class="page">03 / 06</span></div>
+        <div class="scene-head">
+          <div><div class="scene-tag">SCENARIO 01</div><h2 class="scene-title">论文与外部方法<br><span class="serif accent">复现到内部任务</span></h2></div>
+          <p class="scene-intro">算法组经常会关注新的论文和方法，但从论文描述到内部数据上的可用结果，中间还有较多工作。希望合作方帮助我们缩短这段过程。</p>
+        </div>
+        <div class="scene-body">
+          <div class="scene-column"><h3>我们希望合作方参与</h3><ul><li>一起筛选与当前问题相关的方法和论文</li><li>梳理方法的关键假设、输入要求和实现差异</li><li>协助完成代码、环境和基线结果的复现</li></ul></div>
+          <div class="scene-column"><h3>我们希望得到的结果</h3><ul><li>一个能在内部任务上运行的外部方法基线</li><li>与现有方法的效果和成本对比</li><li>对方法适用条件的初步判断</li></ul></div>
+        </div>
+        <div class="expected"><b>适合作为起点</b><span>课题边界相对清楚，容易在较短时间内看到合作是否有效。</span></div>
+      </section>
+
+      <section class="slide" data-title="场景二">
+        <div class="topline"><span class="label">03 / 应用场景二</span><span class="page">04 / 06</span></div>
+        <div class="scene-head">
+          <div><div class="scene-tag">SCENARIO 02</div><h2 class="scene-title">围绕现有算法<br><span class="serif accent">做针对性改进</span></h2></div>
+          <p class="scene-intro">我们已有一些在使用的算法和模型，也有比较明确的瓶颈，例如效果提升有限、计算成本较高，或在部分数据上不够稳定。</p>
+        </div>
+        <div class="scene-body">
+          <div class="scene-column"><h3>我们希望合作方参与</h3><ul><li>结合问题特点提出可能的改进方向</li><li>协助设计小规模对比实验和消融实验</li><li>共同分析改进有效或无效的原因</li></ul></div>
+          <div class="scene-column"><h3>我们希望得到的结果</h3><ul><li>一个标准的自动化的算法优化工作流</li><li>效果、效率和稳定性的对比结果</li><li>值得继续投入的方向和不建议继续的方向</li></ul></div>
+        </div>
+        <div class="expected"><b>重点</b><span>能达到举一反三，为之后的新的算法和代码做高性能优化。</span></div>
+      </section>
+
+      <section class="slide warm" data-title="场景三">
+        <div class="topline"><span class="label">04 / 应用场景三</span><span class="page">05 / 06</span></div>
+        <div class="scene-head">
+          <div><div class="scene-tag">SCENARIO 03</div><h2 class="scene-title">把算法服务做成<br><span class="serif accent">端到端工作流</span></h2></div>
+          <p class="scene-intro">我们为客户提供量子计算算法在具体行业应用的算法服务，覆盖算法定制与选型、算法测试、云平台含噪声模拟、真机计算和完整交付。希望与合作方一起把这条流程跑通并打磨稳定。</p>
+        </div>
+        <div class="scene-body">
+          <div class="scene-column"><h3>我们希望合作方参与</h3><ul><li>结合行业问题，参与算法定制与选型</li><li>协助设计算法测试方案与评价指标</li><li>参与含噪声模拟与结果分析，共同判断是否继续迭代改进</li></ul></div>
+          <div class="scene-column"><h3>我们希望得到的结果</h3><ul><li>一条跑通的端到端算法服务工作流</li><li>指标达标后的量子计算机实测结果</li><li>结构完整的最终交付物</li></ul></div>
+        </div>
+        <div class="expected"><b>服务链路</b><span>算法定制与选型 → 算法测试 → 云平台含噪声模拟 → 指标达标后申请量子计算机计算 → 整理完整交付物。</span></div>
+      </section>
+
+      <section class="slide blue" data-title="试点计划">
+        <div class="topline"><span class="label">05 / 建议的试点计划</span><span class="page">06 / 06</span></div>
+        <div class="scene-head">
+          <div><div class="scene-tag">PILOT PLAN</div><h2 class="scene-title">先选一个课题<br><span class="serif">做出第一轮结果</span></h2></div>
+          <p class="scene-intro">建议先从场景一或场景二中选一个已有基线、数据和评价方式的课题，合作周期以 4–8 周为宜。</p>
+        </div>
+        <div class="plan">
+          <div class="plan-step"><div class="step-no">01</div><h3>共同选题</h3><p>确认一个具体问题、现有方法、数据范围和希望改善的指标。</p></div>
+          <div class="plan-step"><div class="step-no">02</div><h3>联合验证</h3><p>围绕复现或改进开展一轮实验，定期同步阶段结果和遇到的问题。</p></div>
+          <div class="plan-step"><div class="step-no">03</div><h3>评估下一步</h3><p>根据结果决定继续深化、换一个方向，或先保留为阶段性结论。</p></div>
+        </div>
+      </section>
+    </div>
+
+    <div class="hint">← → / 空格 翻页</div>
+    <div class="controls"><button id="prev" aria-label="上一页">←</button><div class="progress" id="progress" aria-label="幻灯片导航"></div><button id="next" aria-label="下一页">→</button></div>
+  </div>
+
+  <script>
+    (() => {
+      const slides = [...document.querySelectorAll('.slide')];
+      const track = document.getElementById('slides');
+      const progress = document.getElementById('progress');
+      let current = 0;
+
+      slides.forEach((slide, index) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.title = slide.dataset.title || `第 ${index + 1} 页`;
+        button.setAttribute('aria-label', button.title);
+        button.addEventListener('click', () => go(index));
+        progress.appendChild(button);
+      });
+
+      function go(index) {
+        current = Math.max(0, Math.min(slides.length - 1, index));
+        track.style.transform = `translateX(-${current * 100}vw)`;
+        [...progress.children].forEach((button, i) => button.classList.toggle('active', i === current));
+      }
+
+      document.getElementById('prev').addEventListener('click', () => go(current - 1));
+      document.getElementById('next').addEventListener('click', () => go(current + 1));
+      document.addEventListener('keydown', (event) => {
+        if (['ArrowRight', 'PageDown', ' '].includes(event.key)) { event.preventDefault(); go(current + 1); }
+        if (['ArrowLeft', 'PageUp'].includes(event.key)) { event.preventDefault(); go(current - 1); }
+        if (event.key === 'Home') { event.preventDefault(); go(0); }
+        if (event.key === 'End') { event.preventDefault(); go(slides.length - 1); }
+      });
+
+      let startX = null;
+      document.addEventListener('touchstart', event => { startX = event.changedTouches[0].clientX; }, { passive: true });
+      document.addEventListener('touchend', event => {
+        if (startX === null) return;
+        const distance = event.changedTouches[0].clientX - startX;
+        if (Math.abs(distance) > 50) go(current + (distance < 0 ? 1 : -1));
+        startX = null;
+      }, { passive: true });
+      const params = new URLSearchParams(location.search);
+      const slide = Math.max(1, Math.min(slides.length, +(params.get('p') || 1)));
+      if (params.has('shot')) document.querySelector('.deck').classList.add('capturing');
+      go(slide - 1);
+    })();
+  </script>
+</body>
+</html>

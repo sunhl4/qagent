@@ -1,0 +1,136 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://company.example/schemas/loop-summary.schema.json",
+  "title": "ExperimentLoopSummary",
+  "description": "Bounded experiment loop record; every attempt, including failures and negative results, is preserved.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "loop_id",
+    "task_id",
+    "experiment_id",
+    "stop_reason",
+    "attempts",
+    "total_cost",
+    "currency",
+    "budget_total",
+    "remaining_budget",
+    "started_at",
+    "finished_at"
+  ],
+  "properties": {
+    "loop_id": {"type": "string", "minLength": 1},
+    "task_id": {"type": "string"},
+    "experiment_id": {"type": "string"},
+    "stop_reason": {
+      "type": "string",
+      "enum": [
+        "kept",
+        "exhausted",
+        "budget_exhausted",
+        "deadline",
+        "stopped",
+        "escalated",
+        "blocked",
+        "consecutive_failures",
+        "no_candidate",
+        "invalid_candidate"
+      ]
+    },
+    "stop_detail": {"type": ["string", "null"]},
+    "attempts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "attempt",
+          "run_id",
+          "experiment_id",
+          "state",
+          "cost",
+          "currency",
+          "started_at",
+          "finished_at"
+        ],
+        "properties": {
+          "attempt": {"type": "integer", "minimum": 1},
+          "run_id": {"type": "string", "minLength": 1},
+          "experiment_id": {"type": "string"},
+          "state": {
+            "type": "string",
+            "enum": [
+              "rejected",
+              "denied",
+              "needs_approval",
+              "infeasible",
+              "escalated",
+              "succeeded",
+              "failed",
+              "unknown_execution",
+              "partial",
+              "stopped"
+            ]
+          },
+          "decision": {
+            "type": ["string", "null"],
+            "enum": ["keep", "discard", "extend", "stop", "escalate", null]
+          },
+          "reason": {"type": ["string", "null"]},
+          "resume_plan": {"type": ["string", "null"]},
+          "resume_from": {"type": ["string", "null"]},
+          "failure": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["category", "code", "message", "retryable", "stage"],
+            "properties": {
+              "category": {
+                "type": "string",
+                "enum": [
+                  "implementation",
+                  "data",
+                  "metric",
+                  "resource",
+                  "hypothesis",
+                  "environment",
+                  "instability",
+                  "policy",
+                  "unknown"
+                ]
+              },
+              "code": {"type": "string", "minLength": 1},
+              "message": {"type": "string"},
+              "retryable": {"type": "boolean"},
+              "stage": {
+                "type": "string",
+                "enum": [
+                  "compile",
+                  "policy",
+                  "quote",
+                  "submit",
+                  "execution",
+                  "artifacts",
+                  "decision",
+                  "unknown_execution",
+                  "loop"
+                ]
+              }
+            }
+          },
+          "cost": {"type": "number"},
+          "currency": {"type": "string", "minLength": 3, "maxLength": 3},
+          "manifest_ref": {"type": ["string", "null"]},
+          "error_code": {"type": ["string", "null"]},
+          "started_at": {"type": "string", "format": "date-time"},
+          "finished_at": {"type": "string", "format": "date-time"}
+        }
+      }
+    },
+    "total_cost": {"type": "number", "minimum": 0},
+    "currency": {"type": "string", "minLength": 3, "maxLength": 3},
+    "budget_total": {"type": "number", "minimum": 0},
+    "remaining_budget": {"type": "number", "minimum": 0},
+    "started_at": {"type": "string", "format": "date-time"},
+    "finished_at": {"type": "string", "format": "date-time"}
+  }
+}

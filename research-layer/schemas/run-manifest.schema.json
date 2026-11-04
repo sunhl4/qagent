@@ -1,0 +1,119 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://company.example/schemas/run-manifest.schema.json",
+  "title": "RunManifest",
+  "description": "Immutable evidence index for one execution attempt.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["run_id", "task_id", "attempt", "state", "code", "environment", "artifacts", "created_at"],
+  "properties": {
+    "run_id": {"type": "string", "minLength": 1},
+    "task_id": {"type": "string"},
+    "experiment_id": {"type": ["string", "null"]},
+    "attempt": {"type": "integer", "minimum": 1},
+    "state": {"type": "string", "enum": ["created", "staging", "running", "completed", "failed", "partial", "unknown", "cancelled"]},
+    "code": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["repo", "commit"],
+      "properties": {
+        "repo": {"type": "string"},
+        "commit": {"type": "string"},
+        "branch": {"type": ["string", "null"]},
+        "dirty": {"type": "boolean", "default": false},
+        "patch_hash": {"type": ["string", "null"]}
+      }
+    },
+    "environment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["container_digest", "lockfile_hash"],
+      "properties": {
+        "container_digest": {"type": "string"},
+        "lockfile_hash": {"type": "string"},
+        "os": {"type": ["string", "null"]},
+        "python": {"type": ["string", "null"]},
+        "cuda": {"type": ["string", "null"]},
+        "hardware": {"type": ["string", "null"]}
+      }
+    },
+    "model": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "model_id": {"type": ["string", "null"]},
+        "version": {"type": ["string", "null"]},
+        "prompt_template_hash": {"type": ["string", "null"]},
+        "parameters": {"type": "object"}
+      }
+    },
+    "resources": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "handle_id": {"type": ["string", "null"]},
+        "lease_id": {"type": ["string", "null"]},
+        "type": {"type": ["string", "null"]},
+        "count": {"type": ["integer", "null"]},
+        "started_at": {"type": ["string", "null"], "format": "date-time"},
+        "ended_at": {"type": ["string", "null"], "format": "date-time"},
+        "cost": {"type": ["number", "null"]},
+        "currency": {"type": ["string", "null"]}
+      }
+    },
+    "metrics": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "value"],
+        "properties": {
+          "name": {"type": "string"},
+          "value": {"type": "number"},
+          "unit": {"type": ["string", "null"]},
+          "uncertainty": {"type": ["number", "null"]},
+          "split": {"type": ["string", "null"]},
+          "seed": {"type": ["integer", "null"]}
+        }
+      },
+      "default": []
+    },
+    "artifacts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["type", "uri", "sha256"],
+        "properties": {
+          "type": {"type": "string", "enum": ["code", "config", "env_lock", "container", "checkpoint", "raw_result", "log", "report", "figure", "dataset_ref", "sbom"]},
+          "uri": {"type": "string"},
+          "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+          "size_bytes": {"type": ["integer", "null"]},
+          "retention": {"type": ["string", "null"]}
+        }
+      }
+    },
+    "decision": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "action": {"type": "string", "enum": ["keep", "discard", "extend", "stop", "escalate"]},
+        "reason": {"type": ["string", "null"]},
+        "decided_by": {"type": ["string", "null"]},
+        "decided_at": {"type": ["string", "null"], "format": "date-time"}
+      }
+    },
+    "failure": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "category": {"type": "string", "enum": ["implementation", "data", "metric", "resource", "hypothesis", "environment", "instability", "policy", "unknown"]},
+        "message": {"type": ["string", "null"]},
+        "retryable": {"type": "boolean", "default": false}
+      }
+    },
+    "trace_id": {"type": ["string", "null"]},
+    "created_at": {"type": "string", "format": "date-time"},
+    "finished_at": {"type": ["string", "null"], "format": "date-time"}
+  }
+}

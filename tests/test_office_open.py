@@ -145,8 +145,12 @@ def test_suffix_allowlist_and_missing_file(tmp_path: Path, monkeypatch) -> None:
     (project / "gone.docx").write_bytes(b"")
 
     monkeypatch.setenv(OPEN_ENV, "startfile")
+    monkeypatch.setattr(office_open, "_shell_open", lambda path: None)
     bad_kind = invoke("company_office_open", "lab", {"project": PROJECT, "path": "evil.exe"})
     assert bad_kind.status == "error" and "不是可交给 WPS 的打开类型" in bad_kind.error
+    (project / "map.xmind").write_bytes(b"PK\x03\x04")
+    opened = invoke("company_office_open", "lab", {"project": PROJECT, "path": "map.xmind"})
+    assert opened.status == "ok", opened.error
 
     missing = invoke("company_office_open", "lab", {"project": PROJECT, "path": "nowhere.docx"})
     assert missing.status == "error" and "workspace file" in missing.error

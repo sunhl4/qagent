@@ -82,6 +82,8 @@ def test_company_skills_publish_required_frontmatter() -> None:
         "company-software-development",
         "quantum-workflow",
         "company-plan",
+        "company-coding",
+        "company-office-desk",
     }
     for name in names:
         text = (ROOT / f"skills/{name}/SKILL.md").read_text(encoding="utf-8")
@@ -178,12 +180,18 @@ def test_profile_reenables_managed_builtins_by_full_row_override() -> None:
         body = next(block for block in blocks[1:] if block.splitlines()[0].strip() == id)
         return body
 
-    for name in ("tool-fs", "tool-fs-search", "tool-web", "skill-filesystem", "tool-skill"):
+    for name in (
+        "tool-fs", "tool-fs-search", "tool-web", "skill-filesystem", "tool-skill",
+        "tool-todo", "tool-present",
+    ):
         body = row(name)
         assert re.search(r"(?m)^  disabled: false$", body), name
     assert "readMaxBytes: 51200" in row("tool-fs")
     assert "sampleOverCapGlobResults: false" in row("tool-fs-search")
     assert "fetch: false" in row("tool-web")
+    assert "allowParallelInProgress: false" in row("tool-todo")
+    assert 'name: "@deepseek-ai/dsh-tool-present"' in row("tool-present")
+    assert "maxFiles: 4" in row("tool-present")
     assert "str_replace_editor" not in text
     for shell in ("tool-bash", "tool-pwsh"):
         with pytest.raises(StopIteration):
@@ -214,8 +222,8 @@ def test_profile_mounts_company_local_model_route_and_default() -> None:
         (ROOT / "src/company_agent/cli.py").read_text()
     )
     default_block = text.split("- id: agent-default-model", 1)[1].split("- id: ", 1)[0]
-    assert "provider: company-local" in default_block
-    assert "model: deepseek-chat" in default_block
+    assert "provider: company-relay" in default_block
+    assert "model: yaozheng-GLM-5.3-Flash" in default_block
     assert "COMPANY_AGENT_LOCAL_MODEL_TOKEN" in (
         (ROOT / "src/company_agent/cli.py").read_text()
     )

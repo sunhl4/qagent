@@ -1,0 +1,11 @@
+{
+  "name": "@unitqc/company-workspace-ui",
+  "version": "0.2.1-company.1",
+  "private": true,
+  "type": "module",
+  "main": "./host.mjs",
+  "exports": {
+    ".": "./host.mjs",
+    "./package.json": "./package.json"
+  }
+}

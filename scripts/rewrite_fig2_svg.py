@@ -194,7 +194,7 @@ def main() -> None:
     svg = "\n".join(parts) + "\n"
     svg.encode("ascii")  # must stay ASCII-safe
 
-    src = Path(r"D:\Yaozheng\sunhl4-qagent\docs\专利附图-图2-服务接管时序.svg")
+    src = Path(__file__).resolve().parents[1] / "docs" / "专利附图-图2-服务接管时序.svg"
     src.write_text(svg, encoding="ascii")
     print("wrote source", src.stat().st_size)
 

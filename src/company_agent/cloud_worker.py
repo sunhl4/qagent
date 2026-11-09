@@ -338,6 +338,22 @@ def compile_program(program: str) -> str:
             raise ValueError("custom gate definitions are unsupported input")
         if word in _REJECTED_CONSTRUCTS:
             raise ValueError(f"unsupported program construct {word}")
+        # OpenQASM 3 writes a register measure as `c = measure q;` or
+        # `c[0] = measure q[0];`. The bit name is not a gate. A whole-register
+        # assignment is rewritten to `measure q;` so the later dialect pass can
+        # expand it into per-qubit assignments the platform record expects.
+        assigned = re.fullmatch(
+            r"([A-Za-z_][A-Za-z0-9_]*(?:\[[^\]]+\])?)\s*=\s*measure\s+"
+            r"([A-Za-z_][A-Za-z0-9_]*(?:\[[^\]]+\])?)\s*;?",
+            value,
+        )
+        if assigned:
+            left, right = assigned.group(1), assigned.group(2)
+            if "[" in right:
+                output.append(f"{left} = measure {right};")
+            else:
+                output.append(f"measure {right};")
+            continue
         if word in _PASSTHROUGH_WORDS:
             output.append(value if value.endswith((";", "}")) else value + ";")
             continue

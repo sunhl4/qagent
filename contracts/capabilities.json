@@ -231,6 +231,21 @@
       "handles": [],
       "approval": "none",
       "provenance": ""
+    },
+    {
+      "id": "company.research",
+      "kind": "research",
+      "provider": "company-research",
+      "contract_version": "company.research/2.0",
+      "tools": [
+        "company_research_compile",
+        "company_research_run",
+        "company_research_status",
+        "company_research_digest"
+      ],
+      "handles": [],
+      "approval": "human",
+      "provenance": ""
     }
   ]
 }

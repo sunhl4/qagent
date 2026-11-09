@@ -150,13 +150,21 @@ function configuredPythonPath() {
   return configured;
 }
 
-function subprocessEnvironment({ approved = false, workspace, turn } = {}) {
+function subprocessEnvironment({ approved = false, workspace, turn, session } = {}) {
   const env = { ...process.env };
   delete env.COMPANY_AGENT_TOOL_WORKSPACE;
   // The kernel termination budget keys its durable ledger by this value; the
   // session id scopes the ledger to one session instead of one DSH process,
   // so a fresh session starts with fresh counters (turn_env in budgets.json).
   delete env.COMPANY_AGENT_TURN_ID;
+  // Only the live DSH agent id may bind a ticket. Drop any parent-supplied value.
+  delete env.COMPANY_AGENT_SESSION_ID;
+  if (session !== undefined) {
+    if (typeof session !== "string" || session.length > 80 || !/^dsh:[\x21-\x7e]+$/.test(session)) {
+      throw new Error("company-agent session reference is invalid");
+    }
+    env.COMPANY_AGENT_SESSION_ID = session;
+  }
   if (turn !== undefined) {
     if (typeof turn !== "string" || turn.length > 512 || !/^[\x21-\x7e]+$/.test(turn)) {
       throw new Error("company-agent turn identifier is invalid");
@@ -623,7 +631,7 @@ export async function decide(tool, args, signal) {
   return value === "allow" || value === "ask" ? value : "deny";
 }
 
-export async function invoke(tool, args, approved = false, signal, workspace, turn) {
+export async function invoke(tool, args, approved = false, signal, workspace, turn, session) {
   if (typeof tool !== "string" || tool.length > 128 || !COMPANY_TOOL_PREFIXES.some((prefix) => tool.startsWith(prefix))) {
     throw new Error("company-agent invoke received an invalid tool name");
   }
@@ -632,7 +640,7 @@ export async function invoke(tool, args, approved = false, signal, workspace, tu
     callArguments("invoke", tool, approved),
     signal,
     encodeArguments(args),
-    { approved, workspace, turn, validateResult: result => validateInvocationResult(result, tool, approved) },
+    { approved, workspace, turn, session, validateResult: result => validateInvocationResult(result, tool, approved) },
   );
 }
 
@@ -809,11 +817,12 @@ export function registerTool(ctx, contract) {
       // (exec.agent.id is the session id per dsh-agent's public Agent face) so
       // counters restart with every session instead of one process lifetime.
       const turn = String(exec?.agent?.id ?? exec?.agent?.session?.header?.id ?? "");
+      const hostSession = name === "company_work_item" && turn ? `dsh:${turn}` : undefined;
       const needsWorkspaceHeader = name === "quantum_cloud_submit" || name === "hpc_stage_file"
         || name === "hpc_file_fetch" || name.startsWith("company_latex_");
       const result = needsWorkspaceHeader
-        ? await invoke(name, args, decision === "ask", exec?.signal, exec?.agent?.session?.header?.cwd, turn || undefined)
-        : await invoke(name, args, decision === "ask", exec?.signal, undefined, turn || undefined);
+        ? await invoke(name, args, decision === "ask", exec?.signal, exec?.agent?.session?.header?.cwd, turn || undefined, hostSession)
+        : await invoke(name, args, decision === "ask", exec?.signal, undefined, turn || undefined, hostSession);
       if (result.status === "ok") {
         if (result.decision !== "allow" && result.decision !== "ask") {
           throw new Error(`${name}: invalid successful decision`);

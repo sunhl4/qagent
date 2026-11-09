@@ -107,7 +107,11 @@
         "company_plan_issue_write",
         "company_plan_milestones",
         "company_plan_milestone_create",
-        "company_portal_open"
+        "company_portal_open",
+        "company_research_compile",
+        "company_research_run",
+        "company_research_status",
+        "company_research_digest"
       ]
     },
     "algo": {
@@ -161,7 +165,10 @@
         "company_plan_issue_get",
         "company_plan_mrs",
         "company_plan_milestones",
-        "company_portal_open"
+        "company_portal_open",
+        "company_research_compile",
+        "company_research_status",
+        "company_research_digest"
       ]
     },
     "sign": {

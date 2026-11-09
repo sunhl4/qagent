@@ -13,6 +13,19 @@ _SIGNAL_TYPES = (
     "lease.changed.v1",
     "budget.exhausted.v1",
 )
+_FLOW_FOUNDATION = {
+    "owner_when_locked": "upstream-super-agent",
+    "stand_in": "local-control-plane",
+    "company_keeps": ["tool-pack", "policy", "platform-clock"],
+    "required_upstream": ["router", "subscription", "attention"],
+    "replaced_when_locked": ["stand-in-ticket-store", "stand-in-thread-binding"],
+    "unattended": {
+        "entry": "source-event",
+        "opens_ticket_when": "written-rule",
+        "default_until_rule": "observe",
+        "company_policy_still_applies": True,
+    },
+}
 _FORBIDDEN = ("secret", "token", "password", "prompt", "credential", "api_key")
 _EVENT_FIELDS = (
     "schema_version", "tenant_id", "source", "idempotency_key",
@@ -76,6 +89,7 @@ def _architecture() -> dict:
         or watchdog.get("may_change_policy") is not False
         or watchdog.get("may_retry_unknown") is not False
         or architecture.get("signal_types") != list(_SIGNAL_TYPES)
+        or architecture.get("flow_foundation") != _FLOW_FOUNDATION
         or not isinstance(framework, dict)
         or framework.get("runtime") != "deepseek-harness"
         or framework.get("executor") != "existing-dsh-session"
@@ -104,6 +118,7 @@ def topology() -> dict:
             "may_retry_unknown": False,
         },
         "signal_types": list(_SIGNAL_TYPES),
+        "flow_foundation": dict(architecture["flow_foundation"]),
         "schema_version": "1",
         "unknown_retryable": False,
         "company_fact_store": False,

@@ -6,7 +6,7 @@ import re
 import subprocess
 from pathlib import Path
 
-DOCS = Path(r"D:\Yaozheng\sunhl4-qagent\docs")
+DOCS = Path(__file__).resolve().parents[1] / "docs"
 
 
 def enc(text: str) -> str:

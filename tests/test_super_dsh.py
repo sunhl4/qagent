@@ -34,6 +34,15 @@ def test_topology_is_one_company_runtime() -> None:
         "may_change_policy": False,
         "may_retry_unknown": False,
     }
+    assert shape["flow_foundation"]["required_upstream"] == [
+        "router", "subscription", "attention",
+    ]
+    assert shape["flow_foundation"]["unattended"] == {
+        "entry": "source-event",
+        "opens_ticket_when": "written-rule",
+        "default_until_rule": "observe",
+        "company_policy_still_applies": True,
+    }
 
 
 def test_platform_signal_stays_a_candidate(tmp_path: Path, monkeypatch) -> None:
@@ -236,6 +245,43 @@ def test_bind_rejects_a_session_body(tmp_path: Path, monkeypatch) -> None:
             "session_ref": "dsh:session-9",
             "tool_pack": "company.workflow",
             "transcript": "full session body",
+        })
+
+
+def test_evaluate_binds_the_live_dsh_session(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setenv("COMPANY_AGENT_WORK_ITEM_DB", str(tmp_path / "work.sqlite3"))
+    monkeypatch.setenv("COMPANY_AGENT_SESSION_ID", "dsh:session-current")
+    with WorkItemStore(tmp_path / "work.sqlite3") as store:
+        trigger = store.receive("company", "thread", "alice", "Fix", tenant_id="tenant-a")
+    accepted = work_item({
+        "action": "evaluate",
+        "trigger_id": trigger["trigger_id"],
+        "mode": "auto",
+        "strength": "explicit",
+        "scope": "lab",
+        "title": "Fix",
+        "reason": "request",
+        "evidence": "Fix",
+        "tenant_id": "tenant-a",
+    })
+    assert accepted["session_ref"] == "dsh:session-current"
+    assert accepted["tool_pack"] == "company.workflow"
+    recovered = work_item({"action": "recover", "tenant_id": "tenant-a"})
+    assert recovered["items"][0]["session_ref"] == "dsh:session-current"
+    assert recovered["items"][0]["execution_state"] == "running"
+    assert recovered["items"][0]["tool_pack"] == "company.workflow"
+    monkeypatch.setenv("COMPANY_AGENT_SESSION_ID", "dsh:other-session")
+    with pytest.raises(WorkItemError, match="execution binding conflict"):
+        work_item({
+            "action": "evaluate",
+            "trigger_id": trigger["trigger_id"],
+            "mode": "auto",
+            "strength": "explicit",
+            "scope": "lab",
+            "title": "Fix",
+            "reason": "request",
+            "evidence": "Fix",
+            "tenant_id": "tenant-a",
         })
 
 

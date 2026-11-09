@@ -9,25 +9,25 @@
   "executed_batches": [
     {"id": "P0", "date": "2026-10-26", "doc": "docs/company-agent-plan-p0-2026-10-26.zh-CN.md"},
     {"id": "TS-1 freeze", "date": "2026-10-26", "doc": "docs/task-set/ts1-narrow-chain.zh-CN.md", "digest": "sha256:b480c84c6671c5585e02502620299c749860ddb82ed91bb61badb7e91821df5d"},
-    {"id": "P1-a trusted subject binding", "date": "2026-10-26", "doc": "docs/company-agent-plan-p1-step1-2026-10-26.zh-CN.md"},
-    {"id": "P1-b subject invariant in compliance gate", "date": "2026-10-26", "doc": "docs/company-agent-plan-p1-step2-2026-10-26.zh-CN.md", "gate_scenarios": 15},
-    {"id": "P1-c tenant registry and enablement projection", "date": "2026-10-26", "doc": "docs/company-agent-plan-p1c-p2-2026-10-26.zh-CN.md", "gate_scenarios": 17},
-    {"id": "P3-a1 managed web fetch", "date": "2026-10-26", "doc": "docs/company-agent-plan-p3a1-webfetch-2026-10-26.zh-CN.md", "gate_scenarios": 18},
-    {"id": "P3-a2 web fetch pinning and injection signals", "date": "2026-10-26", "doc": "docs/company-agent-plan-p3a2-webfetch-hardening-2026-10-26.zh-CN.md", "gate_scenarios": 18},
-    {"id": "P3-b1 termination budgets", "date": "2026-10-26", "doc": "docs/company-agent-plan-p3b1-budgets-2026-10-26.zh-CN.md", "gate_scenarios": 19},
-    {"id": "P3-b2 bounded table profiler", "date": "2026-10-26", "doc": "docs/company-agent-plan-p3b2-b3-data-reference-2026-10-26.zh-CN.md", "gate_scenarios": 19},
-    {"id": "P3-b3 workspace file references", "date": "2026-10-26", "doc": "docs/company-agent-plan-p3b2-b3-data-reference-2026-10-26.zh-CN.md", "gate_scenarios": 19},
-    {"id": "P3 closeout: managed web fetch, budgets, data and references", "date": "2026-10-26", "doc": "docs/company-agent-plan-p3-closeout-2026-10-26.zh-CN.md", "gate_scenarios": 19},
-    {"id": "P4-a1 narrow-chain recertification and platform seams", "date": "2026-10-26", "doc": "docs/company-agent-plan-p4a1-seam-recert-2026-10-26.zh-CN.md"},
-    {"id": "P5-a1 templates extension", "date": "2026-10-26", "doc": "docs/company-agent-plan-p5a1-templates-2026-10-26.zh-CN.md"},
-    {"id": "P5-b2 knowledge recall governance", "date": "2026-10-26", "doc": "docs/company-agent-plan-p5b2-know-recall-2026-10-26.zh-CN.md", "gate_scenarios": 23},
-    {"id": "P8-a1 governance boundary alignment (H03/H02)", "date": "2026-10-26", "doc": "docs/company-agent-plan-p8a1-governance-boundary-2026-10-26.zh-CN.md"},
-    {"id": "P8-a2 license register audit", "date": "2026-10-26", "doc": "docs/company-agent-plan-p8a2-license-audit-2026-10-26.zh-CN.md", "gate_scenarios": 24},
-    {"id": "P8-a3 installed-tree per-package license scan", "date": "2026-10-26", "doc": "docs/company-agent-plan-p8a3-license-tree-audit-2026-10-26.zh-CN.md", "gate_scenarios": 25},
+    {"id": "P1-a trusted subject binding", "date": "2026-10-26", "doc": "docs/super-dsh-handbook-2026-11-06.zh-CN.md"},
+    {"id": "P1-b subject invariant in compliance gate", "date": "2026-10-26", "doc": "docs/super-dsh-handbook-2026-11-06.zh-CN.md", "gate_scenarios": 15},
+    {"id": "P1-c tenant registry and enablement projection", "date": "2026-10-26", "doc": "docs/super-dsh-handbook-2026-11-06.zh-CN.md", "gate_scenarios": 17},
+    {"id": "P3-a1 managed web fetch", "date": "2026-10-26", "doc": "docs/super-dsh-handbook-2026-11-06.zh-CN.md", "gate_scenarios": 18},
+    {"id": "P3-a2 web fetch pinning and injection signals", "date": "2026-10-26", "doc": "docs/super-dsh-handbook-2026-11-06.zh-CN.md", "gate_scenarios": 18},
+    {"id": "P3-b1 termination budgets", "date": "2026-10-26", "doc": "docs/super-dsh-handbook-2026-11-06.zh-CN.md", "gate_scenarios": 19},
+    {"id": "P3-b2 bounded table profiler", "date": "2026-10-26", "doc": "docs/super-dsh-handbook-2026-11-06.zh-CN.md", "gate_scenarios": 19},
+    {"id": "P3-b3 workspace file references", "date": "2026-10-26", "doc": "docs/super-dsh-handbook-2026-11-06.zh-CN.md", "gate_scenarios": 19},
+    {"id": "P3 closeout: managed web fetch, budgets, data and references", "date": "2026-10-26", "doc": "docs/super-dsh-handbook-2026-11-06.zh-CN.md", "gate_scenarios": 19},
+    {"id": "P4-a1 narrow-chain recertification and platform seams", "date": "2026-10-26", "doc": "docs/super-dsh-handbook-2026-11-06.zh-CN.md"},
+    {"id": "P5-a1 templates extension", "date": "2026-10-26", "doc": "docs/super-dsh-handbook-2026-11-06.zh-CN.md"},
+    {"id": "P5-b2 knowledge recall governance", "date": "2026-10-26", "doc": "docs/super-dsh-handbook-2026-11-06.zh-CN.md", "gate_scenarios": 23},
+    {"id": "P8-a1 governance boundary alignment (H03/H02)", "date": "2026-10-26", "doc": "docs/super-dsh-handbook-2026-11-06.zh-CN.md"},
+    {"id": "P8-a2 license register audit", "date": "2026-10-26", "doc": "docs/super-dsh-handbook-2026-11-06.zh-CN.md", "gate_scenarios": 24},
+    {"id": "P8-a3 installed-tree per-package license scan", "date": "2026-10-26", "doc": "docs/super-dsh-handbook-2026-11-06.zh-CN.md", "gate_scenarios": 25},
     {"id": "E0 workspace and profile reproducibility closeout", "date": "2026-10-29", "doc": "docs/company-agent-execution-plan-2026-10-29.zh-CN.md", "verification": "corepack pnpm frozen installs; no-legacy and profile gates"},
     {"id": "E1 P6-A workbench task projection", "date": "2026-10-29", "doc": "docs/company-agent-execution-plan-2026-10-29.zh-CN.md", "verification": "server-side receipt projection and UI route coverage"},
     {"id": "E2 P8-A web injection isolation gate", "date": "2026-10-29", "doc": "docs/company-agent-execution-plan-2026-10-29.zh-CN.md", "verification": "web signal remains untrusted and cannot alter authorization"},
-    {"id": "E0 follow-up cross-platform and full-regression cleanup", "date": "2026-10-29", "doc": "docs/implementation-2026-10-29-p6-p8-slices.zh-CN.md", "verification": "31 full-suite failures remain isolated from P6/P8 focused gates"},
+    {"id": "E0 follow-up cross-platform and full-regression cleanup", "date": "2026-10-29", "doc": "docs/super-dsh-handbook-2026-11-06.zh-CN.md", "verification": "31 full-suite failures remain isolated from P6/P8 focused gates"},
     {"id": "E3 P6-B workbench status axes and reconnect", "date": "2026-11-02", "doc": "docs/implementation-2026-11-02-e3-e4.zh-CN.md", "verification": "Python focused gates 51 passed/1 skipped; Node host/UI 13 passed; plan validator passed"},
     {"id": "E4 P8-B tenant revocation counterexamples", "date": "2026-11-02", "doc": "docs/implementation-2026-11-02-e3-e4.zh-CN.md", "verification": "trusted subject scopes receipts, workbench projection and host cache; cross-subject fixture passes"}
   ],
@@ -69,11 +69,11 @@
     "Unbounded procurement, legal, vendor and platform-owner waiting time"
   ],
   "landed_baselines_not_reestimated": [
-    {"date": "2026-10-22", "doc": "docs/implementation-2026-10-22-oss-survey-p0.zh-CN.md", "items": ["capability layering discipline", "outbound receipts and reconciliation entry", "acceptance counterexample gates"]},
-    {"date": "2026-10-23", "doc": "docs/implementation-2026-10-23-p1-p2.zh-CN.md", "items": ["metric-summary and shots-audit templates", "knowledge registry governance", "skills registry sync/verify", "13-scenario compliance gate", "workbench read-only projection", "six-point model service probe", "platform asset.metrics adapter", "receipts v1.1 business_ref binding"], "test_snapshot": {"pytest": 843, "ui_node": 24, "platform_provider_cases": 77}}
+    {"date": "2026-10-22", "doc": "docs/super-dsh-handbook-2026-11-06.zh-CN.md", "items": ["capability layering discipline", "outbound receipts and reconciliation entry", "acceptance counterexample gates"]},
+    {"date": "2026-10-23", "doc": "docs/super-dsh-handbook-2026-11-06.zh-CN.md", "items": ["metric-summary and shots-audit templates", "knowledge registry governance", "skills registry sync/verify", "13-scenario compliance gate", "workbench read-only projection", "six-point model service probe", "platform asset.metrics adapter", "receipts v1.1 business_ref binding"], "test_snapshot": {"pytest": 843, "ui_node": 24, "platform_provider_cases": 77}}
   ],
   "reconciliation_with_prior_estimate": {
-    "doc": "docs/quantum-agent-delivery-estimate-2026-10-20.zh-CN.md",
+    "doc": "docs/company-agent-2000-person-days-development-plan-v1.0.zh-CN.md",
     "bounded_first_version": "94-156 person-weeks raw; 113-203 with risk (~565-1015 person-days)",
     "note": "That estimate covers only the quantum-workspace subset. This 2000 person-day plan keeps it as the core (mainly P4/P5) and prices the remaining commercial scope: general Agent productization, enterprise identity/tenants, three-column web/local UI, operations/billing, security acceptance and release handover."
   },
@@ -165,9 +165,7 @@
     "docs/oss-survey/04-工程衔接建议.zh-CN.md",
     "docs/oss-survey/05-复核总报告.zh-CN.md",
     "docs/oss-survey/03-本地架构对照与工程边界.zh-CN.md",
-    "docs/implementation-2026-10-22-oss-survey-p0.zh-CN.md",
-    "docs/implementation-2026-10-23-p1-p2.zh-CN.md",
-    "docs/quantum-agent-delivery-estimate-2026-10-20.zh-CN.md",
+    "docs/super-dsh-handbook-2026-11-06.zh-CN.md",
     "AGENTS.md"
   ]
 }

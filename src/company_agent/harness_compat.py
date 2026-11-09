@@ -45,7 +45,7 @@ def _framework() -> dict:
         or framework.get("migration_mode") != "dsh-plugin-pack"
         or framework.get("executor") != "existing-dsh-session"
         or not isinstance(versions, list)
-        or versions != ["0.1.5-rc.2"]
+        or versions != ["0.1.5-rc.2", "0.2.1-rc.5"]
         or framework.get("prototype_objects") != list(_OBJECTS)
         or framework.get("forbidden_worker_modes") != list(_FORBIDDEN)
         or framework.get("mandate_scopes") != list(_SCOPES)

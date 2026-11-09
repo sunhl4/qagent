@@ -127,8 +127,8 @@ import('@unitqc/company-agent-latex').then(async (plugin) => {
 
 def test_plugins_import_from_clean_profile_dependency_graph() -> None:
     expected = {
-        "company-agent": ("policy", "core", "quantum", "hpc", "device", "latex", "office", "plan"),
-        "company-agent-minimal": ("policy", "core", "quantum", "hpc", "latex", "office"),
+        "company-agent": ("policy", "core", "quantum", "hpc", "device", "latex", "office", "plan", "research"),
+        "company-agent-minimal": ("policy", "core", "quantum", "hpc", "latex", "office", "research"),
     }
     for profile, packages in expected.items():
         for package in packages:
@@ -153,13 +153,11 @@ def test_core_runtime_reads_python_contract_catalog() -> None:
     )
     assert result.returncode == 0, result.stderr
     tools = json.loads(result.stdout)
-    assert len(tools) == 75
+    assert len(tools) == 79
     assert "quantum_algorithm_catalog" in {row["name"] for row in tools}
     assert tools[0]["name"] == "company_capabilities"
-    # The lab-filtered catalog follows the preset's visible_tools order, whose
-    # final entry is now the portal open fact (full-contract order ends with
-    # company_fetch; see test_cli).
-    assert tools[-1]["name"] == "company_portal_open"
+    # The lab-filtered catalog follows the preset's visible_tools order.
+    assert tools[-1]["name"] == "company_research_digest"
     assert all(row["output"]["additionalProperties"] is False for row in tools)
     runtime = (ROOT / "packages/company-agent-core/src/runtime.js").read_text()
     assert "CLI_TIMEOUT_MS" in runtime
@@ -211,7 +209,7 @@ console.log(JSON.stringify(results));
     result = _run_node(profile, program, preset=preset)
     assert result.returncode == 0, result.stderr
     payload = json.loads(result.stdout)
-    assert len(payload["capabilities"]["capabilities"]) == 13
+    assert len(payload["capabilities"]["capabilities"]) == 14
     if preset != "sign":
         assert payload["knowledge"]["query"] == "设备执行"
         assert payload["knowledge"]["hits"]
@@ -226,7 +224,7 @@ registerCapabilityTools({ tools: { register: (row) => rows.push({
   name: row.name, parameters: row.parameters, output: row.output.schema
 }) } }, ['company.workflow', 'company.knowledge', 'company.algorithm', 'company.asset',
   'quantum.simulation', 'quantum.compilation', 'quantum.device', 'compute.cloud', 'compute.hpc',
-  'company.latex', 'company.office', 'company.plan', 'company.portal']);
+  'company.latex', 'company.office', 'company.plan', 'company.portal', 'company.research']);
 console.log(JSON.stringify(rows));
 """
     result = _run_node("company-agent", program, preset="lab")

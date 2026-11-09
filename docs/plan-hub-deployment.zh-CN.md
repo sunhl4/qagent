@@ -1,7 +1,7 @@
 # 计划中枢与 LaTeX 协作区部署 runbook（GitLab CE + Overleaf CE）
 
 日期：2026-10-26  
-适用：混合架构（[架构决策](implementation-2026-10-26-overleaf-hybrid-architecture.zh-CN.md)）的 IT 侧上线动作。
+适用：GitLab CE 与 Overleaf CE 的 IT 侧上线动作。决策保留在本 runbook：GitLab 是计划和版本权威，Overleaf CE 只做可信内网的排版协作，阶段结束用 ZIP 快照归档回 GitLab；不把 Overleaf 网页放进中栏，不假设社区版有 Git bridge。编译门禁见 [LaTeX 阶段 0](latex-lab-phase0.zh-CN.md)。
 Agent 侧代码件已就绪（`company.plan` 9 工具 + `company.latex` 11 工具）；本文件只覆盖服务器与运行时接线。
 
 ## 一、GitLab CE（计划/审批中枢）

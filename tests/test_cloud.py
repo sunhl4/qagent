@@ -211,6 +211,17 @@ def test_normalize_inserts_rzz_definition_and_assigned_measures():
 
 
 
+def test_compile_accepts_register_measure_assignment():
+    program = ('OPENQASM 3.0;\ninclude "stdgates.inc";\nqubit[5] q;\nbit[5] c;\n'
+               'h q[0];\ncx q[0], q[1];\nc = measure q;\n')
+    compiled = cloud_worker.compile_program(program)
+    assert "measure q;" in compiled and "c = measure" not in compiled
+    normalized = cloud_worker.normalize_program(compiled)
+    assert "meas[0] = measure q[0];" in normalized
+    assert "meas[4] = measure q[4];" in normalized
+    assert "c = measure" not in normalized
+
+
 def test_compile_lowers_standard_bell_gates_to_sdk_basis():
     program = ('OPENQASM 3.0;\ninclude "stdgates.inc";\nqubit[2] q;\nbit[2] c;\n'
                'h(q[0]);\ncx q[0], q[1];\nmeasure q[0] -> c[0];\nmeasure q[1] -> c[1];\n')
@@ -372,4 +383,18 @@ def test_worker_main_reports_and_logs_sdk_failure(monkeypatch, tmp_path, capsys)
     log = (tmp_path / ".cache/unitqc-company-agent/gateway-errors.log").read_text()
     assert "uqc-cloud worker cloud.devices" in log and "KeyError" in log
     assert "UQC_CLOUD_HOST" not in log
+
+
+def test_windows_posix_probe_interpreter_runs_through_wsl(monkeypatch):
+    monkeypatch.setattr(cloud.os, "name", "nt")
+    monkeypatch.setenv("UQC_CLOUD_PROBE_PYTHON", "/opt/cloud/bin/python")
+    monkeypatch.setenv("SystemRoot", r"C:\Windows")
+    monkeypatch.setattr(cloud.Path, "is_file", lambda self: str(self).endswith("wsl.exe"))
+    monkeypatch.setattr(cloud.subprocess, "run", lambda *args, **kwargs: SimpleNamespace(returncode=0))
+    worker = Path(__file__).resolve().parents[1] / "src" / "company_agent" / "cloud_worker.py"
+    command, env = cloud.probe_process(worker)
+    assert command[0].endswith("wsl.exe")
+    assert command[1:6] == ["-d", "Ubuntu", "--", "/opt/cloud/bin/python", "-I"]
+    assert command[6] == "/tmp/company-agent-cloud-worker.py"
+    assert env["WSLENV"] == "UQC_CLOUD_API_KEY:UQC_CLOUD_HOST:UQC_CLOUD_PORT"
 

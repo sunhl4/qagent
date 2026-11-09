@@ -1,5 +1,4 @@
 import assert from 'node:assert/strict';
-import vm from 'node:vm';
 import test from 'node:test';
 import {spawnSync} from 'node:child_process';
 import {Readable} from 'node:stream';
@@ -27,6 +26,21 @@ function streamingResponse(){
  result.result=()=>({status,headers,body:Buffer.concat(chunks).toString()});
  return result;
 }
+
+test('account route returns only the desktop display name',async()=>{
+ const previous=process.env.COMPANY_AGENT_ACCOUNT_NAME;
+ process.env.COMPANY_AGENT_ACCOUNT_NAME='alice';
+ try{
+  const {routes}=await host('3081');
+  const res=response();
+  await routes.get('/company-workspace/account')({method:'GET',headers:{host:'127.0.0.1:3081',cookie:'fixture'}},res);
+  assert.equal(res.status,200);
+  assert.deepEqual(JSON.parse(res.body),{username:'alice'});
+ }finally{
+  if(previous===undefined)delete process.env.COMPANY_AGENT_ACCOUNT_NAME;
+  else process.env.COMPANY_AGENT_ACCOUNT_NAME=previous;
+ }
+});
 
 test('access seam keeps its documented client-facing envelope',async()=>{
  const {routes}=await host('3081');
@@ -68,7 +82,7 @@ test('custom loopback port keeps exact Host and Origin checks',async()=>{
   if(previous===undefined)delete process.env.COMPANY_AGENT_DSH_PORT;
   else process.env.COMPANY_AGENT_DSH_PORT=previous;
  }
- const handler=routes.get('/company-workspace/client.js');
+ const handler=routes.get('/company-workspace/workspace.css');
  const allowed=response();
  handler({method:'GET',headers:{host:'127.0.0.1:3084',origin:'http://127.0.0.1:3084',cookie:'fixture'}},allowed);
  assert.equal(allowed.status,200);
@@ -98,33 +112,11 @@ test('invalid configured loopback ports fail before mounting routes',async()=>{
  }
 });
 
-test('boot composition appends the company module and preserves native entries',async()=>{
- const {tap}=await host('3081');
- const markup=tap('<html><head></head><body></body></html>');
- const script=markup.match(/<script>([\s\S]*?)<\/script>/)[1];
- const original={rev:'pinned',entries:['@deepseek-ai/dsh-client-ui-layout','@deepseek-ai/dsh-client-ui-sidebar','@deepseek-ai/dsh-client-ui-conversation','@deepseek-ai/dsh-client-ui-workspace'].map(id=>({id,url:'/plugins/'+id,rev:'native',inject:['@deepseek-ai/dsh-client-ui-layout']})),batches:[{phase:'application',url:'/plugins/native-combo',rev:'native',entries:['@deepseek-ai/dsh-client-ui-layout','@deepseek-ai/dsh-client-ui-sidebar']}],rev:'pinned'};
- const graph=structuredClone(original);const links=[];
- vm.runInNewContext(script,{URL,location:{href:'http://127.0.0.1:3081/'},__DSH_BOOT__:graph,document:{createElement:()=>({}),head:{append:n=>links.push(n)}}});
- // Pure append: every native factory keeps its exact url/rev (no replacement,
- // no filtering) and the company module rides at the end with its inject list.
- for(const entry of original.entries){
-  const next=graph.entries.find(e=>e.id===entry.id);
-  assert.equal(next.url,'/plugins/'+entry.id);assert.equal(next.rev,'native');
- }
- assert.equal(graph.entries.length,original.entries.length+1);
- const added=graph.entries.at(-1);
- assert.equal(added.id,'@unitqc/company-workspace-ui');
- assert.equal(added.url,'/company-workspace/client.js');
- assert.deepEqual(added.inject.map(item=>String(item)).join(','),
-  '@deepseek-ai/dsh-client-ui-renderer,@deepseek-ai/dsh-client-ui-session,@deepseek-ai/dsh-client-ui-theme,@deepseek-ai/dsh-client-locale',
-  'the company module injects only renderer/session/theme/locale faces');
- assert.equal(links.length,1);assert.match(graph.rev,/-company-/);
- // native=1 composes nothing at all; and the guard is idempotent.
- const native=structuredClone(original);vm.runInNewContext(script,{URL,location:{href:'http://127.0.0.1:3081/?native=1'},__DSH_BOOT__:native});assert.deepEqual(native,original);
- // The presence guard also keeps a second composition pass from duplicating the module.
- vm.runInNewContext(script,{URL,location:{href:'http://127.0.0.1:3081/'},__DSH_BOOT__:graph});
- assert.equal(graph.entries.filter(e=>e.id==='@unitqc/company-workspace-ui').length,1,
-  'duplicate composition is rejected by the guard');
+test('host serves data routes and does not append a second client',async()=>{
+ const {tap,routes}=await host('3081');
+ assert.equal(tap, undefined);
+ assert.equal(routes.has('/company-workspace/client.js'), false);
+ assert.equal(typeof routes.get('/company-workspace/account'), 'function');
 });
 
 test('workbench task projection is auth-gated and reads one reconciled server fact source',async()=>{

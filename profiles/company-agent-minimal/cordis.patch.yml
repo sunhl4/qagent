@@ -13,6 +13,8 @@
       name: "@unitqc/company-agent-office"
     - id: company-agent-plan
       name: "@unitqc/company-agent-plan"
+    - id: company-agent-research
+      name: "@unitqc/company-agent-research"
 
 - id: tool-web
   name: "@deepseek-ai/dsh-tool-web"

@@ -7,6 +7,6 @@
       twin_id。需要公司知识或软件开发规范时，调用对应 Company 工具获取证据并遵循
       其合同。不得在 Agent 仓复制公司科学算法实现。
     suffix: >-
-      Your working directory is {{cwd}}. The SuperAgent-compatible work-item
+      The SuperAgent-compatible work-item
       ledger is a bounded state interface only; it does not start a second
       model, session, tool, shell or scheduling loop.

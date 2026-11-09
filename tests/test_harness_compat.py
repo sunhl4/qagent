@@ -11,6 +11,7 @@ def test_manifest_keeps_company_tools_on_one_harness_session() -> None:
     assert manifest["reasons"] == []
     assert manifest["runtime"] == "deepseek-harness"
     assert manifest["runtime_pin"] == "0.1.5-rc.2"
+    assert manifest["compatible_runtime_versions"] == ["0.1.5-rc.2", "0.2.1-rc.5"]
     assert manifest["second_runtime"] is False
     assert manifest["architecture"] == "company-super-dsh"
     assert manifest["planes"] == ["control", "execution", "platform"]

@@ -94,5 +94,15 @@
   "plan_write_deny_presets": [
     "boot",
     "algo"
+  ],
+  "research_run_tool": "company_research_run",
+  "research_run_provider": "company-research",
+  "research_run_ask_presets": [
+    "lab"
+  ],
+  "research_run_deny_presets": [
+    "boot",
+    "algo",
+    "sign"
   ]
 }

@@ -15,6 +15,8 @@
       name: "@unitqc/company-agent-office"
     - id: company-agent-plan
       name: "@unitqc/company-agent-plan"
+    - id: company-agent-research
+      name: "@unitqc/company-agent-research"
 
 - id: subagent-codex
   name: "@deepseek-ai/dsh-subagent-codex"
@@ -32,8 +34,8 @@
 
 # 受管通用工具行：web bundle 对 base 挂载的整行加 disabled，patch 层整行覆写
 # 必须显式 disabled: false 才能重新启用。配置键同步重述，避免丢默认值。
-# 只启用合同 managed_builtins 名单内的全部受管工具；不启用任何 shell 或
-# str-replace 类编辑工具（与 tool-fs edit 语义重复）。
+# 只启用合同 managed_builtins 名单内的全部受管工具；不启用任何 shell、
+# str-replace 类编辑工具、子代理、workflow、ralph 或 goal。
 - id: tool-fs
   disabled: false
   config:
@@ -52,8 +54,10 @@
     searchTimeoutMs: 60000
 
 # 公司本地 DeepSeek 端点（openai-completions 自托管路由），默认常开：
-# 缺省无 apiKeyEnv = 免鉴权直连；本地服务要求鉴权时改为受管注入密钥环境
-# 引用（COMPANY_AGENT_LOCAL_MODEL_TOKEN）。地址不进入模型上下文。
+# 不设 apiKeyEnv。当前 DSH 的 OpenAI 兼容协议在既无 apiKeyEnv 也无
+# Authorization 时会在发请求前拒绝。Bearer local 只满足该协议，不是密钥；
+# 本地服务忽略该头。本地服务要求真实密钥时，改为 apiKeyEnv
+# COMPANY_AGENT_LOCAL_MODEL_TOKEN，并删除该占位头。地址不进入模型上下文。
 - id: llm-pi-ai
   config:
     providers:
@@ -61,6 +65,8 @@
         displayName: Company Local DeepSeek
         api: openai-completions
         baseURL: http://127.0.0.1:8000/v1
+        headers:
+          Authorization: Bearer local
         models:
           - id: deepseek-chat
       # 内网公司中转（openai-completions 兼容网关）。密钥经 apiKeyEnv 引用
@@ -92,8 +98,8 @@
 # 保持挂载，可在 Models 页手动选用。端点不可用时诚实失败，不回退公网。
 - id: agent-default-model
   config:
-    provider: company-local
-    model: deepseek-chat
+    provider: company-relay
+    model: yaozheng-GLM-5.3-Flash
 
 - id: skill-filesystem
   disabled: false
@@ -105,6 +111,21 @@
 
 - id: tool-skill
   disabled: false
+
+# 编码和办公共用的会话清单。base 已挂载，web bundle 整行禁用。
+# 本组合没有子代理，所以不允许并行 in_progress。
+- id: tool-todo
+  disabled: false
+  config:
+    allowParallelInProgress: false
+
+# 办公和代码产物的交付声明。0.1.5-rc.3 的 base 未挂载该行，这里显式加入。
+# 结果只回报路径，不复制文件正文。
+- id: tool-present
+  name: "@deepseek-ai/dsh-tool-present"
+  disabled: false
+  config:
+    maxFiles: 4
 
 - id: agent-presets
   config:

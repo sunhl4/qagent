@@ -49,6 +49,7 @@ const ASK_ROUTED_TOOLS = new Set([
   "company_plan_note_create",
   "company_plan_issue_write",
   "company_plan_milestone_create",
+  "company_research_run",
 ]);
 
 const DEVICE_PROVIDER = "ionstack-twinrun";
@@ -101,6 +102,10 @@ function deviceApprovalReason(tool, args) {
   if (tool === "company_plan_issue_write") {
     const fields = ["title", "description", "state_event", "labels", "milestone_id"].filter((name) => args?.[name] !== undefined);
     return `Company Agent plan issue write approval: provider=company-plan; project=${args?.project}; iid=${args?.iid}; fields=${fields.length ? fields.join("+") : "none"}`;
+  }
+  if (tool === "company_research_run") {
+    const attempts = Number.isSafeInteger(args?.max_attempts) ? String(args.max_attempts) : "invalid";
+    return `Company Agent research loop approval: provider=company-research; experiment_id=${args?.experiment_id}; task_id=${args?.task_id}; attempts=${attempts}; resource_type=${args?.resource_type ?? "unset"}`;
   }
   if (tool === "company_plan_milestone_create") {
     return `Company Agent plan milestone create approval: provider=company-plan; project=${args?.project}; title=${args?.title}; due=${args?.due_date ?? "unset"}`;

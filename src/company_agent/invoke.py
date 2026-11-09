@@ -29,6 +29,7 @@ from company_agent import office_surface as _office_surface
 from company_agent import office_validate as _office_validate
 from company_agent import plan_hub as _plan_hub
 from company_agent import portal as _portal
+from company_agent import research_clock as _research_clock
 from company_agent import table_profile as _table_profile
 from company_agent import work_items as _work_items
 from company_agent import workspace_reference as _workspace_reference
@@ -55,7 +56,7 @@ def _capability_payload(preset: str) -> dict[str, Any]:
     visible = set(load_presets()["presets"][preset]["visible_tools"])
 
     def provider_state(item):
-        if item.kind in {"knowledge", "workflow", "document", "plan", "portal"}:
+        if item.kind in {"knowledge", "workflow", "document", "plan", "portal", "research"}:
             return "local"
         return "configured_unverified" if client_by_provider(item.provider).configured() else "unconfigured"
 
@@ -156,6 +157,10 @@ _LOCAL_TOOLS = {
     "company_plan_milestone_create": _plan_hub.milestone_create,
     "company_work_item": _work_items.work_item,
     "company_portal_open": _portal.open_portal,
+    "company_research_compile": _research_clock.compile_spec,
+    "company_research_run": _research_clock.run_spec,
+    "company_research_status": _research_clock.read_status,
+    "company_research_digest": _research_clock.read_digest,
 }
 
 

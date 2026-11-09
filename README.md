@@ -10,7 +10,7 @@
 - 量子能力作为 `company-agent-quantum` capability pack 维护。
 - 公司知识库、未来业务能力和其他 capability pack 共用同一 Agent Runtime。
 
-全公司只用这一套 Super DSH 架构，定义在 [`docs/super-dsh-architecture.zh-CN.md`](docs/super-dsh-architecture.zh-CN.md)：
+全公司只用这一套 Super DSH 架构。现行手册是 [`docs/super-dsh-handbook-2026-11-06.zh-CN.md`](docs/super-dsh-handbook-2026-11-06.zh-CN.md)，架构说明在 [`docs/super-dsh-architecture.zh-CN.md`](docs/super-dsh-architecture.zh-CN.md)：
 
 - 控制面是工单时钟：Source、Trigger、Eval、Mandate、Ticket、Assignment、Subscription。Mandate 只有 `boot`、`lab`、`algo`、`sign`。
 - 执行面是现有 DSH 会话和公司工具包。不增加第二个模型循环、会话循环或 shell 工人。
@@ -91,24 +91,18 @@ Agent 使用严格的 `company-agent-provider/1.0` JSON 信封。每类真实服
 - 受管生产发布和人工证据格式见 [部署与证据说明](docs/deployment-and-evidence.zh-CN.md)。生产清单包含 Runtime 和两个 profile 的完整依赖树；签认与信任文件必须位于发布和 Runtime 根之外。校验先验证同一份清单的外部签认，再核对内容和运行版本探测；无效签认不得执行待验 Node。工作区开发启动不代表生产部署。
 - 开发依赖更新：先安装现有哈希锁，再执行 `bash scripts/lock_python.sh --upgrade`；wheel 在临时源码副本使用同一锁构建，不污染工作区。
 
-当前字段、正反例与边界见 [2.0 迁移说明](docs/contracts-2.0-migration.zh-CN.md)；[1.2 迁移记录](docs/contracts-1.2-migration.zh-CN.md) 与 [2026-09-29 性能记录](docs/performance-2026-09-29.zh-CN.md) 作为历史证据保留，不替代当前验收。
+当前字段、正反例与边界见 [2.0 迁移说明](docs/contracts-2.0-migration.zh-CN.md)。
 
-## 产品界面设计
+## 产品界面
 
-当前方案以 [v0.7 DSH 插件 / MCP / Skills 集成设计](docs/company-agent-dsh-integration-v0.7.zh-CN.md) 为准：在 DeepSeek Harness 上使用公司本地模型，装配受管通用插件、MCP（工具与资源连接协议）及常用 Skills。知识库、云平台、HPC 和量子算法是并列服务，量子能力只是其中一类；日常使用与通用 Agent 一样。
+日常座席是开发桌面：在 harness 检出目录运行本仓库的 `scripts/dev_desktop.ps1 -SkipBuild`。界面用 DSH 原生座位，公司工具和预设插在对应位置。不另开一套覆盖层。
 
-[v0.6 能力与验收](docs/company-agent-general-capabilities-v0.6.zh-CN.md) 保留实际文件、办公、编程、分析和调研交付要求，但这些是能力清单，不是全部自研清单。优先复用固定版本 DSH 与成熟扩展，只补公司合同适配、隔离、身份、鲁棒性和产品接入；不重建 Agent 循环或每类能力的后端。插件安装 / MCP 发现 / Skill 配置不等于已授权或验收，当前生产白名单也未自动开放这些通用工具。
+开发桌面使用公司 profile 和 `lab` 预设。生产 profile 关闭 DSH 内置 preset 和用户可写 preset 根，只挂 system-trust 的 `company-agent`。官方 Codex 保持 `permissionMode: never` 和 `inheritsParentContext: false`，不挂载模型可见的委派工具。
 
-通用命令按合同在隔离边界内执行，不开放生产宿主 shell 或可切换的 shell 编码 preset；Codex 宿主隔离与设备逐次审批保持不变。[v0.4 公司级设计](docs/company-agent-platform-plan-v0.4.zh-CN.md) 的知识与身份边界继续沿用。
+工作台界面回归独立运行：`npm test --prefix tests/ui`。它不安装到受管 DSH Runtime，也不调用模型或科学服务。
 
-三栏视觉延续 [v0.5 界面基准](docs/workspace-ui-baseline-v0.5.zh-CN.md)，最新展示使用 DSH 的 Slot 组合：真实工作空间 / 会话列表和原生设置并入左栏，中间显示公司内容，右侧直接渲染未经修改的原生对话组件。右栏不再嵌套整套 DSH 网页；各栏可收起、恢复和拖动调宽，草稿不随隐藏丢失。
+## 现行文档
 
-启动方式见 [原生 DSH 三栏展示](docs/native-dsh-demo.zh-CN.md)：运行 `python3 scripts/serve_workspace_demo.py`，打开程序打印的本机启动链接。它使用隔离展示状态、最小受管 profile 和 `boot`，不继承模型 / 科学服务凭据。公司账号、云 / HPC 和示例文件仍未接入业务；真实会话列表、新会话、模型设置已经使用 DSH 原生组件。
+手册、架构、产品计划和实验卡在 `docs/super-dsh-handbook-2026-11-06.zh-CN.md` 第 9 节列出。2000 人天基线不在这里重算。LaTeX 黄金矩阵见 [LaTeX 工具链阶段 0](docs/latex-lab-phase0.zh-CN.md)。记录器核对枚举输入的首尾内容、文件集合及权限；它没有冻结整个主机。已安装依赖不在该源码清单内，完整生产依赖核验另由发布清单负责。
 
-原型交互回归独立运行：`npm ci --prefix tests/ui`，然后 `npm test --prefix tests/ui`；不安装到受管 DSH Runtime，也不调用模型或科学服务。
-
-## 审查与实施记录
-
-2026-10-26 建立 LaTeX 工具链阶段 0 黄金矩阵与兼容性门禁：固定清单的黄金项目集、直驱引擎的矩阵脚本、诚实未配置语义与 opt-in `latex_toolchain` 门禁接线，见 [LaTeX 工具链阶段 0](docs/latex-lab-phase0.zh-CN.md)。2026-10-09 续行修复发布校验顺序与离线验收完整性，当前复验结果、环境恢复和独立证据见 [续行实施记录](docs/implementation-2026-10-09.zh-CN.md)。2026-10-08 四阶段改造、收尾门禁、失败尝试和证据范围见 [历史实施记录](docs/implementation-2026-10-08.zh-CN.md)。记录器核对枚举输入的首尾内容、文件集合及权限；它没有冻结整个主机或证明运行中未发生瞬时改动。已安装依赖不在该源码清单内，完整生产依赖核验另由发布清单负责。
-
-2026-09-28 原始审查及 2026-09-29 全量整改交付见 [工程审查记录](docs/review-2026-09-28.zh-CN.md)。本地通过与真实模型、服务、设备上线验收明确分开。
+开发和审查的自动迭代见 [开发审查循环](docs/dev-review-loop.zh-CN.md)。它在 DSH 外面执行已经登记的检查：先审阅，再测量，再决定保留或放弃。它不注册工具，也不提交计算。

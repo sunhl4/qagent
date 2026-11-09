@@ -12,7 +12,7 @@
       "operation": "work-item.dispatch",
       "input_handles": [],
       "output_handles": [],
-      "description": "Record a Super DSH trigger, mandate, platform signal, execution binding, or unknown-execution close. receive, evaluate, recover, bind and reconcile require tenant_id. evaluate opens a ticket only when mode is auto and strength is explicit. bind stores only a dsh: session reference and a company tool pack, and only while that reference is empty. reconcile closes an unknown execution as ended and does not submit a new session. recover returns that short record, including unknown executions, and does not return session text or results. Closed channels and unknown schema versions are rejected. Local ledger only; never starts a model, shell, scheduler or provider operation.",
+      "description": "Record a Super DSH trigger, mandate, platform signal, execution binding, or unknown-execution close. receive, evaluate, recover, bind and reconcile require tenant_id. evaluate opens a ticket only when mode is auto and strength is explicit. When that call runs inside a DSH session, the open assignment is bound to dsh:<session id>, tool pack company.workflow, and marked running. bind stores only a dsh: session reference and a company tool pack, and only while that reference is empty. reconcile closes an unknown execution as ended and does not submit a new session. recover returns that short record, including unknown executions, and does not return session text or results. Closed channels and unknown schema versions are rejected. Local ledger only; never starts a model, shell, scheduler or provider operation.",
       "parameters": {
         "type": "object",
         "required": [
@@ -531,7 +531,8 @@
                     "workflow",
                     "document",
                     "plan",
-                    "portal"
+                    "portal",
+                    "research"
                   ]
                 },
                 "provider": {
@@ -8079,7 +8080,7 @@
       "operation": "office.open",
       "input_handles": [],
       "output_handles": [],
-      "description": "Desktop exit for one workspace file, the §5.1 host integration ported to the Windows deployment: the file is opened with WPS through the current file association (registry-checked launcher must be WPS/Kingsoft, otherwise the call fails with a human message instead of silently falling back), or with the explicitly configured startfile mode when the operator prefers the system association. Launching requires COMPANY_AGENT_OPEN_WPS=wps|startfile to be set in the local environment - absent configuration is an honest refusal, not a surprise launch. Allowed kinds are bounded to office/pdf/text/old-binary suffixes; every launch (and every failure) carries an audit line when the ledger is configured. Bounded receipt: no machine paths beyond the workspace compound, launcher reduced to its basename. Standard library only.",
+      "description": "Desktop exit for one workspace file, the §5.1 host integration ported to the Windows deployment: the file is opened with WPS through the current file association (registry-checked launcher must be WPS/Kingsoft, otherwise the call fails with a human message instead of silently falling back), or with the explicitly configured startfile mode when the operator prefers the system association. Launching requires COMPANY_AGENT_OPEN_WPS=wps|startfile to be set in the local environment - absent configuration is an honest refusal, not a surprise launch. Allowed kinds are bounded to office/pdf/text/mind-map suffixes, including .xmind and .mm; every launch (and every failure) carries an audit line when the ledger is configured. Bounded receipt: no machine paths beyond the workspace compound, launcher reduced to its basename. Standard library only.",
       "parameters": {
         "type": "object",
         "required": [
@@ -8096,7 +8097,7 @@
           "path": {
             "type": "string",
             "pattern": "^[^\\\\:*?\"<>|\\u0000-\\u001f]{1,256}$",
-            "description": "Existing workspace file relative to the project directory; office/pdf/text/old-binary suffixes only (.doc .docx .xls .xlsx .ppt .pptx .wps .et .dps .pdf .txt .md); anything else refuses."
+            "description": "Existing workspace file relative to the project directory; office/pdf/text/mind-map suffixes only (.doc .docx .xls .xlsx .ppt .pptx .wps .et .dps .pdf .txt .md .xmind .mm); anything else refuses."
           },
           "note": {
             "type": "string",
@@ -8814,6 +8815,720 @@
           }
         }
       }
+    },
+    {
+      "name": "company_research_compile",
+      "capability": "company.research",
+      "operation": "research.compile",
+      "input_handles": [],
+      "output_handles": [],
+      "description": "Compile one experiment through the research-layer rules: one change path, a reproduced baseline, a primary metric, and a budget. Returns acceptance and whether the spec asks for HPC or a device. Does not run, reserve resources, or open a ticket.",
+      "parameters": {
+        "type": "object",
+        "required": [
+          "tenant_id",
+          "experiment_id",
+          "task_id",
+          "hypothesis",
+          "falsifier",
+          "baseline_name",
+          "baseline_source",
+          "baseline_metric",
+          "baseline_reproduced",
+          "changed_path",
+          "primary_metric",
+          "direction",
+          "resource_type",
+          "max_cost",
+          "max_attempts"
+        ],
+        "properties": {
+          "tenant_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$",
+            "maxLength": 64
+          },
+          "experiment_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$",
+            "maxLength": 64
+          },
+          "task_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$",
+            "maxLength": 64
+          },
+          "project_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$",
+            "maxLength": 64
+          },
+          "hypothesis": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 240
+          },
+          "falsifier": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 240
+          },
+          "baseline_name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "baseline_source": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "baseline_metric": {
+            "type": "number",
+            "minimum": -1000000,
+            "maximum": 1000000
+          },
+          "baseline_reproduced": {
+            "type": "boolean"
+          },
+          "baseline_train_time_seconds": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1000000
+          },
+          "min_seeds": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 3
+          },
+          "changed_path": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_./-]{1,120}$",
+            "maxLength": 120
+          },
+          "primary_metric": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]{0,63}$",
+            "maxLength": 64
+          },
+          "direction": {
+            "type": "string",
+            "enum": [
+              "minimize",
+              "maximize"
+            ]
+          },
+          "resource_type": {
+            "type": "string",
+            "enum": [
+              "cpu",
+              "gpu",
+              "hpc",
+              "qpu",
+              "cloud"
+            ]
+          },
+          "max_cost": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100000
+          },
+          "max_attempts": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 5
+          }
+        },
+        "additionalProperties": false
+      },
+      "output": {
+        "type": "object",
+        "required": [
+          "ok",
+          "experiment_id",
+          "primary_metric",
+          "direction",
+          "changed_path",
+          "resource_type",
+          "max_attempts",
+          "max_cost",
+          "currency",
+          "approval_required",
+          "error_code"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "experiment_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          },
+          "primary_metric": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          },
+          "direction": {
+            "type": "string",
+            "enum": [
+              "minimize",
+              "maximize"
+            ]
+          },
+          "changed_path": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "resource_type": {
+            "type": "string",
+            "enum": [
+              "cpu",
+              "gpu",
+              "hpc",
+              "qpu",
+              "cloud"
+            ]
+          },
+          "max_attempts": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 5
+          },
+          "max_cost": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100000
+          },
+          "currency": {
+            "type": "string",
+            "const": "CNY"
+          },
+          "approval_required": {
+            "type": "boolean"
+          },
+          "error_code": {
+            "type": "string",
+            "maxLength": 40
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "company_research_run",
+      "capability": "company.research",
+      "operation": "research.run",
+      "input_handles": [],
+      "output_handles": [],
+      "description": "Run one bounded research-layer loop on the local stub clock after approval. The budget covers the whole loop, and each attempt reserves an equal share on the same file. A keep stops the loop. Returns the stop reason, attempt count, each keep-or-discard decision, remaining budget, and failure count. Records a research candidate only when the loop keeps a result or exhausts the budget. The returned trigger_id stays a candidate until company_work_item evaluate uses mode auto and strength explicit, which opens one assignment in the current DSH session. Office files and charts are produced by the company office tools for WPS. qpu records a lab device-approval handoff and does not call a device. The stub does not submit HPC or cloud work. resource_type hpc returns a handoff that names hpc_submit and does not submit. resource_type cloud returns a handoff that names quantum_cloud_submit and does not submit. When COMPANY_AGENT_RESEARCH_ROOT is an absolute directory and changed_path is a val_loss log inside it, the executor is local; otherwise it stays stub. Each line is one attempt, or lines sharing attempt=N are one attempt with seeds. A Git repository writes only that attempt into the worktree copy of changed_path and makes one local commit; the candidate file in the main directory stays unchanged. A discard removes the worktree when that commit is clean, and a dirty worktree is left in place. The tool result does not include the worktree path. Its metric reading is the mean val_loss. Optional baseline_train_time_seconds discards an attempt whose train_time_seconds mean exceeds that baseline by more than 10 percent. Optional min_seeds, or a relative standard deviation above 0.5, stops the loop and names changed_path. A kept card cannot be run again until hypothesis or falsifier changes. A handoff receipt names next_tool and sets approval_still_required, so the next submit still needs its own approval. On a handoff, next_fields names the required arguments of that submit. Otherwise next_fields names only the card fields that must change.",
+      "parameters": {
+        "type": "object",
+        "required": [
+          "tenant_id",
+          "experiment_id",
+          "task_id",
+          "hypothesis",
+          "falsifier",
+          "baseline_name",
+          "baseline_source",
+          "baseline_metric",
+          "baseline_reproduced",
+          "changed_path",
+          "primary_metric",
+          "direction",
+          "resource_type",
+          "max_cost",
+          "max_attempts",
+          "idempotency_key"
+        ],
+        "properties": {
+          "tenant_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$",
+            "maxLength": 64
+          },
+          "experiment_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$",
+            "maxLength": 64
+          },
+          "task_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$",
+            "maxLength": 64
+          },
+          "project_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$",
+            "maxLength": 64
+          },
+          "hypothesis": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 240
+          },
+          "falsifier": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 240
+          },
+          "baseline_name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "baseline_source": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "baseline_metric": {
+            "type": "number",
+            "minimum": -1000000,
+            "maximum": 1000000
+          },
+          "baseline_reproduced": {
+            "type": "boolean"
+          },
+          "baseline_train_time_seconds": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1000000
+          },
+          "min_seeds": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 3
+          },
+          "changed_path": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_./-]{1,120}$",
+            "maxLength": 120
+          },
+          "primary_metric": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]{0,63}$",
+            "maxLength": 64
+          },
+          "direction": {
+            "type": "string",
+            "enum": [
+              "minimize",
+              "maximize"
+            ]
+          },
+          "resource_type": {
+            "type": "string",
+            "enum": [
+              "cpu",
+              "gpu",
+              "hpc",
+              "qpu",
+              "cloud"
+            ]
+          },
+          "max_cost": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100000
+          },
+          "max_attempts": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 5
+          },
+          "idempotency_key": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,79}$",
+            "maxLength": 80
+          }
+        },
+        "additionalProperties": false
+      },
+      "output": {
+        "type": "object",
+        "required": [
+          "ok",
+          "executor",
+          "experiment_id",
+          "stop_reason",
+          "attempts",
+          "decision",
+          "decisions",
+          "remaining_budget",
+          "total_cost",
+          "currency",
+          "failure_count",
+          "signal_type",
+          "authority",
+          "trigger_id",
+          "resource_type",
+          "next_tool",
+          "approval_still_required",
+          "next_fields"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "executor": {
+            "type": "string",
+            "enum": [
+              "stub",
+              "local",
+              "handoff",
+              "none"
+            ]
+          },
+          "experiment_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          },
+          "stop_reason": {
+            "type": "string",
+            "enum": [
+              "kept",
+              "exhausted",
+              "budget_exhausted",
+              "deadline",
+              "stopped",
+              "escalated",
+              "blocked",
+              "consecutive_failures",
+              "no_candidate",
+              "invalid_candidate",
+              "handoff",
+              "none"
+            ]
+          },
+          "attempts": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 5
+          },
+          "decision": {
+            "type": "string",
+            "enum": [
+              "keep",
+              "discard",
+              "extend",
+              "stop",
+              "escalate",
+              "none"
+            ]
+          },
+          "decisions": {
+            "type": "string",
+            "maxLength": 48,
+            "pattern": "^$|^(keep|discard|extend|stop|escalate|none)(,(keep|discard|extend|stop|escalate|none)){0,4}$"
+          },
+          "remaining_budget": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1000000
+          },
+          "total_cost": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1000000
+          },
+          "currency": {
+            "type": "string",
+            "const": "CNY"
+          },
+          "failure_count": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 32
+          },
+          "signal_type": {
+            "type": "string",
+            "enum": [
+              "experiment.completed.v1",
+              "budget.exhausted.v1",
+              "none"
+            ]
+          },
+          "authority": {
+            "type": "string",
+            "enum": [
+              "candidate",
+              "none"
+            ]
+          },
+          "trigger_id": {
+            "type": "string",
+            "maxLength": 80
+          },
+          "resource_type": {
+            "type": "string",
+            "enum": [
+              "",
+              "cpu",
+              "gpu",
+              "hpc",
+              "qpu",
+              "cloud"
+            ]
+          },
+          "next_tool": {
+            "type": "string",
+            "enum": [
+              "",
+              "hpc_submit",
+              "quantum_cloud_submit",
+              "quantum_device_run"
+            ]
+          },
+          "approval_still_required": {
+            "type": "boolean"
+          },
+          "next_fields": {
+            "type": "string",
+            "maxLength": 32,
+            "pattern": "^$|^(hypothesis,falsifier|max_cost|changed_path|job_name,script|program_path,target,shots|circuit_id,shots)$"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "company_research_status",
+      "capability": "company.research",
+      "operation": "research.status",
+      "input_handles": [],
+      "output_handles": [],
+      "description": "Read the latest short record for one experiment: stop reason, attempts, each keep-or-discard decision, remaining budget, failure count, the resource type, the next tool when a handoff is waiting, and the card fields the next card must change. Does not return logs, hypotheses, or session text.",
+      "parameters": {
+        "type": "object",
+        "required": [
+          "tenant_id",
+          "experiment_id"
+        ],
+        "properties": {
+          "tenant_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$",
+            "maxLength": 64
+          },
+          "experiment_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$",
+            "maxLength": 64
+          }
+        },
+        "additionalProperties": false
+      },
+      "output": {
+        "type": "object",
+        "required": [
+          "ok",
+          "recorded",
+          "executor",
+          "experiment_id",
+          "stop_reason",
+          "attempts",
+          "decision",
+          "decisions",
+          "remaining_budget",
+          "failure_count",
+          "resource_type",
+          "next_tool",
+          "approval_still_required",
+          "next_fields"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "const": true
+          },
+          "recorded": {
+            "type": "boolean"
+          },
+          "executor": {
+            "type": "string",
+            "enum": [
+              "stub",
+              "local",
+              "handoff",
+              "none"
+            ]
+          },
+          "experiment_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          },
+          "stop_reason": {
+            "type": "string",
+            "enum": [
+              "kept",
+              "exhausted",
+              "budget_exhausted",
+              "deadline",
+              "stopped",
+              "escalated",
+              "blocked",
+              "consecutive_failures",
+              "no_candidate",
+              "invalid_candidate",
+              "handoff",
+              "none"
+            ]
+          },
+          "attempts": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 5
+          },
+          "decision": {
+            "type": "string",
+            "enum": [
+              "keep",
+              "discard",
+              "extend",
+              "stop",
+              "escalate",
+              "none"
+            ]
+          },
+          "decisions": {
+            "type": "string",
+            "maxLength": 48,
+            "pattern": "^$|^(keep|discard|extend|stop|escalate|none)(,(keep|discard|extend|stop|escalate|none)){0,4}$"
+          },
+          "remaining_budget": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1000000
+          },
+          "failure_count": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 32
+          },
+          "resource_type": {
+            "type": "string",
+            "enum": [
+              "",
+              "cpu",
+              "gpu",
+              "hpc",
+              "qpu",
+              "cloud"
+            ]
+          },
+          "next_tool": {
+            "type": "string",
+            "enum": [
+              "",
+              "hpc_submit",
+              "quantum_cloud_submit",
+              "quantum_device_run"
+            ]
+          },
+          "approval_still_required": {
+            "type": "boolean"
+          },
+          "next_fields": {
+            "type": "string",
+            "maxLength": 32,
+            "pattern": "^$|^(hypothesis,falsifier|max_cost|changed_path|job_name,script|program_path,target,shots|circuit_id,shots)$"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "company_research_digest",
+      "capability": "company.research",
+      "operation": "research.digest",
+      "input_handles": [],
+      "output_handles": [],
+      "description": "Read counts for one tenant across the recorded research runs: runs, kept, discarded, handoffs, rejected, needs_decision, failure count, and total cost. needs_decision counts stops that still need a person. Does not return hypotheses, logs, paths, worktrees, or secrets, and does not open a ticket.",
+      "parameters": {
+        "type": "object",
+        "required": [
+          "tenant_id"
+        ],
+        "properties": {
+          "tenant_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$",
+            "maxLength": 64
+          }
+        },
+        "additionalProperties": false
+      },
+      "output": {
+        "type": "object",
+        "required": [
+          "ok",
+          "runs",
+          "kept",
+          "discarded",
+          "handoffs",
+          "rejected",
+          "needs_decision",
+          "failure_count",
+          "total_cost",
+          "currency"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "runs": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 64
+          },
+          "kept": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 64
+          },
+          "discarded": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 64
+          },
+          "handoffs": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 64
+          },
+          "rejected": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 64
+          },
+          "needs_decision": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 64
+          },
+          "failure_count": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2048
+          },
+          "total_cost": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1000000
+          },
+          "currency": {
+            "type": "string",
+            "const": "CNY"
+          }
+        },
+        "additionalProperties": false
+      }
     }
   ],
   "managed_builtins": {
@@ -8902,6 +9617,30 @@
           "algo",
           "sign"
         ]
+      },
+      {
+        "name": "todo_write",
+        "source": "dsh-native",
+        "package": "@deepseek-ai/dsh-tool-todo",
+        "description": "Replace the current session task list for multi-step coding or office work. One in_progress item at a time. The list is session state and carries no approval, shell, or scientific handle.",
+        "presets": [
+          "boot",
+          "lab",
+          "algo",
+          "sign"
+        ]
+      },
+      {
+        "name": "present",
+        "source": "dsh-native",
+        "package": "@deepseek-ai/dsh-tool-present",
+        "description": "Declare up to 4 existing workspace files as deliverables. The result names paths only and does not copy file bodies, secrets, or scientific text.",
+        "presets": [
+          "boot",
+          "lab",
+          "algo",
+          "sign"
+        ]
       }
     ],
     "excluded_from_managed_list": [
@@ -8912,6 +9651,10 @@
       {
         "name": "bash / pwsh",
         "reason": "Command execution stays out of the managed组合 for this milestone; no shell preset is opened."
+      },
+      {
+        "name": "goal / workflow / ralph / subagent",
+        "reason": "A second planning loop, workflow script, or subagent would add another agent loop. Daily coding and office use todo_write and present inside the existing session."
       }
     ]
   }

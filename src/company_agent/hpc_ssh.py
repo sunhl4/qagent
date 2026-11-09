@@ -96,10 +96,13 @@ _QUEUE_FIELD_DELIMITER = "\t"
 _INVALID_FIELD = re.compile(r"[\t\r\n]")
 _GENERIC_ERROR = "hpc gateway is unavailable"
 
-# resources_result folds a single "$HOME" echo into the sinfo call so the
+# resources_result folds a single home echo into the sinfo call so the
 # per-account staging root is derived from the authorized login account itself:
 # whatever identity was provisioned, its writable home reports
 # <home>/company_agent; no account-specific path is ever stored in this repo.
+# The dollars are escaped because the desktop runs ssh through wsl.exe, and
+# wsl.exe expands $HOME (and $?) in the argument to the Windows-side Linux
+# home before ssh ever reaches the cluster.
 _STAGING_MARKER = "company-agent-home"
 _STAGING_DIRNAME = "company_agent"
 
@@ -140,20 +143,30 @@ def run_ssh(target: SshTarget, remote_command: str, *, timeout: int,
         f"{target.user}@{target.host}",
         remote_command,
     ]
+    # The company SSH key and known_hosts live in the WSL home. Windows ssh
+    # cannot see them, so the desktop opts in and runs that same ssh.
+    if os.environ.get("COMPANY_AGENT_HPC_VIA_WSL") == "1" and os.name == "nt":
+        distro = os.environ.get("COMPANY_AGENT_WSL_DISTRO", "Ubuntu").strip() or "Ubuntu"
+        if re.fullmatch(r"[A-Za-z0-9._-]{1,64}", distro):
+            root = os.environ.get("SystemRoot") or os.environ.get("SYSTEMROOT") or r"C:\Windows"
+            wsl = Path(root) / "System32" / "wsl.exe"
+            if wsl.is_file():
+                argv = [str(wsl), "-d", distro, "--", *argv]
     try:
+        # Bytes in, bytes out. Text mode on Windows rewrites \n to \r\n, and
+        # sbatch then rejects the staged script for DOS line breaks.
         completed = subprocess.run(
             argv,
             capture_output=True,
-            text=True,
-            encoding="utf-8",
-            errors="replace",
-            input=stdin_text,
+            input=None if stdin_text is None else stdin_text.encode("utf-8"),
             timeout=timeout,
             check=False,
         )
+        stdout = completed.stdout.decode("utf-8", "replace") if isinstance(completed.stdout, bytes) else (completed.stdout or "")
+        stderr = completed.stderr.decode("utf-8", "replace") if isinstance(completed.stderr, bytes) else (completed.stderr or "")
         return SshResult(
-            stdout=completed.stdout or "",
-            stderr=completed.stderr or "",
+            stdout=stdout,
+            stderr=stderr,
             returncode=int(completed.returncode if completed.returncode is not None else -1),
             timed_out=False,
         )
@@ -331,11 +344,59 @@ def job_cancel_result(payload: dict[str, object]) -> dict[str, object]:
     }
 
 
+def _account_home(target: SshTarget) -> str:
+    """Cluster login home, cached for this process.
+
+    wsl.exe expands an unescaped ``$HOME`` before ssh runs, so a desktop that
+    learned its staging root from that expansion holds the Linux distro home.
+    The escaped form is expanded by the cluster shell instead.
+    """
+    cached = getattr(_account_home, "value", None)
+    if isinstance(cached, str):
+        return cached
+    result = run_ssh(target, "printf '%s' \\$HOME", timeout=_STATUS_TIMEOUT)
+    home = result.stdout.strip()
+    if (result.timed_out or result.returncode != 0
+            or not _SCRIPT_PATTERN.fullmatch(home)
+            or ".." in home.split("/") or home.endswith("/")):
+        raise AdapterError(_GENERIC_ERROR)
+    _account_home.value = home
+    return home
+
+
+def _place_staging_path(path: str, target: SshTarget) -> str:
+    """Move a company_agent path onto the cluster account home.
+
+    Callers that cached the WSL home keep sending ``/home/.../company_agent``.
+    That directory is not the login account's writable staging root. Paths
+    that already sit on the account home, and paths outside company_agent,
+    stay unchanged.
+    """
+    if os.environ.get("COMPANY_AGENT_HPC_VIA_WSL") != "1":
+        return path
+    home = _account_home(target)
+    if path == home or path.startswith(home + "/"):
+        return path
+    marker = "/" + _STAGING_DIRNAME
+    if path.endswith(marker):
+        index = len(path) - len(marker)
+    else:
+        index = path.find(marker + "/")
+    if index < 0:
+        return path
+    placed = home + path[index:]
+    if (not _SCRIPT_PATTERN.fullmatch(placed) or ".." in placed.split("/")
+            or placed.endswith("/")):
+        raise AdapterError(_GENERIC_ERROR)
+    return placed
+
+
 def dir_create_result(payload: dict[str, object]) -> dict[str, object]:
     path = _validated_path_argument(payload, "path")
     target = ssh_target()
     if target is None:
         raise AdapterError(_GENERIC_ERROR)
+    path = _place_staging_path(path, target)
     exists_dir = run_ssh(
         target,
         "test -d " + shlex.quote(path),
@@ -396,8 +457,8 @@ def resources_result() -> dict[str, object]:
         raise AdapterError(_GENERIC_ERROR)
     result = run_ssh(
         target,
-        f"sinfo -h -o '{_SINFO_FIELDS}' ; sinfo_status=$? ; "
-        f"printf '{_STAGING_MARKER}\\t%s\\n' \"$HOME\" ; exit $sinfo_status",
+        f"sinfo -h -o '{_SINFO_FIELDS}' ; sinfo_status=\\$? ; "
+        f"printf '{_STAGING_MARKER}\\t%s\\n' \\$HOME ; exit \\$sinfo_status",
         timeout=_STATUS_TIMEOUT,
     )
     if result.timed_out or result.returncode != 0:
@@ -650,6 +711,7 @@ def stage_file_result(payload: dict[str, object], workspace: str) -> dict[str, o
     target = ssh_target()
     if target is None:
         raise AdapterError(_GENERIC_ERROR)
+    gateway_path = _place_staging_path(gateway_path, target)
     exists_check = run_ssh(
         target,
         "test -f " + shlex.quote(gateway_path),

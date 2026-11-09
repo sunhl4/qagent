@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import os
+import re
 import stat
 import subprocess
 import tempfile
@@ -61,12 +62,51 @@ def read_program(path: str, workspace: str) -> str:
     return text
 
 
+def probe_process(script: Path) -> tuple[list[str], dict[str, str]]:
+    """Build the cloud SDK interpreter command.
+
+    The stored interpreter may be a Linux absolute path. On Windows that path
+    runs through the Ubuntu WSL distro instead of being treated as missing.
+    """
+    python = os.environ.get("UQC_CLOUD_PROBE_PYTHON", "")
+    posix = os.name == "nt" and python.startswith("/") and not python.startswith("//")
+    if not python or not (posix or Path(python).is_absolute()):
+        raise ValueError("cloud SDK interpreter unavailable")
+    inherited = {name: os.environ[name] for name in ("HOME", "PATH", "LANG", "SSL_CERT_FILE", "SYSTEMROOT", "SystemRoot", "WINDIR")
+                 if name in os.environ}
+    if posix:
+        distro = os.environ.get("COMPANY_AGENT_WSL_DISTRO", "Ubuntu").strip() or "Ubuntu"
+        if not re.fullmatch(r"[A-Za-z0-9._-]{1,64}", distro):
+            raise ValueError("cloud SDK interpreter unavailable")
+        root = os.environ.get("SystemRoot") or os.environ.get("SYSTEMROOT") or r"C:\Windows"
+        wsl = Path(root) / "System32" / "wsl.exe"
+        if not wsl.is_file():
+            raise ValueError("cloud SDK interpreter unavailable")
+        script_text = str(script.resolve())
+        if len(script_text) < 3 or script_text[1] != ":":
+            raise ValueError("cloud SDK interpreter unavailable")
+        # Copy through the distro itself. A Windows write to \\wsl$ is not the
+        # byte stream that distro's Python reads back.
+        destination = "/tmp/company-agent-cloud-worker.py"
+        try:
+            subprocess.run(
+                [str(wsl), "-d", distro, "--", "dd", f"of={destination}", "status=none"],
+                input=script.read_bytes(),
+                check=True,
+            )
+        except (OSError, subprocess.CalledProcessError) as exc:
+            raise ValueError("cloud SDK interpreter unavailable") from exc
+        inherited["WSLENV"] = "UQC_CLOUD_API_KEY:UQC_CLOUD_HOST:UQC_CLOUD_PORT"
+        return [str(wsl), "-d", distro, "--", python, "-I", destination], inherited
+    if not os.access(python, os.X_OK):
+        raise ValueError("cloud SDK interpreter unavailable")
+    return [python, "-I", str(script)], inherited
+
+
 def worker(operation: str, payload: dict) -> dict:
     import json
 
-    python = os.environ.get("UQC_CLOUD_PROBE_PYTHON", "")
-    if not python or not Path(python).is_absolute() or not os.access(python, os.X_OK):
-        raise ValueError("cloud SDK interpreter unavailable")
+    command, env = probe_process(Path(__file__).with_name("cloud_worker.py"))
     endpoint = urllib.parse.urlsplit(os.environ.get("UQC_CLOUD_API_BASE_URL", ""))
     if (endpoint.scheme not in {"http", "https"} or not endpoint.hostname
         or endpoint.scheme != "http"
@@ -76,17 +116,15 @@ def worker(operation: str, payload: dict) -> dict:
     key = os.environ.get("UQC_CLOUD_API_KEY", "").strip()
     if not key:
         raise ValueError("cloud authentication unavailable")
-    env = {name: os.environ[name] for name in ("HOME", "PATH", "LANG", "SSL_CERT_FILE")
-           if name in os.environ}
     env.update({"UQC_CLOUD_API_KEY": key, "UQC_CLOUD_HOST": endpoint.hostname,
                 "UQC_CLOUD_PORT": str(endpoint.port or (443 if endpoint.scheme == "https" else 8003))})
     with tempfile.TemporaryDirectory(prefix="company-cloud-worker-") as temporary:
         operation_timeout = 95 if operation == "cloud.submit" else 27
         completed = subprocess.run(
-            [python, "-I", str(Path(__file__).with_name("cloud_worker.py"))],
+            command,
             input=json.dumps({"operation": operation, "payload": payload}),
             text=True, capture_output=True, timeout=operation_timeout, check=False, env=env,
-            cwd=temporary)
+            cwd=None if command[0].lower().endswith("wsl.exe") else temporary)
     value = loads(completed.stdout)
     if (completed.returncode != 0 or not isinstance(value, dict)
         or set(value) != {"ok", "result"} or value["ok"] is not True

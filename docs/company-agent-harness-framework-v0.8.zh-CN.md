@@ -2,7 +2,7 @@
 
 日期：2026-10-21 10:30（UTC+8）。  
 状态：设计更新；本次不安装组件、不修改合同与生产配置、不改执行代码。  
-沿用：[v0.5 界面基准](workspace-ui-baseline-v0.5.zh-CN.md)、[v0.6 通用能力验收](company-agent-general-capabilities-v0.6.zh-CN.md)、[v0.7 DSH 集成设计](company-agent-dsh-integration-v0.7.zh-CN.md)。本文按「Agent architecture design plan」对话沉淀的 harness 框架计划，对 v0.7 方案做职责边界与投入优先级的体系化更新。
+v0.5 到 v0.7 的草稿已退出仓库。现行手册是 [Super DSH 手册](super-dsh-handbook-2026-11-06.zh-CN.md)。本文保留 2026-10-21 的框架优先级，供 2000 人天基线引用，不再作为产品界面说明。
 
 ## 一、来源与框架命题
 
@@ -124,7 +124,7 @@ v0.7 七的四步保留，插入两条框架要求：
 本次为设计对齐更新：未查询新的上游版本，未安装插件、未连接模型 / MCP / 设备、未修改 `contracts/`、`src/`、`packages/`、`profiles/`、`pins.json` 与任何执行配置。依据文件：
 
 - `~/projects/agent-from-scratch/docs/`（`ARCHITECTURE.md`、`HARNESS_TAXONOMY.md`、`FAILURE_MODES.md`、`PRINCIPLES.md`、`TEARDOWN.md`）：框架来源，全部为未实现设计文档，仅取其结论与映射，不引入未验证的实现承诺。
-- `docs/company-agent-dsh-integration-v0.7.zh-CN.md` 与 `pins.json`（DSH `0.1.5-rc.2` / 组件 `0.1.5-rc.3`）：沿用其全部既有边界，本文未放宽任何一条。
+- `pins.json`（DSH `0.1.5-rc.2` / 组件 `0.1.5-rc.3`）与 `AGENTS.md`：沿用其全部既有边界，本文未放宽任何一条。v0.7 草稿已退出仓库。
 
 ### 工作区 HTML 一致性修复
 

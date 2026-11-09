@@ -180,7 +180,7 @@ def test_tool_report_rejects_invalid_shape(tmp_path: Path) -> None:
 
 
 def test_verifier_builds_exact_tool_probe_per_profile() -> None:
-    for profile, expected_count in (("company-agent", 83), ("company-agent-minimal", 27)):
+    for profile, expected_count in (("company-agent", 85), ("company-agent-minimal", 27)):
         with VERIFY.profile_home(profile) as temporary:
             home = Path(temporary)
             VERIFY.write_session_probe(home, profile)
@@ -192,7 +192,10 @@ def test_verifier_builds_exact_tool_probe_per_profile() -> None:
             assert "ctx.tools.schemas(agent)" in source
             expected = json.loads(patch.split("expected: ", 1)[1].splitlines()[0])
             assert len(expected) == expected_count
-            builtins = {"read", "write", "edit", "read_image", "glob", "grep", "web_search"}
+            builtins = {
+                "read", "write", "edit", "read_image", "glob", "grep", "web_search",
+                "todo_write", "present",
+            }
             if profile == "company-agent":
                 assert builtins <= set(expected)
                 assert expected[-1] == "skill"

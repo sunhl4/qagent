@@ -92,7 +92,8 @@ def _validate_contract_graph() -> None:
                           "company.knowledge": "company-knowledge", "company.workflow": "company-agent",
                           "company.latex": "company-latex", "company.plan": "company-plan",
                           "company.office": "company-office",
-                          "company.portal": "company-portal"}
+                          "company.portal": "company-portal",
+                          "company.research": "company-research"}
     referenced = set()
     operations_by_provider: dict[str, set[str]] = {name: set() for name in providers}
     for capability in capabilities.values():
@@ -124,7 +125,11 @@ def _validate_contract_graph() -> None:
             or ("hpc_stage_file" in visible) != (preset in {"lab", "sign"})
             or ("hpc_job_cancel" in visible) != (preset in {"lab", "sign"})
             or ("hpc_dir_create" in visible) != (preset in {"lab", "sign"})
-            or ("hpc_file_remove" in visible) != (preset in {"lab", "sign"})):
+            or ("hpc_file_remove" in visible) != (preset in {"lab", "sign"})
+            or ("company_research_compile" in visible) != (preset in {"lab", "algo"})
+            or ("company_research_status" in visible) != (preset in {"lab", "algo"})
+            or ("company_research_digest" in visible) != (preset in {"lab", "algo"})
+            or ("company_research_run" in visible) != (preset == "lab")):
             raise RuntimeError("invalid preset visibility contract")
     builtins = load_managed_builtins()
     if any(name in tools for name in builtins):
@@ -383,6 +388,10 @@ def load_tools() -> dict[str, dict[str, Any]]:
         "company_plan_milestone_create",
         "company_latex_issue_note",
         "company_portal_open",
+        "company_research_compile",
+        "company_research_run",
+        "company_research_status",
+        "company_research_digest",
     }
     if set(names) != expected_names:
         raise RuntimeError("invalid Company Agent contract: tools.json")
@@ -586,6 +595,10 @@ def load_policy() -> dict[str, Any]:
         "plan_write_provider",
         "plan_write_ask_presets",
         "plan_write_deny_presets",
+        "research_run_tool",
+        "research_run_provider",
+        "research_run_ask_presets",
+        "research_run_deny_presets",
     }
     if set(payload) != expected or payload.get("version") != "1.0.0":
         raise RuntimeError("invalid Company Agent contract: policy.json")

@@ -11,6 +11,7 @@
 ## 硬规则
 
 - DSH 是唯一 Agent Runtime；禁止新增模型循环、会话循环或工具循环。
+- 上游 Super-agent 的流程是控制面基座，Router、订阅和注意力面板是这条流程的必要部分，用来承接大量任务和没有人逐条输入的任务。这些能力消费上游实现，不在公司仓库里再写一套路由器或会话循环。锁定前，`company_work_item` 只保存同一对象链的薄替身，订阅只记录工单和线程的对应。无人输入的任务从 Source 事件进入，没有书面规则时只记录；书面规则打开工单后，超算、云和真机仍走公司策略。公司长期保留工具包、审批策略和平台时钟。
 - 不直接 import `company_quantum_platform` 或任何科学算法包。
 - 算法名单只来自 `company-quantum-platform` 的 `algorithm.catalog`；标识是平台 `component_id`，禁止在 Agent 代码或知识库固化算法列表。
 - 句柄只有 `asset_id`、`circuit_id`、`twin_id`。

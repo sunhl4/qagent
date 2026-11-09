@@ -8,13 +8,11 @@ import {homedir} from 'node:os';
 import {dirname, join, relative, resolve, sep} from 'node:path';
 const run = promisify(execFile);
 
-// Presentation and content extension over the native DSH shell. No tools,
-// model calls, or runtime loops: everything mounts through native slots.
-// The running boot graph and native Slot/seat contracts are integration
-// boundaries; this plugin only appends entries and never replaces native ones.
+// Host data routes for the native company resource UI. No tools, model calls,
+// runtime loops, or a second client module: the web app already mounts the
+// native seats.
 export const name = 'company-workspace-shell';
-export const inject = ['webServer', 'connection', 'clientModules', 'workspaceRegistry'];
-const ID = '@unitqc/company-workspace-ui';
+export const inject = ['webServer', 'connection', 'workspaceRegistry'];
 const ROOT = new URL('../../', import.meta.url);
 const WORKBENCH_OPERATIONS = new Set(['cloud.submit', 'hpc.submit', 'device.run']);
 const REQUEST_ID = /^req_[0-9a-f]{32}$/;
@@ -132,18 +130,23 @@ export async function apply(ctx) {
   if (!/^[0-9]+$/.test(port) || Number(port) < 1 || Number(port) > 65535) {
     throw new Error('COMPANY_AGENT_DSH_PORT must be an integer from 1 to 65535');
   }
-  const authority = `127.0.0.1:${Number(port)}`;
-  const trustedRequest = req => trusted(req, authority);
+  // The web runtime pins one port. The desktop host binds an ephemeral port and
+  // publishes it on webServer.port after listen; request checks must use that.
+  const authorityFor = () => {
+    const live = ctx.webServer && ctx.webServer.port;
+    if (typeof live === 'number' && Number.isSafeInteger(live) && live >= 1 && live <= 65535) {
+      return `127.0.0.1:${live}`;
+    }
+    return `127.0.0.1:${Number(port)}`;
+  };
+  const trustedRequest = req => trusted(req, authorityFor());
   const trustedSubject = req => resolveTrustedSubject(ctx.connection, req);
   const subprocessEnvFor = req => ({...process.env, COMPANY_AGENT_SUBJECT: trustedSubject(req)});
-  const [client, css, layoutModel, page] = await Promise.all([
-    readFile(new URL('client.js', import.meta.url), 'utf8'),
+  const [css, page, mark] = await Promise.all([
     readFile(new URL('workspace.css', import.meta.url), 'utf8'),
-    readFile(new URL('layout-model.js', import.meta.url), 'utf8'),
     readFile(new URL('docs/quantum-agent-architecture.zh-CN.html', ROOT), 'utf8'),
+    readFile(new URL('mark.png', import.meta.url)),
   ]);
-  const bundle = layoutModel + '\n' + client;
-  const rev = createHash('sha256').update(bundle).update(css).digest('hex').slice(0,12);
   const content = page.replace(/<iframe id="dsh-native-frame"[\s\S]*?<\/iframe>/, '')
     .replace("frame-src http://127.0.0.1:3081", "frame-src 'self'")
     .replace('</head>', `<style>
@@ -587,6 +590,10 @@ export async function apply(ctx) {
   };
   jsonRoute('/company-workspace/workbench/tasks', workbenchTasks, 'company-workspace: workbench tasks');
   jsonRoute('/company-workspace/agent/state', agentState, 'company-workspace: agent state');
+  jsonRoute('/company-workspace/account', () => {
+    const name = String(process.env.COMPANY_AGENT_ACCOUNT_NAME || '').trim();
+    return {username: name.length > 0 && name.length <= 64 ? name : ''};
+  }, 'company-workspace: account');
   jsonRoute('/company-workspace/cloud/status', cloudStatus, 'company-workspace: cloud status');
   jsonRoute('/company-workspace/cloud/overview', cloudOverview, 'company-workspace: cloud overview');
   jsonRoute('/company-workspace/hpc/status', hpcStatus, 'company-workspace: hpc status');
@@ -717,9 +724,9 @@ export async function apply(ctx) {
   }}), 'company-workspace: access grant');
 
   const files = new Map([
-    ['/company-workspace/client.js', [bundle, 'text/javascript; charset=utf-8']],
     ['/company-workspace/workspace.css', [css, 'text/css; charset=utf-8']],
     ['/company-workspace/content', [content, 'text/html; charset=utf-8']],
+    ['/company-workspace/mark.png', [mark, 'image/png']],
   ]);
   for (const [path,[body,type]] of files) ctx.effect(() => ctx.webServer.register({kind:'exact',path,handler:(req,res) => {
     if (!trustedRequest(req)) {res.writeHead(403);res.end();return;}
@@ -729,18 +736,4 @@ export async function apply(ctx) {
     res.end(req.method === 'HEAD' ? undefined : body);
   }}), 'company-workspace: UI resource');
 
-  // Compose additively on top of the native shell: the native layout,
-  // conversation, workspace, settings and renderer factories stay fully
-  // active, and this plugin only appends its own entry (resource tab,
-  // receipt view and settings pages ride native slots).
-  const assemble = `(()=>{
-    if(new URL(location.href).searchParams.get('native')==='1')return;
-    const graph=globalThis.__DSH_BOOT__;
-    if(!graph||graph.entries.some(e=>e.id===${JSON.stringify(ID)}))return;
-    graph.entries.push({id:${JSON.stringify(ID)},url:'/company-workspace/client.js',rev:${JSON.stringify(rev)},inject:['@deepseek-ai/dsh-client-ui-renderer','@deepseek-ai/dsh-client-ui-session','@deepseek-ai/dsh-client-ui-theme','@deepseek-ai/dsh-client-locale'],immediately:true});
-    graph.batches.push({phase:'application',url:'/company-workspace/client.js',rev:${JSON.stringify(rev)},entries:[${JSON.stringify(ID)}]});
-    graph.rev+='-company-${rev}';
-    const link=document.createElement('link');link.rel='stylesheet';link.href='/company-workspace/workspace.css';document.head.append(link);
-  })()`;
-  ctx.effect(() => ctx.webServer.tapIndex(html => html.replace('</head>', `<script>${assemble}<\/script></head>`)), 'company-workspace: boot composition');
 }

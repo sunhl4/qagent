@@ -124,6 +124,44 @@
           ]
         }
       ]
+    },
+    {
+      "name": "company-coding",
+      "path": "skills/company-coding/SKILL.md",
+      "sha256": "283dd251d3a6e74fe9196fbbf7d3e64e8b0c3aab2ec298dd68b023ea1864a4db",
+      "scripts": [],
+      "revoked": false,
+      "when": [
+        {
+          "profiles": [
+            "company-agent"
+          ],
+          "presets": [
+            "boot",
+            "lab",
+            "algo"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "company-office-desk",
+      "path": "skills/company-office-desk/SKILL.md",
+      "sha256": "3600ccf40d0fb50f23e2499f64e73b5914ffe82be2f5c547f12dc7c41669e181",
+      "scripts": [],
+      "revoked": false,
+      "when": [
+        {
+          "profiles": [
+            "company-agent"
+          ],
+          "presets": [
+            "boot",
+            "lab",
+            "algo"
+          ]
+        }
+      ]
     }
   ]
 }

@@ -181,7 +181,7 @@ test('general Agent capabilities are core design requirements, without changing 
     assert.match(baseline.textContent, expected);
   }
   assert.match(document.querySelector('#general-agent-roadmap').textContent, /首期：通用 Agent 内部可用版/);
-  assert.ok(document.querySelector('#panel-enterprise a[href="company-agent-general-capabilities-v0.6.zh-CN.md"]'));
+  assert.ok(document.querySelector('#panel-enterprise a[href="super-dsh-product-plan.zh-CN.md"]'));
   click('[data-scenario="daily"]');
   assert.match(document.querySelector('#enterprise-scenario').textContent, /实际读写文件/);
   assert.match(document.querySelector('#enterprise-scenario').textContent, /当前合同尚未实现/);
@@ -211,7 +211,7 @@ test('DSH integration design prioritizes reuse, scoped tools and interface robus
   }
   assert.match(document.querySelector('.enterprise-summary').textContent, /并列接入/);
   assert.match(document.querySelector('#general-agent-roadmap').textContent, /优先复用已有 API/);
-  assert.ok(document.querySelector('#panel-enterprise a[href="company-agent-dsh-integration-v0.7.zh-CN.md"]'));
+  assert.ok(document.querySelector('#panel-enterprise a[href="super-dsh-handbook-2026-11-06.zh-CN.md"]'));
   assert.ok(document.querySelector('#panel-enterprise a[href="company-agent-harness-framework-v0.8.zh-CN.md"]'));
   assert.equal(baseline.querySelectorAll('button, input, textarea, select, iframe').length, 0);
   assert.equal(document.querySelector('#center-content').innerHTML, content);

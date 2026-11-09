@@ -29,6 +29,9 @@ importers:
       '@unitqc/company-agent-quantum':
         specifier: file:../../packages/company-agent-quantum
         version: file:../../packages/company-agent-quantum
+      '@unitqc/company-agent-research':
+        specifier: file:../../packages/company-agent-research
+        version: file:../../packages/company-agent-research
 
 packages:
 
@@ -52,6 +55,9 @@ packages:
 
   '@unitqc/company-agent-quantum@file:../../packages/company-agent-quantum':
     resolution: {directory: ../../packages/company-agent-quantum, type: directory}
+
+  '@unitqc/company-agent-research@file:../../packages/company-agent-research':
+    resolution: {directory: ../../packages/company-agent-research, type: directory}
 
 snapshots:
 
@@ -78,5 +84,9 @@ snapshots:
       '@unitqc/company-agent-core': file:../../packages/company-agent-core
 
   '@unitqc/company-agent-quantum@file:../../packages/company-agent-quantum':
+    dependencies:
+      '@unitqc/company-agent-core': file:../../packages/company-agent-core
+
+  '@unitqc/company-agent-research@file:../../packages/company-agent-research':
     dependencies:
       '@unitqc/company-agent-core': file:../../packages/company-agent-core

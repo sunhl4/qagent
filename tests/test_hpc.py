@@ -460,7 +460,8 @@ def test_resources_result_quotes_remote_command(stubbed_ssh) -> None:
     remote = argv[-1]
     assert remote.startswith("sinfo -h -o '%P|%a|%D|%t|%C'")
     assert "printf 'company-agent-home\\t%s\\n'" in remote
-    assert remote.endswith("exit $sinfo_status")
+    assert remote.endswith("exit \\$sinfo_status")
+    assert "\\$HOME" in remote
 
 
 @pytest.mark.parametrize(
@@ -688,7 +689,7 @@ def test_stage_file_result_creates_and_skips(monkeypatch, tmp_path) -> None:
     assert calls[0][0] == "test -f /data/jobs/demo.sh"
     write_command, stdin_text = calls[1]
     assert write_command == "cat > /data/jobs/demo.sh"
-    assert stdin_text == "#!/bin/sh\necho hi\n"
+    assert stdin_text == b"#!/bin/sh\necho hi\n"
     overwritten = hpc_ssh.stage_file_result(
         {"workspace_path": "demo.sh", "gateway_path": "/data/jobs/demo.sh", "overwrite": True},
         header)
@@ -836,6 +837,38 @@ def test_dir_create_result_receipt(monkeypatch) -> None:
     exists = hpc_ssh.dir_create_result({"path": "/data/jobs/runs"})
     assert exists == {"provider": "hpc-slurm-ssh", "path": "/data/jobs/runs",
                       "created": False, "mode": "exists"}
+
+
+def test_dir_create_moves_wsl_cached_home_onto_account_home(monkeypatch) -> None:
+    from company_agent import hpc_ssh
+
+    if hasattr(hpc_ssh._account_home, "value"):
+        del hpc_ssh._account_home.value
+    monkeypatch.setenv("COMPANY_AGENT_HPC_VIA_WSL", "1")
+    monkeypatch.setenv("COMPANY_AGENT_HPC_USER", "hpc-user")
+    monkeypatch.setenv("COMPANY_AGENT_HPC_HOST", "hpc-login.internal")
+    commands: list[str] = []
+
+    def fake_run(argv, **_kwargs):
+        remote = argv[-1]
+        commands.append(remote)
+        if "\\$HOME" in remote:
+            return subprocess.CompletedProcess(argv, 0, stdout="/data/home/hpc-user", stderr="")
+        if remote.startswith("test -d"):
+            return subprocess.CompletedProcess(argv, 1, stdout="", stderr="")
+        return subprocess.CompletedProcess(argv, 0, stdout="", stderr="")
+
+    monkeypatch.setattr(hpc_ssh.subprocess, "run", fake_run)
+    created = hpc_ssh.dir_create_result({"path": "/home/someone/company_agent/smoke"})
+    assert created == {
+        "provider": "hpc-slurm-ssh",
+        "path": "/data/home/hpc-user/company_agent/smoke",
+        "created": True,
+        "mode": "created",
+    }
+    assert "mkdir -p /data/home/hpc-user/company_agent/smoke" in commands
+    left = hpc_ssh.dir_create_result({"path": "/data/jobs/runs"})
+    assert left["path"] == "/data/jobs/runs"
 
 
 def test_file_remove_result_receipt(monkeypatch) -> None:

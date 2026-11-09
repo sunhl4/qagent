@@ -42,7 +42,7 @@ def test_sync_matches_registry_selection(verify_skills, mount_root) -> None:
     assert verify_skills.sync(root=mount_root, profile="company-agent", preset="lab") == 0
     assert {path.name for path in mount_root.iterdir()} == {
         "company-knowledge", "company-docs-research", "company-office-matter",
-        "quantum-workflow", "company-plan",
+        "quantum-workflow", "company-plan", "company-coding", "company-office-desk",
     }
     for name, row in _registry_digests().items():
         mounted = mount_root / name / Path(row["path"]).name

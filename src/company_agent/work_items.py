@@ -617,6 +617,21 @@ class WorkItemStore:
         return closed
 
 
+def _host_session_ref() -> str | None:
+    """Return the DSH session that is executing this call. The model cannot supply it."""
+    raw = os.environ.get("COMPANY_AGENT_SESSION_ID", "").strip()
+    if not raw:
+        return None
+    if (
+        not raw.startswith("dsh:")
+        or len(raw) <= 4
+        or len(raw.encode("utf-8")) > _contract()["limits"]["session_ref_bytes"]
+        or any(character.isspace() for character in raw[4:])
+    ):
+        raise WorkItemError("session_ref is invalid")
+    return raw
+
+
 def work_item(args: Mapping[str, object]) -> dict:
     action = _text(args.get("action"), "action")
     with WorkItemStore() as store:
@@ -635,13 +650,14 @@ def work_item(args: Mapping[str, object]) -> dict:
                 "source": row["source"], "kind": "candidate", "count": 0, "available": True,
             }
         if action == "evaluate":
+            session = _host_session_ref()
             result = store.evaluate(
                 args.get("trigger_id"), mode=args.get("mode", "observe"),
                 strength=args.get("strength", "explicit"), scope=args.get("scope"),
                 title=args.get("title"), reason=args.get("reason"), evidence=args.get("evidence"),
                 worktree_name=args.get("worktree_name", "work-item"), tenant_id=args.get("tenant_id"),
             )
-            return {
+            payload = {
                 "action": action, "status": "ok", "authority": "mandate" if result["ticket_id"] else "none",
                 "items": [], "work_item_id": result["ticket_id"] or "", "trigger_id": result["trigger_id"],
                 "thread_key": "", "decision_id": result["decision_id"],
@@ -649,6 +665,15 @@ def work_item(args: Mapping[str, object]) -> dict:
                 "assignment_id": result["assignment_id"] or "", "source": "", "kind": result["kind"],
                 "count": 0, "available": True,
             }
+            if result["assignment_id"] and session:
+                bound = store.bind_execution(
+                    result["assignment_id"], session, "company.workflow",
+                    tenant_id=args.get("tenant_id"),
+                )
+                store.note_execution(result["assignment_id"], "running", tenant_id=args.get("tenant_id"))
+                payload["session_ref"] = bound["session_ref"]
+                payload["tool_pack"] = bound["tool_pack"]
+            return payload
         if action == "recover":
             rows = store.recoverable(args.get("tenant_id"))
             return {

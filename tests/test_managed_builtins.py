@@ -75,8 +75,11 @@ def test_f10_result_budget_covers_managed_builtins() -> None:
 
 def test_local_route_stays_failure_honest() -> None:
     patch = (ROOT / "profiles/company-agent/cordis.patch.yml").read_text(encoding="utf-8")
-    assert "provider: company-local" in patch
+    assert "provider: company-relay" in patch
     assert "baseURL: http://127.0.0.1:8000/v1" in patch
+    local = patch.split("      company-local:", 1)[1].split("      company-relay:", 1)[0]
+    assert "Authorization: Bearer local" in local
+    assert "apiKeyEnv:" not in local
     # No key material is inlined; credentials stay env-addressed, and local
     # unreachability is reported as-is instead of falling back to a public route.
     assert "DEEPSEEK_API_KEY" not in patch

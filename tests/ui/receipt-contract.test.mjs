@@ -23,15 +23,21 @@ import vm from 'node:vm';
 const ROOT = fileURLToPath(new URL('../..', import.meta.url));
 const RUNTIME = process.env.COMPANY_AGENT_RUNTIME_DIR
   || join(os.homedir(), '.cache', 'unitqc-company-agent', 'dsh-runtime');
-const CLIENT = join(ROOT, 'apps/company-workspace/client.js');
+const CLIENT = join(ROOT, '../deepseek-harness/packages/client/ui-company-resources/lib/client.js');
 
 const RECEIPT_TARGET = 'company-agent-receipts';
 
 /** Browser-globals the module touches; only inner nodes the shell owns. */
 const documentStub = (() => {
   const style = () => ({setProperty() {}, removeProperty() {}});
-  const element = {style: style(), toggleAttribute() {}, setAttribute() {}, removeAttribute() {}};
-  return {documentElement: element, body: element};
+  const element = {style: style(), dataset: {}, toggleAttribute() {}, setAttribute() {}, removeAttribute() {}};
+  return {
+    documentElement: element,
+    body: element,
+    head: {append() {}, appendChild() {}},
+    querySelector: () => null,
+    createElement: () => element,
+  };
 })();
 const localStorageStub = {getItem: () => null, setItem() {}, removeItem() {}};
 
@@ -123,7 +129,10 @@ function makeContext() {
     slots, uiConversation,
     reflect: {provide: () => {}},
     locale: {register: key => { captured.locales.push(key); return () => {}; }, bind: () => () => 'stub'},
-    theme: {getTheme: () => ({active: {colorScheme: 'light', tokens: {}}, fontSize: 14})},
+    theme: {
+      getTheme: () => ({active: {colorScheme: 'light', tokens: {}}, fontSize: 14}),
+      overrideTokens: () => () => {},
+    },
     on: () => () => {},
     effect: factory => factory(),
     sidebarRightTabs: {
@@ -243,7 +252,7 @@ function recordedShapeEvents() {
 
 test('client module declares exactly the pinned integration faces', () => {
   const {module} = makeContext();
-  assert.deepEqual(module.inject, ['slots', 'locale', 'sidebarRightTabs']);
+  assert.deepEqual(module.inject, ['slots', 'locale', 'sidebarRightTabs', 'theme']);
   assert.equal(typeof module.apply, 'function');
 });
 
@@ -365,9 +374,9 @@ test('receipt view reads the injected face and completes view requests in an eff
   const source = readFileSync(CLIENT, 'utf8');
   assert.doesNotMatch(source, /useConversation\s*\(/,
     'the conversation store hook never leaks into the slot component');
-  assert.match(source, /useState\(\(\)=>receiptSnapshot\(receipts\)\)/,
+  assert.match(source, /useState\)\(\(\) => receiptSnapshot\(receipts\)\)/,
     'the snapshot arrives through the injected face only');
-  assert.match(source, /\[viewRequest,completeViewRequest\]\)/,
+  assert.match(source, /\[viewRequest, completeViewRequest\]/,
     'viewRequest completion is a keyed effect, not a render write');
   assert.match(source, /data-empty/, 'an empty receipt pane renders a real empty state');
 });

@@ -49,6 +49,13 @@ def _policy_contract() -> dict[str, Any]:
         or policy.get("plan_write_ask_presets") != ["lab", "sign"]
         or policy.get("plan_write_deny_presets") != ["boot", "algo"]):
         raise RuntimeError("Company Agent plan write policy contract is invalid")
+    research_ask = policy.get("research_run_ask_presets")
+    research_deny = policy.get("research_run_deny_presets")
+    if (policy.get("research_run_tool") != "company_research_run"
+        or policy.get("research_run_provider") != "company-research"
+        or research_ask != ["lab"]
+        or research_deny != ["boot", "algo", "sign"]):
+        raise RuntimeError("Company Agent research run policy contract is invalid")
     return policy
 
 
@@ -175,6 +182,22 @@ def decide(tool: str, preset: str, args: Mapping[str, Any] | None = None) -> Dec
         if preset in plan_deny_presets:
             return "deny"
         return "ask" if preset in plan_ask_presets else "deny"
+    if tool == policy.get("research_run_tool"):
+        if tool != "company_research_run":
+            return "deny"
+        if policy.get("research_run_provider") != "company-research":
+            return "deny"
+        research_ask = policy.get("research_run_ask_presets") or ()
+        research_deny = policy.get("research_run_deny_presets") or ()
+        if not isinstance(research_ask, list) or not isinstance(research_deny, list):
+            return "deny"
+        if any(not isinstance(item, str) for item in (*research_ask, *research_deny)):
+            return "deny"
+        if set(research_ask) != {"lab"} or set(research_deny) != {"boot", "algo", "sign"}:
+            return "deny"
+        if preset in set(research_deny):
+            return "deny"
+        return "ask" if preset in set(research_ask) else "deny"
     if tool == policy.get("hpc_submit_tool"):
         if tool != "hpc_submit":
             return "deny"

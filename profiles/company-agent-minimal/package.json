@@ -9,6 +9,7 @@
     "@unitqc/company-agent-quantum":"file:../../packages/company-agent-quantum","@unitqc/company-agent-hpc":"file:../../packages/company-agent-hpc",
     "@unitqc/company-agent-latex":"file:../../packages/company-agent-latex",
     "@unitqc/company-agent-office":"file:../../packages/company-agent-office",
-    "@unitqc/company-agent-plan":"file:../../packages/company-agent-plan"
+    "@unitqc/company-agent-plan":"file:../../packages/company-agent-plan",
+    "@unitqc/company-agent-research":"file:../../packages/company-agent-research"
   }
 }

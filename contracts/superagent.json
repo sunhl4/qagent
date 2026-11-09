@@ -67,7 +67,20 @@
     },
     "channels": {"company": true, "workspace": true, "research": true, "github": false, "feishu": false},
     "watchdog": {"may_open_ticket": false, "may_change_policy": false, "may_retry_unknown": false, "implementation": "company-policy"},
-    "signal_types": ["experiment.completed.v1", "lease.changed.v1", "budget.exhausted.v1"]
+    "signal_types": ["experiment.completed.v1", "lease.changed.v1", "budget.exhausted.v1"],
+    "flow_foundation": {
+      "owner_when_locked": "upstream-super-agent",
+      "stand_in": "local-control-plane",
+      "company_keeps": ["tool-pack", "policy", "platform-clock"],
+      "required_upstream": ["router", "subscription", "attention"],
+      "replaced_when_locked": ["stand-in-ticket-store", "stand-in-thread-binding"],
+      "unattended": {
+        "entry": "source-event",
+        "opens_ticket_when": "written-rule",
+        "default_until_rule": "observe",
+        "company_policy_still_applies": true
+      }
+    }
   },
   "retention": {
     "max_events": 100000,
@@ -76,7 +89,7 @@
   },
   "framework": {
     "runtime": "deepseek-harness",
-    "compatible_runtime_versions": ["0.1.5-rc.2"],
+    "compatible_runtime_versions": ["0.1.5-rc.2", "0.2.1-rc.5"],
     "prototype": "dsh-superagent-prototype",
     "prototype_objects": ["source", "trigger", "eval", "mandate", "ticket", "assignment", "subscription"],
     "official_status": "unreleased",

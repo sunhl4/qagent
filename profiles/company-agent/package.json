@@ -5,6 +5,7 @@
   "dsh":{"profile":{"bundles":["@deepseek-ai/dsh-base","@deepseek-ai/dsh-web-app","@deepseek-ai/dsh-subagent-codex"],"patchReload":"startup"}},
   "dependencies":{
     "@deepseek-ai/dsh-subagent-codex":"0.1.5-rc.2",
+    "@deepseek-ai/dsh-tool-present":"0.1.5-rc.3",
     "@openai/codex":"0.153.4",
     "@unitqc/company-agent-policy":"file:../../packages/company-agent-policy",
     "@unitqc/company-agent-core":"file:../../packages/company-agent-core",
@@ -13,6 +14,7 @@
     "@unitqc/company-agent-device":"file:../../packages/company-agent-device",
     "@unitqc/company-agent-latex":"file:../../packages/company-agent-latex",
     "@unitqc/company-agent-office":"file:../../packages/company-agent-office",
-    "@unitqc/company-agent-plan":"file:../../packages/company-agent-plan"
+    "@unitqc/company-agent-plan":"file:../../packages/company-agent-plan",
+    "@unitqc/company-agent-research":"file:../../packages/company-agent-research"
   }
 }

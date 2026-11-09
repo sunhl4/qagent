@@ -471,6 +471,7 @@ def test_capability_layers_stay_apart(store) -> None:
         "company_latex_overleaf_push", "company_latex_push", "company_latex_revert",
         "company_plan_issue_create", "company_plan_issue_write",
         "company_plan_milestone_create", "company_plan_note_create",
+        "company_research_run",
         "hpc_dir_create", "hpc_file_remove",
         "hpc_job_cancel", "hpc_stage_file", "hpc_submit",
         "quantum_cloud_submit", "quantum_device_run",

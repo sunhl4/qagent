@@ -65,6 +65,7 @@ def test_capability_and_tool_catalogs_are_consistent() -> None:
         "company.office",
         "company.plan",
         "company.portal",
+        "company.research",
     } == set(capabilities)
     for name, row in tools.items():
         assert row["capability"] in capabilities, name
@@ -201,6 +202,10 @@ def test_policy_device_identity_matches_capability_contract() -> None:
         "plan_write_provider",
         "plan_write_ask_presets",
         "plan_write_deny_presets",
+        "research_run_tool",
+        "research_run_provider",
+        "research_run_ask_presets",
+        "research_run_deny_presets",
     }
     device = next(item for item in list_capabilities() if item.id == "quantum.device")
     assert policy["fail_closed"] is True
@@ -249,6 +254,15 @@ def test_policy_device_identity_matches_capability_contract() -> None:
     assert set(policy["hpc_job_cancel_deny_presets"]) == {"boot", "algo"}
     assert set(policy["hpc_job_cancel_ask_presets"]).isdisjoint(policy["hpc_job_cancel_deny_presets"])
     assert set(policy["hpc_job_cancel_ask_presets"]) | set(policy["hpc_job_cancel_deny_presets"]) == set(
+        load_presets()["presets"]
+    )
+    research = next(item for item in list_capabilities() if item.id == "company.research")
+    assert policy["research_run_tool"] == "company_research_run"
+    assert policy["research_run_provider"] == research.provider
+    assert policy["research_run_ask_presets"] == ["lab"]
+    assert policy["research_run_deny_presets"] == ["boot", "algo", "sign"]
+    assert set(policy["research_run_ask_presets"]).isdisjoint(policy["research_run_deny_presets"])
+    assert set(policy["research_run_ask_presets"]) | set(policy["research_run_deny_presets"]) == set(
         load_presets()["presets"]
     )
 
@@ -304,6 +318,7 @@ def test_tool_registration_is_exactly_once_across_company_plugins() -> None:
         "latex": {"company.latex"},
         "office": {"company.office"},
         "plan": {"company.plan"},
+        "research": {"company.research"},
     }
     registered: list[str] = []
     capabilities = {item.id: item for item in list_capabilities()}

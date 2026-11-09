@@ -52,6 +52,8 @@ OPEN_SUFFIXES = (
     ".pdf",
     ".txt",
     ".md",
+    ".xmind",
+    ".mm",
 )
 
 

@@ -67,6 +67,7 @@ ALLOWED_TOP_LEVEL = {
     "README.md",
     "apps",  # TEMPORARY: company-workspace presentation experiment; not an M1 deliverable.
     "contracts",
+    "desktop",
     "docs",
     "knowledge",
     "package.json",
@@ -74,11 +75,14 @@ ALLOWED_TOP_LEVEL = {
     "pins.json",
     "profiles",
     "pyproject.toml",
+    "research-layer",
+    "resources",
     "runtime",
     "scripts",
     "skills",
     "src",
     "tests",
+    "view",
 }
 ALLOWED_SOURCE_CHILDREN = {
     "src": {"company_agent"},
@@ -91,6 +95,7 @@ ALLOWED_SOURCE_CHILDREN = {
         "company-agent-latex",
         "company-agent-office",
         "company-agent-plan",
+        "company-agent-research",
     },
     "profiles": {"company-agent", "company-agent-minimal"},
     "runtime": set(),
@@ -208,6 +213,7 @@ def test_only_company_architecture_roots_remain() -> None:
         "skills.json",
         "tenants.json",
         "budgets.json",
+        "superagent.json",
     }
 
 

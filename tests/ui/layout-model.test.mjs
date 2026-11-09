@@ -38,24 +38,21 @@ test('dragging adjusts the requested side and clamps to safe ranges',()=>{
 });
 
 test('additive client rides native slots and never replaces the conversation shell',()=>{
- const client=readFileSync(new URL('../../apps/company-workspace/client.js',import.meta.url),'utf8');
+ const client=readFileSync(new URL('../../../deepseek-harness/packages/client/ui-company-resources/src/client/surfaces.tsx',import.meta.url),'utf8');
  const host=readFileSync(new URL('../../apps/company-workspace/host.mjs',import.meta.url),'utf8');
- const css=readFileSync(new URL('../../apps/company-workspace/workspace.css',import.meta.url),'utf8');
- // Additive face: the module declares only shell-owned services; the native
- // conversation plugin is reached through a child scope so rc.3's
- // uiConversation→uiWorkspace ordering cannot couple this upgrade.
- assert.match(client,/inject:\['slots','locale','sidebarRightTabs'\]/);
- assert.match(client,/ctx\.inject\(\['uiConversation'\], scope=>registerReceiptView\(ctx, scope\.get\('uiConversation'\)\)\)/);
- assert.doesNotMatch(client,/inject:\[[^\]]*uiConversation/,'conversation plugin is resolved in a child scope, not a hard dependency');
- // Settings seats (platform section + General row) and the resource tab ride
- // native slots with the pinned identities the seam consumers rely on.
- assert.match(client,/name:'settings.section',id:'platform',order:12/);
- assert.match(client,/name:'settings.general.item',id:'platform-connections',order:25/);
+ const css=readFileSync(new URL('../../../deepseek-harness/packages/client/ui-company-resources/src/client/resources.css',import.meta.url),'utf8');
+ assert.match(client,/export const inject = \['slots', 'locale', 'sidebarRightTabs', 'theme'\]/);
+ assert.match(client,/ctx\.inject\(\['uiConversation'\], \(scope\) => \{[\s\S]*registerReceiptView\(ctx, scope\.get\('uiConversation'\)/);
+ assert.doesNotMatch(client,/inject = \[[^\]]*uiConversation/);
+ assert.match(client,/name: 'settings\.section', id: 'platform', order: 12/);
+ assert.match(client,/name: 'settings\.general\.item', id: 'platform-connections', order: 25/);
  assert.match(client,/sidebarRightTabs\.register\(/);
- assert.match(client,/name:'sidebar\.right\.pane\.tab'/);
- // The replaced-shell era is gone: no custom root/sidebar frame, no local file
- // tree simulation, and no model/loop-facing client actions anywhere.
- assert.doesNotMatch(client,/name:'root'|name:'sidebar'|renderSlot\(/);
+ assert.match(client,/name: 'sidebar\.right\.pane\.tab'/);
+ assert.match(client,/const PANEL_ID = 'company-resources'/);
+ assert.match(client,/name: 'main', key: PANEL_ID/);
+ assert.match(client,/name: 'sidebar\.panellist', id: PANEL_ID, order: 30/);
+ assert.doesNotMatch(client,/paintCompanyChrome|MutationObserver|priority: -1|settings\.launcher/);
+ assert.doesNotMatch(client,/name: 'root'|name: 'sidebar'(?!\.)|renderSlot\(/);
  assert.doesNotMatch(client,/本机文件|quantum-project/);
  assert.doesNotMatch(client,/\.sendMessage\(|\.runCli\(|innerHTML|contentDocument/);
  // The only client-service calls permitted are the read-only connection
@@ -68,7 +65,7 @@ test('additive client rides native slots and never replaces the conversation she
   /\/company-workspace\/agent\/state'/,
   /\/company-workspace\/workbench\/tasks'/,
   /\/company-workspace\/access'\)/,
-  /\/company-workspace\/access',\{method:'POST'/
+  /\/company-workspace\/access[\s\S]{0,120}POST/,
  ];
  for (const sidebarFetch of sidebarFetches) {
    assert.ok(allowedFetches.some(allowed => allowed.test(sidebarFetch)), `allowed client-service fetch only: ${sidebarFetch}`);
@@ -76,8 +73,8 @@ test('additive client rides native slots and never replaces the conversation she
  assert.doesNotMatch(css,/pI_x6G|hHd-Xa|contenteditable|\.chat-head|\.assistant-message/);
  // Host side: session-gated routes and the boot composition stay read-only
  // additive — native boot entries must never be filtered or replaced here.
- assert.match(host,/authorizeIndex/);assert.match(host,/tapIndex/);
- assert.match(host,/Compose additively on top of the native shell/);
- assert.doesNotMatch(host,/REPLACED|entries\.filter/,'boot composition appends, it never removes native entries');
+ assert.match(host,/authorizeIndex/);
+ assert.doesNotMatch(host,/tapIndex|company-workspace\/client\.js/);
+ assert.doesNotMatch(host,/REPLACED|entries\.filter/,'host routes never replace native boot entries');
  assert.doesNotMatch(host,/res\.setHeader\(['"]Access-Control-Allow-Origin|shell:true/);
 });

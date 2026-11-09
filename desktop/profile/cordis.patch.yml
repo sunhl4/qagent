@@ -1,0 +1,121 @@
+# Company Agent composition for the Electron desktop profile.
+# The desktop shell can only boot profiles/desktop. These entries are the
+# managed company-agent patch: company plugins, local model routes, admitted
+# skills, and the system-trust preset root. policy is already a profile bundle.
+- insert:
+    - id: company-agent-core
+      name: "@unitqc/company-agent-core"
+    - id: company-agent-quantum
+      name: "@unitqc/company-agent-quantum"
+    - id: company-agent-hpc
+      name: "@unitqc/company-agent-hpc"
+    - id: company-agent-device
+      name: "@unitqc/company-agent-device"
+    - id: company-agent-latex
+      name: "@unitqc/company-agent-latex"
+    - id: company-agent-office
+      name: "@unitqc/company-agent-office"
+    - id: company-agent-plan
+      name: "@unitqc/company-agent-plan"
+    - id: company-agent-research
+      name: "@unitqc/company-agent-research"
+    - id: company-workspace-shell
+      name: "@unitqc/company-workspace-ui"
+
+- id: tool-fs
+  disabled: false
+  config:
+    readMaxBytes: 51200
+
+- id: tool-fs-search
+  disabled: false
+  config:
+    sampleOverCapGlobResults: false
+
+- id: tool-web
+  disabled: false
+  config:
+    fetch: false
+    searchTimeoutMs: 60000
+
+- id: llm-pi-ai
+  config:
+    providers:
+      company-local:
+        displayName: Company Local DeepSeek
+        api: openai-completions
+        baseURL: http://127.0.0.1:8000/v1
+        headers:
+          Authorization: Bearer local
+        models:
+          - id: deepseek-chat
+      company-relay:
+        displayName: Company Relay (公司中转)
+        api: openai-completions
+        baseURL: http://192.168.110.150:4000/v1
+        apiKeyEnv: COMPANY_RELAY_API_KEY
+        models:
+          - id: yaozheng-GLM-5.3-Flash
+          - id: gpt-6.1-sol
+            contextWindow: 922000
+            maxTokens: 128000
+          - id: gpt-6-astra
+            contextWindow: 922000
+            maxTokens: 128000
+          - id: gpt-6-luna
+            contextWindow: 922000
+            maxTokens: 128000
+          - id: codex-auto-review
+
+- id: agent-default-model
+  config:
+    provider: company-relay
+    model: yaozheng-GLM-5.3-Flash
+
+- id: skill-filesystem
+  disabled: false
+  config:
+    includeDefaultRoots: false
+    customSkillDirs:
+      - !!js process.env.COMPANY_AGENT_SKILL_ROOT
+    watch: false
+
+- id: tool-skill
+  disabled: false
+
+- id: tool-todo
+  disabled: false
+  config:
+    allowParallelInProgress: false
+
+# 0.2 registry default. Native presets stay installed; new sessions open on Company Agent.
+- id: agent-preset-registry
+  name: "@deepseek-ai/dsh-agent-preset-registry"
+  config:
+    default: company-agent
+
+# Codex stays a host provider. The model-visible delegation tool is off.
+- id: subagent-codex
+  config:
+    permissionMode: never
+- id: tool-subagent-codex
+  disabled: true
+- id: ui-settings-account
+  name: "@deepseek-ai/dsh-client-ui-settings-account"
+  config:
+    version: 1
+    step: done
+    purpose: both
+    process: detailed
+    completion: completed
+    usage: detailed
+    developerTools: true
+- id: ui-chat
+  name: "@deepseek-ai/dsh-client-ui-chat"
+  config:
+    transcriptView: detailed
+    performanceUsage: detailed
+- id: ui-settings
+  name: "@deepseek-ai/dsh-client-ui-settings"
+  config:
+    enabled: true

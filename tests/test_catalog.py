@@ -55,10 +55,14 @@ def _real_tools_contract(tmp_path: Path) -> Path:
 
 def test_managed_builtins_shape_and_preset_coverage() -> None:
     builtins = catalog.load_managed_builtins()
-    assert set(builtins) == {"read", "read_image", "write", "edit", "glob", "grep", "web_search"}
+    assert set(builtins) == {
+        "read", "read_image", "write", "edit", "glob", "grep", "web_search",
+        "todo_write", "present",
+    }
     for preset in ("boot", "lab", "algo", "sign"):
         assert catalog.builtin_tools_for_preset(preset) == (
             "read", "read_image", "write", "edit", "glob", "grep", "web_search",
+            "todo_write", "present",
         )
     tools = catalog.load_tools()
     assert not set(builtins) & set(tools)
@@ -69,6 +73,8 @@ def test_managed_builtins_shape_and_preset_coverage() -> None:
     for name in ("glob", "grep"):
         assert packages[name] == "@deepseek-ai/dsh-tool-fs-search"
     assert packages["web_search"] == "@deepseek-ai/dsh-tool-web"
+    assert packages["todo_write"] == "@deepseek-ai/dsh-tool-todo"
+    assert packages["present"] == "@deepseek-ai/dsh-tool-present"
 
 
 def test_managed_builtins_fail_closed_on_mutated_contracts(monkeypatch, tmp_path: Path) -> None:

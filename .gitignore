@@ -1,6 +1,8 @@
 build/
 dist/
 .gate-tmp/
+.tmp-desktop-src/
+.tmp-desktop-boot.log
 *.egg-info/
 .credentials.yaml
 .company-agent/
@@ -21,3 +23,5 @@ secrets.json
 # LaTeX golden matrix: user-supplied Overleaf reference artifacts stay out of the repository.
 /tests/latex/references/
 !/tests/latex/references/README.zh-CN.md
+# Local rounds of the development review circle. The snapshot is STATUS.md.
+/docs/dev-review/runs/

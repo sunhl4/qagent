@@ -40,6 +40,7 @@ def _parse_capabilities(rows: object) -> tuple[Capability, ...]:
         "company.office": "document",
         "company.plan": "plan",
         "company.portal": "portal",
+        "company.research": "research",
         "company.workflow": "workflow",
         "company.latex": "document",
         "company.plan": "plan",
@@ -61,6 +62,7 @@ def _parse_capabilities(rows: object) -> tuple[Capability, ...]:
         "company.office",
         "company.plan",
         "company.portal",
+        "company.research",
     }:
         raise RuntimeError("capability contract is invalid")
     if any(item.approval not in {"none", "human"} for item in capabilities):

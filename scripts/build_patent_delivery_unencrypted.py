@@ -8,7 +8,7 @@ import subprocess
 import zipfile
 from pathlib import Path
 
-DOCS = Path(r"D:\Yaozheng\sunhl4-qagent\docs")
+DOCS = Path(__file__).resolve().parents[1] / "docs"
 OUT = DOCS / "交底书交付_20261104_无加密"
 FIG = OUT / "附图"
 MIRROR = Path(r"D:\Yaozheng\专利\交底书交付_20261104_无加密")

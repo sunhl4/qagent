@@ -56,7 +56,7 @@ def test_doctor_reports_model_and_contract_providers(monkeypatch, capsys) -> Non
     }
     assert payload["model"]["env"] == "DEEPSEEK_API_KEY"
     assert payload["platform"]["token_env"] == "COMPANY_QUANTUM_PLATFORM_TOKEN"
-    assert payload["managed_builtins"] == {"enabled": True, "count": 7}
+    assert payload["managed_builtins"] == {"enabled": True, "count": 9}
     assert payload["local_model_route"]["token_env"] == "COMPANY_AGENT_LOCAL_MODEL_TOKEN"
 
 
@@ -202,10 +202,10 @@ def test_cli_rejects_non_finite_json_number(capsys) -> None:
 def test_tools_command_exposes_contract_catalog(capsys) -> None:
     assert main(["tools"]) == 0
     tools = json.loads(capsys.readouterr().out)
-    assert len(tools) == 75
+    assert len(tools) == 79
     assert "quantum_algorithm_catalog" in {row["name"] for row in tools}
     assert tools[0]["name"] == "company_work_item"
-    assert tools[-1]["name"] == "company_office_surface"
+    assert tools[-1]["name"] == "company_research_digest"
 
 
 def test_tools_command_filters_by_preset(capsys) -> None:

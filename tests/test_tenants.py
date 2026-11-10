@@ -1,10 +1,11 @@
-"""Architecture gates for P1-C: tenant/service enablement projection.
+"""Architecture gates for tenant enablement and account class.
 
 Sources: docs/company-agent-2000-person-days-development-plan-v1.0.zh-CN.md P1 and
 docs/oss-survey/04-工程衔接建议.zh-CN.md 「P0 2.1」. The registry is operator
-data; enablement is a modeled fact that never widens tool visibility and never
-acts on model-controlled input. A configured-but-invalid registry fails closed
-to "unavailable" rather than guessing an enablement.
+data. An unset registry keeps the single-seat preset behavior. A configured
+registry projects internal or external and narrows preset-visible tools to
+approved capabilities. It never widens a preset denial. A configured-but-invalid
+registry fails closed to "unavailable" rather than guessing an enablement.
 """
 
 from __future__ import annotations
@@ -15,7 +16,10 @@ from pathlib import Path
 
 import pytest
 
+from company_agent.catalog import load_tenants, load_tools, load_tools_for_preset, load_visible_tools_for_preset
+from company_agent.capabilities import list_capabilities
 from company_agent.invoke import invoke
+from company_agent.policy import decide
 from company_agent.receipts import subject, subject_source
 from company_agent.tenants import projection, re_all_subjects_valid, summary
 
@@ -23,7 +27,14 @@ TRUSTED = "operator@corp.example.com"
 OTHER = "guest@corp.example.com"
 SERVICE = "compute.cloud"
 OTHER_SERVICE = "company.algorithm"
-ALL_SERVICES = {"company.algorithm", "company.asset", "compute.cloud", "compute.hpc"}
+ALL_SERVICES = {
+    "company.algorithm", "company.asset",
+    "quantum.simulation", "quantum.compilation", "quantum.device",
+    "compute.cloud", "compute.hpc",
+    "company.knowledge", "company.workflow", "company.latex",
+    "company.office", "company.plan", "company.portal",
+    "company.research", "company.literature", "company.dingtalk",
+}
 
 
 @pytest.fixture(autouse=True)
@@ -44,8 +55,9 @@ def _registry(
 
 
 def _line(subject: str = TRUSTED, service: str = SERVICE, state: str = "approved",
-          expires_epoch: int | None = None, approved_by: str = "owner@corp") -> dict[str, object]:
-    return {"subject": subject, "service": service, "state": state,
+          expires_epoch: int | None = None, approved_by: str = "owner@corp",
+          account_class: str = "internal") -> dict[str, object]:
+    return {"subject": subject, "class": account_class, "service": service, "state": state,
             "expires_epoch": expires_epoch, "approved_by": approved_by}
 
 
@@ -130,7 +142,7 @@ def test_unknown_line_field_or_out_of_scope_service_fails_closed(monkeypatch, tm
     row["note"] = "extra"
     _registry(monkeypatch, tmp_path, [row])
     assert projection(TRUSTED, "trusted")["regime"] == "unavailable"
-    _registry(monkeypatch, tmp_path, [_line(service="company.knowledge")], name="scope.jsonl")
+    _registry(monkeypatch, tmp_path, [_line(service="not.a.service")], name="scope.jsonl")
     assert projection(TRUSTED, "trusted")["regime"] == "unavailable"
 
 
@@ -170,15 +182,24 @@ def test_oversized_registry_fails_closed(monkeypatch, tmp_path) -> None:
 
 def test_capability_payload_carries_subject_and_enablement(monkeypatch, tmp_path) -> None:
     monkeypatch.setenv("COMPANY_AGENT_SUBJECT", TRUSTED)
-    _registry(monkeypatch, tmp_path, [_line(subject=TRUSTED), _line(subject=TRUSTED, service=OTHER_SERVICE)])
+    _registry(monkeypatch, tmp_path, [
+        _line(subject=TRUSTED),
+        _line(subject=TRUSTED, service=OTHER_SERVICE),
+        _line(subject=TRUSTED, service="company.workflow"),
+    ])
     payload = invoke("company_capabilities", "lab")
     assert payload.status == "ok"
     enablement = payload.payload["enablement"]
     assert enablement["regime"] == "registry"
+    assert enablement["class"] == "internal"
     assert enablement["subject"] == subject() == TRUSTED
     assert enablement["services"][SERVICE]["enabled"] is True
     assert enablement["services"][OTHER_SERVICE]["enabled"] is True
     assert set(enablement["services"]) == ALL_SERVICES
+    rows = {row["id"]: row for row in payload.payload["capabilities"]}
+    assert "quantum_cloud_submit" in rows["compute.cloud"]["visible_tools"]
+    assert rows["compute.hpc"]["visible_tools"] == []
+    assert "hpc_submit" not in payload.payload["approvals"]
     # Every registered fact survives the model-visible envelope shape contract.
     assert all(set(row) >= {"service", "enabled", "reason"} for row in enablement["services"].values())
 
@@ -187,7 +208,7 @@ def test_legacy_payload_keeps_enablement_out_of_the_envelope_shape(monkeypatch) 
     payload = invoke("company_capabilities", "lab")
     assert payload.status == "ok"
     assert payload.payload["enablement"] == {
-        "regime": "legacy-single-user", "subject": subject(), "services": {},
+        "regime": "legacy-single-user", "subject": subject(), "class": "", "services": {},
     }
 
 
@@ -249,3 +270,127 @@ def test_untrusted_projection_in_capability_payload_is_never_enabled() -> None:
     enablement = payload.payload["enablement"]
     assert enablement["subject"] == subject() or subject_source() == "untrusted"
     assert enablement["regime"] in {"legacy-single-user", "registry", "unavailable"}
+    assert enablement["class"] in {"", "internal", "external"}
+
+
+def test_tenant_contract_services_match_capabilities() -> None:
+    contract = load_tenants()
+    assert contract["classes"] == ["internal", "external"]
+    assert contract["services"] == [item.id for item in list_capabilities()]
+    schema = load_tools()["company_capabilities"]["output"]["properties"]["enablement"]
+    assert schema["required"] == ["regime", "subject", "class", "services"]
+    assert schema["properties"]["class"]["enum"] == ["", "internal", "external"]
+    assert list(schema["properties"]["services"]["properties"]) == contract["services"]
+
+
+def test_unset_registry_keeps_preset_behavior(monkeypatch) -> None:
+    monkeypatch.delenv("COMPANY_AGENT_TENANT_REGISTRY", raising=False)
+    facts = projection(TRUSTED, "trusted")
+    assert facts["regime"] == "legacy-single-user" and facts["class"] == ""
+    assert decide("hpc_submit", "lab", {}) == "ask"
+    assert "hpc_submit" in load_tools_for_preset("lab")
+    assert "hpc_submit" in load_visible_tools_for_preset("lab")
+
+
+def test_registry_without_class_denies_managed_tool(monkeypatch, tmp_path) -> None:
+    monkeypatch.setenv("COMPANY_AGENT_SUBJECT", TRUSTED)
+    _registry(monkeypatch, tmp_path, [_line(subject=OTHER)])
+    facts = projection(TRUSTED, "trusted")
+    assert facts["regime"] == "registry" and facts["class"] == ""
+    assert decide("hpc_submit", "lab", {}) == "deny"
+    assert "hpc_submit" not in load_tools_for_preset("lab")
+    assert "hpc_submit" not in load_visible_tools_for_preset("lab")
+
+
+def test_conflicting_class_fails_the_whole_registry(monkeypatch, tmp_path) -> None:
+    monkeypatch.setenv("COMPANY_AGENT_SUBJECT", TRUSTED)
+    _registry(monkeypatch, tmp_path, [
+        _line(account_class="internal"),
+        _line(service="compute.hpc", account_class="external"),
+    ])
+    assert projection(TRUSTED, "trusted")["regime"] == "unavailable"
+    assert summary()["valid"] is False
+    assert decide("hpc_submit", "lab", {}) == "deny"
+
+
+def test_external_empty_allow_list_denies_hpc(monkeypatch, tmp_path) -> None:
+    monkeypatch.setenv("COMPANY_AGENT_SUBJECT", TRUSTED)
+    _registry(monkeypatch, tmp_path, [_line(account_class="external", state="revoked")])
+    facts = projection(TRUSTED, "trusted")
+    assert facts["class"] == "external"
+    assert facts["services"]["compute.hpc"]["enabled"] is False
+    assert decide("hpc_submit", "lab", {}) == "deny"
+    assert "hpc_submit" not in load_visible_tools_for_preset("lab")
+
+
+def test_internal_hpc_stays_denied_until_approved_then_asks(monkeypatch, tmp_path) -> None:
+    monkeypatch.setenv("COMPANY_AGENT_SUBJECT", TRUSTED)
+    _registry(monkeypatch, tmp_path, [_line(service="compute.cloud")])
+    assert projection(TRUSTED, "trusted")["class"] == "internal"
+    assert decide("hpc_submit", "lab", {}) == "deny"
+    assert "hpc_submit" not in load_tools_for_preset("lab")
+    assert "hpc_submit" not in load_visible_tools_for_preset("lab")
+    denied = invoke(
+        "hpc_submit", "lab",
+        {"job_name": "demo", "script": "/tmp/demo.sh"},
+        approved=True,
+    )
+    assert denied.status == "denied"
+    _registry(monkeypatch, tmp_path, [
+        _line(service="compute.cloud"),
+        _line(service="compute.hpc"),
+    ])
+    assert decide("hpc_submit", "lab", {}) == "ask"
+    assert "hpc_submit" in load_tools_for_preset("lab")
+    assert "hpc_submit" in load_visible_tools_for_preset("lab")
+
+
+def test_preset_deny_beats_an_approved_device_capability(monkeypatch, tmp_path) -> None:
+    monkeypatch.setenv("COMPANY_AGENT_SUBJECT", TRUSTED)
+    _registry(monkeypatch, tmp_path, [_line(service="quantum.device")])
+    assert projection(TRUSTED, "trusted")["services"]["quantum.device"]["enabled"] is True
+    assert decide("quantum_device_run", "lab", {}) == "ask"
+    assert "quantum_device_run" in load_tools_for_preset("lab")
+    assert decide("quantum_device_run", "boot", {}) == "deny"
+    assert decide("quantum_device_run", "algo", {}) == "deny"
+    assert "quantum_device_run" not in load_tools_for_preset("boot")
+    assert "quantum_device_run" not in load_tools_for_preset("algo")
+
+
+def test_session_grant_cannot_override_account_or_preset_deny(monkeypatch, tmp_path) -> None:
+    monkeypatch.setenv("COMPANY_AGENT_SUBJECT", TRUSTED)
+    monkeypatch.setenv("COMPANY_AGENT_SESSION_ID", "dsh:account-class-hook")
+    _registry(monkeypatch, tmp_path, [
+        _line(service="compute.hpc"),
+        _line(service="company.workflow"),
+    ])
+    opened = invoke(
+        "company_grant_open",
+        "lab",
+        {
+            "tools": ["hpc_submit"],
+            "max_calls": 2,
+            "ttl_seconds": 60,
+            "subject": {
+                "kind": "experiment",
+                "id": "exp-1",
+                "resource": "hpc",
+                "limit_kind": "node_hours",
+                "limit": 1,
+            },
+        },
+        approved=True,
+    )
+    assert opened.status == "ok"
+    matched = {
+        "job_name": "smoke",
+        "script": "/data/jobs/demo.sh",
+        "nodes": 1,
+        "experiment_id": "exp-1",
+    }
+    assert decide("hpc_submit", "lab", matched) == "allow"
+    assert decide("hpc_submit", "boot", matched) == "deny"
+    _registry(monkeypatch, tmp_path, [_line(service="company.workflow")])
+    assert decide("hpc_submit", "lab", matched) == "deny"
+    blocked = invoke("hpc_submit", "lab", matched, approved=True)
+    assert blocked.status == "denied"

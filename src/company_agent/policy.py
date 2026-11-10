@@ -91,6 +91,23 @@ def _grant_tools() -> tuple[str, ...]:
     return GRANT_TOOLS
 
 
+def _account_allows(tool: str) -> bool:
+    """Narrow an already-permitted preset decision. Legacy seats stay preset-only."""
+
+    try:
+        capability = load_tools()[tool]["capability"]
+    except (KeyError, RuntimeError, TypeError):
+        return False
+    if not isinstance(capability, str) or not capability:
+        return False
+    try:
+        from company_agent.tenants import account_allows
+
+        return account_allows(capability)
+    except (OSError, RuntimeError, TypeError, ValueError):
+        return False
+
+
 def _with_grant(tool: str, preset: str, ask_presets: set[str], args: Mapping[str, Any]) -> Decision:
     """Ask unless this session's grant still covers the tool. A deny preset stays deny."""
     if preset not in ask_presets:
@@ -187,6 +204,10 @@ def decide(tool: str, preset: str, args: Mapping[str, Any] | None = None) -> Dec
     if not isinstance(forbidden_raw, list) or any(not isinstance(item, str) for item in forbidden_raw):
         return "deny"
     if tool in set(forbidden_raw):
+        return "deny"
+    # Preset denial has already returned. The account list cannot reopen it,
+    # and a session grant only runs inside the ask path below.
+    if not _account_allows(tool):
         return "deny"
     if tool == policy.get("device_tool"):
         if tool != "quantum_device_run":

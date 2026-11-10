@@ -36,7 +36,12 @@ from company_agent import table_profile as _table_profile
 from company_agent import work_items as _work_items
 from company_agent import workspace_reference as _workspace_reference
 from company_agent.capabilities import capability
-from company_agent.catalog import contract_snapshot, load_presets, load_result_policy, load_tools
+from company_agent.catalog import (
+    contract_snapshot,
+    load_result_policy,
+    load_tools,
+    load_visible_tools_for_preset,
+)
 from company_agent.contracts import HANDLE_PREFIXES, HANDLES, Invocation
 from company_agent.cloud_results import read_page
 from company_agent.diagnostics import emit, invocation_events
@@ -60,7 +65,7 @@ def _capability_payload(preset: str) -> dict[str, Any]:
     from company_agent.receipts import subject_source as receipt_subject_source
     from company_agent.tenants import projection as tenants_projection
 
-    visible = set(load_presets()["presets"][preset]["visible_tools"])
+    visible = set(load_visible_tools_for_preset(preset))
 
     def provider_state(item):
         if item.kind in {

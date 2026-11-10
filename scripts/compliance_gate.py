@@ -75,6 +75,9 @@ def run_scenarios(store_dir: Path) -> list[dict[str, Any]]:
     from company_agent.catalog import current_contract_digest
     from company_agent.invoke import invoke
     from company_agent.policy import decide
+    from company_agent.receipts import subject as receipt_subject
+    from company_agent.receipts import subject_source as receipt_subject_source
+    from company_agent.tenants import projection as tenant_projection
     from company_agent.receipts import (
         load_records,
         reconcile,
@@ -247,10 +250,18 @@ def run_scenarios(store_dir: Path) -> list[dict[str, Any]]:
 
     # ---- tenancy (P1-C enablement facts) ------------------------------------
     registry_path = store_dir / "tenants.jsonl"
-    registry_path.write_text(json.dumps({
-        "subject": "operator@corp.example.com", "service": "compute.cloud",
-        "state": "approved", "expires_epoch": None, "approved_by": "gate-owner",
-    }) + "\n", encoding="utf-8")
+    registry_path.write_text("".join(json.dumps(item) + "\n" for item in (
+        {
+            "subject": "operator@corp.example.com", "class": "internal",
+            "service": "compute.cloud", "state": "approved",
+            "expires_epoch": None, "approved_by": "gate-owner",
+        },
+        {
+            "subject": "operator@corp.example.com", "class": "internal",
+            "service": "company.workflow", "state": "approved",
+            "expires_epoch": None, "approved_by": "gate-owner",
+        },
+    )), encoding="utf-8")
     previous_registry = os.environ.get("COMPANY_AGENT_TENANT_REGISTRY", "")
     pristine_subject = os.environ.pop("COMPANY_AGENT_SUBJECT", "")
     os.environ["COMPANY_AGENT_SUBJECT"] = "operator@corp.example.com"
@@ -263,6 +274,7 @@ def run_scenarios(store_dir: Path) -> list[dict[str, Any]]:
             "approved registry line projects enabled compute.cloud for the trusted subject",
             {"regime": tenancy.get("regime"), "compute_cloud": compute_fact},
             tenancy.get("regime") == "registry"
+            and tenancy.get("class") == "internal"
             and compute_fact.get("enabled") is True
             and compute_fact.get("reason") == "approved")
     finally:
@@ -276,16 +288,20 @@ def run_scenarios(store_dir: Path) -> list[dict[str, Any]]:
             json.dumps({"subject": "operator@corp.example.com"}) + "\n", encoding="utf-8"
         )
         os.environ["COMPANY_AGENT_TENANT_REGISTRY"] = str(broken_registry)
+        mutex = tenant_projection(receipt_subject(), receipt_subject_source())
         mutex_caps = invoke("company_capabilities", "lab")
-        mutex = mutex_caps.payload.get("enablement", {}) if mutex_caps.status == "ok" else {}
         row("denied", "tenant-registry-invalid-fails-closed", "denied",
-            "an invalid registry yields unavailable facts, never an enabled service",
-            {"regime": mutex.get("regime"),
-             "enabled_states": sorted({row.get("enabled") for row in mutex.get("services", {}).values()})},
+            "an invalid registry yields unavailable facts and denies managed tools",
+            {"regime": mutex.get("regime"), "invoke_status": mutex_caps.status,
+             "enabled_states": sorted({
+                 item.get("enabled") for item in mutex.get("services", {}).values()
+             })},
             mutex.get("regime") == "unavailable"
+            and mutex.get("class") == ""
             and mutex.get("services")
-            and all(row.get("enabled") is False and row.get("reason") == "registry_unavailable"
-                    for row in mutex.get("services", {}).values()))
+            and all(item.get("enabled") is False and item.get("reason") == "registry_unavailable"
+                    for item in mutex.get("services", {}).values())
+            and mutex_caps.status == "denied")
     finally:
         if previous_registry:
             os.environ["COMPANY_AGENT_TENANT_REGISTRY"] = previous_registry

@@ -18,11 +18,11 @@ SUBJECT = "operator@corp.example.com"
 TRUSTED = "trusted"
 
 LINES = {
-    "approved": {"subject": SUBJECT, "service": "compute.cloud",
+    "approved": {"subject": SUBJECT, "class": "internal", "service": "compute.cloud",
                  "state": "approved", "expires_epoch": None, "approved_by": "owner"},
-    "revoked": {"subject": SUBJECT, "service": "compute.cloud",
+    "revoked": {"subject": SUBJECT, "class": "internal", "service": "compute.cloud",
                 "state": "revoked", "expires_epoch": None, "approved_by": "owner"},
-    "other": {"subject": SUBJECT, "service": "compute.hpc",
+    "other": {"subject": SUBJECT, "class": "internal", "service": "compute.hpc",
               "state": "approved", "expires_epoch": None, "approved_by": "owner"},
 }
 

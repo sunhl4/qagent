@@ -232,33 +232,33 @@ def queue_result() -> dict[str, object]:
 
 def _validated_submit_arguments(payload: dict[str, object]) -> dict[str, object]:
     if not isinstance(payload, dict):
-        raise AdapterError("invalid submit arguments")
+        raise _staging_argument_error("submit")
     if set(payload) - {"job_name", "script", "partition", "nodes", "walltime"}:
-        raise AdapterError("invalid submit arguments")
+        raise _staging_argument_error("submit")
     job_name = payload.get("job_name")
     script = payload.get("script")
     partition = payload.get("partition")
     nodes = payload.get("nodes")
     walltime = payload.get("walltime")
     if not isinstance(job_name, str) or not _JOB_NAME_PATTERN.fullmatch(job_name):
-        raise AdapterError("invalid submit arguments")
+        raise _staging_argument_error("submit")
     if not isinstance(script, str) or not _SCRIPT_PATTERN.fullmatch(script):
-        raise AdapterError("invalid submit arguments")
+        raise _staging_argument_error("submit")
     if ".." in script.split("/") or script.endswith("/"):
-        raise AdapterError("invalid submit arguments")
+        raise _staging_argument_error("submit")
     argument_list = [f"-J {shlex.quote(job_name)}"]
     if partition is not None:
         if not isinstance(partition, str) or not _PARTITION_PATTERN.fullmatch(partition):
-            raise AdapterError("invalid submit arguments")
+            raise _staging_argument_error("submit")
         argument_list.append(f"-p {shlex.quote(partition)}")
     if nodes is not None:
         if isinstance(nodes, bool) or not isinstance(nodes, int) or not 1 <= nodes <= 64:
-            raise AdapterError("invalid submit arguments")
+            raise _staging_argument_error("submit")
         argument_list.append(f"-N {nodes}")
     if walltime is not None:
         if (not isinstance(walltime, str) or not _WALLTIME_PATTERN.fullmatch(walltime)
             or any(int(part) > 59 for part in walltime.split(":")[1:])):
-            raise AdapterError("invalid submit arguments")
+            raise _staging_argument_error("submit")
         argument_list.append(f"-t {shlex.quote(walltime)}")
     argument_list.append(shlex.quote(script))
     return {"command": "sbatch --parsable " + " ".join(argument_list), "fields": payload}
@@ -561,12 +561,23 @@ def _workspace_destination(root: Path, relative: str) -> Path:
         return resolve_workspace(root, relative)
     except (WorkspaceFileError, OSError) as exc:
         raise AdapterError(_GENERIC_ERROR) from exc
+def _staging_prefix() -> str:
+    home = getattr(_account_home, "value", None)
+    if isinstance(home, str) and home:
+        return home + "/" + _STAGING_DIRNAME
+    return "<staging_root>/" + _STAGING_DIRNAME
+
+
+def _staging_argument_error(kind: str) -> AdapterError:
+    return AdapterError(f"invalid {kind} arguments; staging_root prefix is {_staging_prefix()}")
+
+
 def _validated_path_argument(payload: dict[str, object], field: str) -> str:
     value = payload.get(field) if isinstance(payload, dict) else None
     if not isinstance(value, str) or not _SCRIPT_PATTERN.fullmatch(value):
-        raise AdapterError("invalid file arguments")
+        raise AdapterError(f"invalid file arguments; staging_root prefix is {_staging_prefix()}")
     if ".." in value.split("/") or value.endswith("/"):
-        raise AdapterError("invalid file arguments")
+        raise AdapterError(f"invalid file arguments; staging_root prefix is {_staging_prefix()}")
     return value
 
 
@@ -746,14 +757,14 @@ def stage_file_result(payload: dict[str, object], workspace: str) -> dict[str, o
 
 def _validated_script_arguments(payload: object, *fields: str) -> dict[str, str]:
     if not isinstance(payload, dict) or set(payload) != set(fields):
-        raise AdapterError("invalid script arguments")
+        raise _staging_argument_error("script")
     values: dict[str, str] = {}
     for name in fields:
         value = payload[name]
         if not isinstance(value, str) or not _SCRIPT_PATTERN.fullmatch(value):
-            raise AdapterError("invalid script arguments")
+            raise _staging_argument_error("script")
         if ".." in value.split("/") or value.endswith("/"):
-            raise AdapterError("invalid script arguments")
+            raise _staging_argument_error("script")
         values[name] = value
     return values
 

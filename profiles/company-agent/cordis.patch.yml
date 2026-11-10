@@ -17,6 +17,8 @@
       name: "@unitqc/company-agent-plan"
     - id: company-agent-research
       name: "@unitqc/company-agent-research"
+    - id: company-agent-literature
+      name: "@unitqc/company-agent-literature"
 
 - id: subagent-codex
   name: "@deepseek-ai/dsh-subagent-codex"
@@ -40,7 +42,7 @@
   disabled: false
   config:
     # 单次 read 返回上限：衔接 contracts/results.json 的输出预算。
-    readMaxBytes: 51200
+    readMaxBytes: 131072
 
 - id: tool-fs-search
   disabled: false

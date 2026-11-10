@@ -1,6 +1,7 @@
 """Authenticated UQC cloud SDK gateway; only simulators can accept submissions."""
 from __future__ import annotations
 
+import hashlib
 import os
 import re
 import stat
@@ -141,8 +142,28 @@ def operation_result(operation: str, payload: dict, workspace: str = "") -> dict
     if operation == "cloud.submit":
         if actual["shots"] % 100:
             raise ValueError("shots must be a multiple of 100")
-        actual["program"] = read_program(actual.pop("program_path"), workspace)
+        program = read_program(actual.pop("program_path"), workspace)
+        actual["program"] = program
+        program_sha256 = hashlib.sha256(program.encode("utf-8")).hexdigest()
     result = worker(operation, actual)
+    if operation == "cloud.submit":
+        result["program_sha256"] = program_sha256
+    if operation == "cloud.result":
+        from company_agent.cloud_results import limit_of, store_table
+        summary = result.get("summary") if isinstance(result.get("summary"), dict) else {}
+        metrics = summary.get("metrics") if isinstance(summary.get("metrics"), dict) else {}
+        items = list(metrics.get("items") or [])
+        shots = summary.get("shots")
+        shot_count = shots if isinstance(shots, int) and not isinstance(shots, bool) else 0
+        page_limit = limit_of(actual.get("limit"))
+        task = str(result.get("cloud_task") or "")
+        summary["artifact_path"] = store_table(workspace, task, shot_count, items)
+        if workspace and not summary["artifact_path"]:
+            raise ValueError("result artifact unavailable")
+        summary["omitted_states"] = max(0, len(items) - page_limit)
+        metrics["items"] = items[:page_limit]
+        summary["metrics"] = metrics
+        result["summary"] = summary
     validate_json_schema(result, row["output"], path="result")
     return result
 

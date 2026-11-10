@@ -14,7 +14,7 @@ def validate(args: Mapping[str, Any]) -> dict[str, Any]:
         raise TypeError("workflow arguments must be an object")
     if not isinstance(args, dict):
         raise TypeError("workflow arguments must be a JSON object")
-    unknown_top = set(args) - {"steps", "inputs"}
+    unknown_top = set(args) - {"steps", "inputs", "record", "tenant_id"}
     if unknown_top:
         raise ValueError(f"workflow has unknown fields: {sorted(unknown_top)}")
     raw_steps = args.get("steps")
@@ -265,4 +265,15 @@ def validate(args: Mapping[str, Any]) -> dict[str, Any]:
         ],
         "produces": sorted(produced),
     }
+    record = args.get("record", False)
+    if not isinstance(record, bool):
+        raise ValueError("record must be a boolean")
+    if record:
+        from company_agent.work_items import WorkItemError, WorkItemStore
+        try:
+            with WorkItemStore() as store:
+                attached = store.attach_plan(args.get("tenant_id"), [step.tool for step in steps])
+        except WorkItemError as exc:
+            raise ValueError(str(exc)) from exc
+        result["plan_hash"] = attached["plan_hash"]
     return result

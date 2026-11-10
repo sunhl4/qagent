@@ -9,8 +9,8 @@ status probe must use the SDK transport.
 Reads configuration from the environment (never argv so the key stays out of
 process listings):
   UQC_CLOUD_API_KEY  sk- prefixed API key (required)
-  UQC_CLOUD_HOST     default cloud.unitaryqubit.com
-  UQC_CLOUD_PORT     default 8003
+  UQC_CLOUD_HOST     required; no baked host
+  UQC_CLOUD_PORT     required; no baked port
 
 Prints exactly one JSON line:
   {"connected": true,  "chips": [{...normalized device rows...}]}
@@ -37,6 +37,20 @@ def _alarm(_sig, _frame):
     raise _Timeout()
 
 
+def _arm() -> None:
+    alarm = getattr(signal, "SIGALRM", None)
+    if alarm is None:
+        return
+    signal.signal(alarm, _alarm)
+    signal.alarm(TIMEOUT_S)
+
+
+def _disarm() -> None:
+    if getattr(signal, "SIGALRM", None) is None:
+        return
+    signal.alarm(0)
+
+
 def _resolve(host: str) -> str:
     try:
         return socket.gethostbyname(host)
@@ -53,13 +67,17 @@ def _normalize_chips(chips) -> list:
             rows.append({"id": str(name), "name": str(name), "status": "未知"})
             continue
         info = chip.get("device_info") if isinstance(chip.get("device_info"), dict) else {}
+        status = str(chip.get("status") or info.get("chip_status") or "未知")
+        kind = str(chip.get("chip_type") or "")
         rows.append({
             "id": str(name),
             "name": str(chip.get("description") or chip.get("name") or name),
-            "status": str(chip.get("status") or info.get("chip_status") or "未知"),
+            "status": status,
+            "state": status,
             "qubits": chip.get("qubits") if chip.get("qubits") is not None else info.get("qubit_count"),
             "region": chip.get("region") or "",
-            "chip_type": chip.get("chip_type") or "",
+            "chip_type": kind,
+            "kind": kind,
             "max_shots": info.get("max_shots") or "",
         })
     return rows
@@ -67,15 +85,19 @@ def _normalize_chips(chips) -> list:
 
 def main() -> int:
     token = (os.environ.get("UQC_CLOUD_API_KEY") or "").strip()
-    host = (os.environ.get("UQC_CLOUD_HOST") or "cloud.unitaryqubit.com").strip()
-    port = int((os.environ.get("UQC_CLOUD_PORT") or "8003").strip() or "8003")
+    host = (os.environ.get("UQC_CLOUD_HOST") or "").strip()
+    port_text = (os.environ.get("UQC_CLOUD_PORT") or "").strip()
     if not token:
         print(json.dumps({"connected": False, "reason": "missing_api_key",
                           "detail": "UQC_CLOUD_API_KEY 未配置"}, ensure_ascii=False))
         return 0
+    if not host or not port_text.isdigit():
+        print(json.dumps({"connected": False, "reason": "missing_endpoint",
+                          "detail": "UQC_CLOUD_HOST 或 UQC_CLOUD_PORT 未配置"}, ensure_ascii=False))
+        return 0
+    port = int(port_text)
 
-    signal.signal(signal.SIGALRM, _alarm)
-    signal.alarm(TIMEOUT_S)
+    _arm()
     try:
         # The SDK reads SERVER_HOST/SERVER_PORT via pydantic-settings at init;
         # translate our names so the UI-configured target wins.
@@ -123,7 +145,7 @@ def main() -> int:
             print(json.dumps({"connected": False, "reason": "probe_error", "detail": text}, ensure_ascii=False))
         return 0
     finally:
-        signal.alarm(0)
+        _disarm()
 
     print(json.dumps({"connected": True, "chips": _normalize_chips(chips)}, ensure_ascii=False))
     return 0

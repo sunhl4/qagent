@@ -57,7 +57,7 @@ def test_wheel_does_not_read_sibling_workspace_contracts(tmp_path: Path, built_w
         capture_output=True,
         text=True,
     )
-    assert result.stdout.strip() == "70 1"
+    assert result.stdout.strip() == "82 1"
 
 
 def test_built_wheel_runs_without_workspace_source(tmp_path: Path, built_wheel: Path) -> None:
@@ -89,4 +89,4 @@ def test_built_wheel_runs_without_workspace_source(tmp_path: Path, built_wheel: 
         capture_output=True,
         text=True,
     )
-    assert result.stdout.strip() == "13"
+    assert result.stdout.strip() == "16"

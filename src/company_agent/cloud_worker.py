@@ -461,7 +461,7 @@ def result_metrics(raw):
     items = [
         {"name": f"p_{format(index, f'0{width}b')}", "kind": "probability", "unit": "dimensionless",
          "value": round(counts[index] / total, 6)}
-        for index in sorted(counts, key=lambda idx: (-counts[idx], idx))[:8]
+        for index in sorted(counts, key=lambda idx: (-counts[idx], idx))
     ]
     return total, items
 

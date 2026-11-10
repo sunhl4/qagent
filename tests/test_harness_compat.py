@@ -17,14 +17,14 @@ def test_manifest_keeps_company_tools_on_one_harness_session() -> None:
     assert manifest["planes"] == ["control", "execution", "platform"]
     assert manifest["official_status"] == "unreleased"
     assert manifest["executor"] == "existing-dsh-session"
-    assert manifest["connectors"] == {"github": False, "feishu": False}
+    assert manifest["connectors"] == {"github": False, "feishu": False, "dingtalk": True}
     assert "danger-full-access" in manifest["forbidden_worker_modes"]
     assert len(names) == len(set(names)) == manifest["tool_count"]
     assert manifest["presets"]["lab"]["device"] == "ask"
     assert manifest["presets"]["sign"]["device"] == "ask"
     assert manifest["presets"]["boot"]["device"] == "deny"
     assert manifest["presets"]["algo"]["device"] == "deny"
-    assert manifest["presets"]["sign"]["includes_work_item"] is False
+    assert manifest["presets"]["sign"]["includes_work_item"] is True
     assert manifest["presets"]["lab"]["includes_work_item"] is True
 
 

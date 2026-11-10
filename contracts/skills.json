@@ -85,6 +85,7 @@
             "company-agent"
           ],
           "presets": [
+            "lab",
             "algo"
           ]
         }
@@ -93,7 +94,7 @@
     {
       "name": "quantum-workflow",
       "path": "skills/quantum-workflow/SKILL.md",
-      "sha256": "c44aa96199f9a9d1e805d66c1fad587158f15b9167eee603980b04db7ff1769d",
+      "sha256": "53d7cb9d94255629a49ebe44372e44e461ffbb22dc1b9bf84133a948096723bb",
       "scripts": [],
       "revoked": false,
       "when": [
@@ -111,7 +112,7 @@
     {
       "name": "company-plan",
       "path": "skills/company-plan/SKILL.md",
-      "sha256": "3eda242a1ee6c42b74c53558cdb18b6c6a51459407257ae186e9e861656f7bdb",
+      "sha256": "e942b22f737a4acc132a0672ebb0da94c1fca2e1d56173c7a25581e165a3edda",
       "scripts": [],
       "revoked": false,
       "when": [
@@ -128,7 +129,7 @@
     {
       "name": "company-coding",
       "path": "skills/company-coding/SKILL.md",
-      "sha256": "283dd251d3a6e74fe9196fbbf7d3e64e8b0c3aab2ec298dd68b023ea1864a4db",
+      "sha256": "73344f45a50c265635f31fc269ea79f81a0ba442402b717bbb5ebf5da287f5e6",
       "scripts": [],
       "revoked": false,
       "when": [
@@ -157,6 +158,25 @@
           ],
           "presets": [
             "boot",
+            "lab",
+            "algo"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "company-literature-review",
+      "path": "skills/company-literature-review/SKILL.md",
+      "sha256": "ac1ad051225c0b3c306df0c2a13d3adf3d5d67f6c14621f9b9548d1c08679f84",
+      "scripts": [],
+      "revoked": false,
+      "when": [
+        {
+          "profiles": [
+            "company-agent",
+            "company-agent-minimal"
+          ],
+          "presets": [
             "lab",
             "algo"
           ]

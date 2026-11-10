@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import shutil
 import subprocess
 from pathlib import Path
@@ -7,7 +8,7 @@ from pathlib import Path
 import pytest
 
 from company_agent.invoke import invoke
-from company_agent.research_clock import _worktree
+from company_agent.research_clock import _METRIC_LINE, _worktree
 from company_agent.work_items import WorkItemStore
 
 _SPEC = {
@@ -60,6 +61,8 @@ def test_unreproduced_baseline_does_not_run(isolated) -> None:
     assert result.status == "ok"
     assert result.payload["ok"] is False
     assert result.payload["stop_reason"] == "invalid_candidate"
+    assert result.payload["charter_action"] == ""
+    assert result.payload["charter_fields"] == ""
     assert result.payload["authority"] == "none"
     store = WorkItemStore()
     assert store.db.execute("select count(*) from tickets").fetchone()[0] == 0
@@ -81,6 +84,8 @@ def test_lab_run_records_a_candidate_and_not_a_ticket(isolated) -> None:
     assert payload["decisions"] == "keep"
     assert payload["signal_type"] == "experiment.completed.v1"
     assert payload["authority"] == "candidate"
+    assert payload["charter_action"] == "opened"
+    assert payload["charter_fields"] == "hypothesis,baseline,metric,budget"
     assert payload["trigger_id"]
     store = WorkItemStore()
     assert store.db.execute("select count(*) from tickets").fetchone()[0] == 0
@@ -91,6 +96,8 @@ def test_lab_run_records_a_candidate_and_not_a_ticket(isolated) -> None:
     assert status.payload["recorded"] is True
     assert status.payload["stop_reason"] == "kept"
     assert status.payload["decisions"] == "keep"
+    assert status.payload["charter_action"] == "opened"
+    assert "warmup lowers validation loss" not in (isolated / "clock" / "records.json").read_text(encoding="utf-8")
     again = invoke(
         "company_research_run", "lab", {**_SPEC, "idempotency_key": "run-1"}, approved=True,
     )
@@ -129,6 +136,27 @@ def test_same_file_runs_until_the_attempt_limit(isolated) -> None:
     })
     assert status.payload["recorded"] is True
     assert status.payload["decisions"] == payload["decisions"]
+
+
+def test_six_attempts_are_accepted(isolated) -> None:
+    args = {
+        **_SPEC,
+        "experiment_id": "exp-six",
+        "baseline_metric": 0.95,
+        "max_attempts": 6,
+        "idempotency_key": "six",
+    }
+    result = invoke("company_research_run", "lab", args, approved=True)
+    assert result.status == "ok", result.error
+    assert result.payload["attempts"] == 6
+    assert result.payload["decisions"] == "discard,discard,discard,discard,discard,discard"
+    assert "research clock failed" not in (result.error or "")
+
+
+def test_metric_lines_accept_attempt_twenty() -> None:
+    assert _METRIC_LINE.fullmatch("attempt=6 seed=1 val_loss=0.2000")
+    assert _METRIC_LINE.fullmatch("attempt=20 val_loss=0.2")
+    assert _METRIC_LINE.fullmatch("attempt=21 val_loss=0.2") is None
 
 
 def test_keep_stops_before_the_attempt_limit(isolated) -> None:
@@ -224,6 +252,63 @@ def test_status_is_empty_before_a_run(isolated) -> None:
     assert result.payload["next_tool"] == ""
     assert result.payload["approval_still_required"] is False
     assert result.payload["next_fields"] == ""
+    assert result.payload["charter_action"] == ""
+    assert result.payload["charter_fields"] == ""
+
+
+def test_charter_change_names_only_the_changed_slot(isolated) -> None:
+    opened = {
+        **_SPEC,
+        "experiment_id": "exp-charter",
+        "baseline_metric": 0.95,
+        "max_attempts": 5,
+        "idempotency_key": "charter-open",
+    }
+    first = invoke("company_research_run", "lab", opened, approved=True)
+    assert first.payload["stop_reason"] == "exhausted"
+    assert first.payload["charter_action"] == "opened"
+    same = invoke(
+        "company_research_run",
+        "lab",
+        {**opened, "changed_path": "src/train/other.py", "idempotency_key": "charter-same"},
+        approved=True,
+    )
+    assert same.payload["charter_action"] == "same"
+    assert same.payload["charter_fields"] == ""
+    changed = invoke(
+        "company_research_run",
+        "lab",
+        {**opened, "max_cost": 4, "idempotency_key": "charter-budget"},
+        approved=True,
+    )
+    assert changed.payload["charter_action"] == "changed"
+    assert changed.payload["charter_fields"] == "budget"
+    revised = invoke(
+        "company_research_run",
+        "lab",
+        {**opened, "max_cost": 4, "hypothesis": "a shorter warmup", "idempotency_key": "charter-problem"},
+        approved=True,
+    )
+    assert revised.payload["charter_action"] == "changed"
+    assert revised.payload["charter_fields"] == "hypothesis"
+    other = invoke(
+        "company_research_run",
+        "lab",
+        {**opened, "tenant_id": "team-b", "idempotency_key": "charter-other"},
+        approved=True,
+    )
+    assert other.payload["charter_action"] == "opened"
+    status = invoke("company_research_status", "algo", {
+        "tenant_id": "team-a", "experiment_id": "exp-charter",
+    })
+    assert status.payload["charter_action"] == "changed"
+    assert status.payload["charter_fields"] == "hypothesis"
+    digest = invoke("company_research_digest", "lab", {"tenant_id": "team-a"})
+    assert "charter_action" not in digest.payload
+    stored = (isolated / "clock" / "records.json").read_text(encoding="utf-8")
+    assert "warmup lowers validation loss" not in stored
+    assert "a shorter warmup" not in stored
+    assert "the metric does not improve" not in stored
 
 
 def test_sensitive_identifier_is_rejected(isolated) -> None:
@@ -278,6 +363,7 @@ def test_local_metric_keeps_the_improving_line(isolated, monkeypatch) -> None:
     ledger = (isolated / "clock" / "ledger.tsv").read_text(encoding="utf-8")
     assert "keep\timprove" in ledger
     assert "hypothesis" not in ledger
+    assert not (isolated / "clock" / "failures.jsonl").exists()
     again = invoke(
         "company_research_run",
         "lab",
@@ -303,6 +389,66 @@ def test_local_timeout_stops_without_a_second_loop(isolated, monkeypatch) -> Non
     assert result.payload["stop_reason"] == "deadline"
     assert result.payload["failure_count"] == 1
     assert result.payload["trigger_id"] == ""
+    assert "category" not in result.payload
+    rows = [
+        json.loads(line)
+        for line in (isolated / "clock" / "failures.jsonl").read_text(encoding="utf-8").splitlines()
+    ]
+    assert rows == [{
+        "experiment_id": "exp-1",
+        "category": "environment",
+        "code": "TIMEOUT",
+        "stage": "execution",
+        "retryable": True,
+    }]
+    assert "warmup" not in (isolated / "clock" / "failures.jsonl").read_text(encoding="utf-8")
+
+
+def test_local_crash_records_a_short_failure(isolated, monkeypatch) -> None:
+    root = isolated / "workspace"
+    root.mkdir()
+    (root / "metrics.log").write_text("NOT_A_METRIC_TOKEN\nval_loss=0.1000\n", encoding="utf-8")
+    monkeypatch.setenv("COMPANY_AGENT_RESEARCH_ROOT", str(root))
+    result = invoke(
+        "company_research_run",
+        "lab",
+        {**_SPEC, "changed_path": "metrics.log", "max_attempts": 5, "idempotency_key": "local-crash"},
+        approved=True,
+    )
+    assert result.payload["stop_reason"] == "consecutive_failures"
+    assert result.payload["attempts"] == 1
+    text = (isolated / "clock" / "failures.jsonl").read_text(encoding="utf-8")
+    assert json.loads(text) == {
+        "experiment_id": "exp-1",
+        "category": "environment",
+        "code": "E_ARTIFACT_STORE",
+        "stage": "artifacts",
+        "retryable": False,
+    }
+    assert "NOT_A_METRIC_TOKEN" not in text
+    assert "0.1000" not in text
+    assert "category" not in result.payload
+
+
+def test_missing_failure_script_records_unknown_once(isolated, monkeypatch) -> None:
+    root = isolated / "workspace"
+    root.mkdir()
+    (root / "metrics.log").write_text("timeout\nval_loss=0.1000\n", encoding="utf-8")
+    monkeypatch.setenv("COMPANY_AGENT_RESEARCH_ROOT", str(root))
+    monkeypatch.setattr("company_agent.research_clock._FAILURE", isolated / "missing.mjs")
+    result = invoke(
+        "company_research_run",
+        "lab",
+        {**_SPEC, "changed_path": "metrics.log", "max_attempts": 5, "idempotency_key": "local-unknown"},
+        approved=True,
+    )
+    assert result.payload["stop_reason"] == "deadline"
+    assert result.payload["attempts"] == 1
+    text = (isolated / "clock" / "failures.jsonl").read_text(encoding="utf-8")
+    assert json.loads(text)["retryable"] is False
+    assert json.loads(text)["category"] == "unknown"
+    assert "warmup" not in text
+    assert "0.1000" not in text
 
 
 def test_local_budget_stops_before_later_lines(isolated, monkeypatch) -> None:
@@ -514,3 +660,106 @@ def test_local_seed_spread_stops_for_a_new_change(isolated, monkeypatch) -> None
     digest = invoke("company_research_digest", "lab", {"tenant_id": "team-a"})
     assert digest.payload["needs_decision"] == 1
     assert "0.2000" not in str(digest.payload)
+
+
+def test_probability_and_objective_metrics_keep_other_kinds_fail(isolated, monkeypatch) -> None:
+    rejected = invoke(
+        "company_research_compile",
+        "lab",
+        {**_SPEC, "primary_metric": "val_loss", "metric_kind": "objective", "metric_unit": "hartree"},
+    )
+    assert rejected.status == "error"
+    unknown = invoke(
+        "company_research_compile",
+        "lab",
+        {**_SPEC, "primary_metric": "energy", "metric_kind": "count", "metric_unit": "count"},
+    )
+    assert unknown.status == "error"
+    root = isolated / "workspace"
+    root.mkdir()
+    (root / "metrics.log").write_text("metric=1.1000\nmetric=0.9700\n", encoding="utf-8")
+    monkeypatch.setenv("COMPANY_AGENT_RESEARCH_ROOT", str(root))
+    kept = invoke(
+        "company_research_run",
+        "lab",
+        {
+            **_SPEC,
+            "primary_metric": "energy",
+            "metric_kind": "objective",
+            "metric_unit": "hartree",
+            "changed_path": "metrics.log",
+            "max_attempts": 5,
+            "idempotency_key": "science-1",
+        },
+        approved=True,
+    )
+    assert kept.status == "ok"
+    assert kept.payload["executor"] == "local"
+    assert kept.payload["stop_reason"] == "kept"
+
+
+def test_handoff_asks_again_and_does_not_spend_the_old_grant(isolated, monkeypatch) -> None:
+    from company_agent.grants import grant_view, handoff_view
+    from company_agent.policy import decide
+    from company_agent.providers import ProviderClient
+
+    monkeypatch.setenv("COMPANY_AGENT_RECEIPT_DIR", str(isolated / "receipts"))
+    monkeypatch.setenv("COMPANY_AGENT_SESSION_ID", "dsh:handoff-seat")
+    opened = invoke(
+        "company_grant_open",
+        "lab",
+        {
+            "tools": ["hpc_submit"],
+            "max_calls": 2,
+            "ttl_seconds": 60,
+            "subject": {
+                "kind": "experiment",
+                "id": "exp-1",
+                "resource": "hpc",
+                "limit_kind": "node_hours",
+                "limit": 1,
+            },
+        },
+        approved=True,
+    )
+    assert opened.status == "ok"
+    matched = {
+        "job_name": "smoke",
+        "script": "/data/jobs/demo.sh",
+        "nodes": 1,
+        "experiment_id": "exp-1",
+    }
+    assert decide("hpc_submit", "lab", {**matched, "nodes": 2}) == "ask"
+    assert decide("hpc_submit", "lab", {**matched, "experiment_id": "exp-2"}) == "ask"
+    assert decide("hpc_submit", "boot", matched) == "deny"
+    assert decide("quantum_cloud_submit", "algo", {}) == "deny"
+    assert decide("quantum_device_run", "algo", {}) == "deny"
+    assert decide("hpc_submit", "lab", matched) == "allow"
+    ran = invoke(
+        "company_research_run",
+        "lab",
+        {**_SPEC, "resource_type": "hpc", "idempotency_key": "handoff-grant"},
+        approved=True,
+    )
+    assert ran.payload["stop_reason"] == "handoff"
+    assert handoff_view()["pending"] is True
+    assert decide("hpc_submit", "lab", matched) == "ask"
+    asked = invoke("hpc_submit", "lab", matched)
+    assert asked.status == "needs_ask"
+    assert grant_view()["tools"][0]["remaining"] == 2
+
+    def fake_invoke(self, operation, payload):
+        assert operation == "hpc.submit"
+        return {
+            "provider": "hpc-slurm-ssh",
+            "slurm_number": "12",
+            "job_name": payload["job_name"],
+            "state": "submitted",
+        }
+
+    monkeypatch.setattr(ProviderClient, "invoke", fake_invoke)
+    done = invoke("hpc_submit", "lab", matched, approved=True)
+    assert done.status == "ok"
+    assert handoff_view()["pending"] is False
+    assert grant_view()["tools"][0]["remaining"] == 2
+    assert decide("hpc_submit", "lab", matched) == "allow"

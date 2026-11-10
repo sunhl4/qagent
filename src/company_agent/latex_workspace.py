@@ -450,7 +450,7 @@ def _engine_log_errors(text: str) -> list:
     rows = []
     consumed = 0
     for line in text.splitlines():
-        if consumed >= 8:
+        if consumed >= 32:
             break
         numbered = ENGINE_ERROR_LINE.match(line)
         bang = ENGINE_BANG_LINE.match(line)
@@ -590,7 +590,7 @@ def compile(args: dict) -> dict:
         "engine": engine,
         "status": status,
         "pages": max(0, min(pages, 100_000)),
-        "errors": [] if status == "success" else _engine_log_errors(text)[:8],
+        "errors": [] if status == "success" else _engine_log_errors(text)[:32],
         "warnings": min(max(warnings, 0), 10_000),
         "artifact": artifact_rel,
         "duration_ms": min(max(elapsed_ms, 0), 1_000_000),

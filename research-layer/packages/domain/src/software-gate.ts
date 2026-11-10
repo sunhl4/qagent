@@ -183,7 +183,7 @@ export function evaluateSoftwareMerge(input: SoftwareMergeInput): SoftwareMergeR
   const review = input.review;
   if (!review || !nonEmpty(review.reviewer_id)) {
     deny("independent_review", "缺少独立评审");
-  } else if (review.reviewer_id === input.author_id) {
+  } else if (review.reviewer_id.trim().toLowerCase() === input.author_id.trim().toLowerCase()) {
     deny("independent_review", "作者不能审查自己的变更");
   } else if (review.blockers > 0) {
     deny("independent_review", "独立评审仍有阻断项");

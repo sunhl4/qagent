@@ -15,6 +15,7 @@
     "@unitqc/company-agent-latex":"file:../../packages/company-agent-latex",
     "@unitqc/company-agent-office":"file:../../packages/company-agent-office",
     "@unitqc/company-agent-plan":"file:../../packages/company-agent-plan",
-    "@unitqc/company-agent-research":"file:../../packages/company-agent-research"
+    "@unitqc/company-agent-research":"file:../../packages/company-agent-research",
+    "@unitqc/company-agent-literature":"file:../../packages/company-agent-literature"
   }
 }

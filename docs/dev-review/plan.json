@@ -1,0 +1,57 @@
+{
+  "task_id": "company-dev-review",
+  "experiment_id": "company-dev-review-circle",
+  "repo_root": "../..",
+  "review_commands": [
+    ["{python}", "scripts/dev_review_gates.py", "review"]
+  ],
+  "run_command": [
+    "{python}",
+    "scripts/dev_review_gates.py",
+    "run",
+    "--candidate",
+    "{candidate_id}",
+    "--attempt-dir",
+    "{output_dir}"
+  ],
+  "metric": {
+    "primary": "checks_failed",
+    "file": "metrics.json",
+    "direction": "minimize",
+    "baseline": 1,
+    "minimum_effect": 1
+  },
+  "resources": {
+    "timeout_seconds": null,
+    "budget_total": 1000,
+    "currency": "check"
+  },
+  "loop": {
+    "max_rounds": 1000,
+    "max_attempts": 1000,
+    "max_consecutive_failures": 2,
+    "stop_on_keep": false,
+    "task_bound": true,
+    "deadline_at": null
+  },
+  "required_artifacts": [
+    "command.json",
+    "stdout.log",
+    "stderr.log",
+    "metrics.json",
+    "attempt.json"
+  ],
+  "proposal_command": [
+    "{python}",
+    "scripts/dev_review_propose.py",
+    "--catalog",
+    "docs/dev-review/catalog.json",
+    "--ledger",
+    "docs/dev-review/LEDGER.md",
+    "--history",
+    "{history}",
+    "--output",
+    "{output}"
+  ],
+  "candidates": []
+}

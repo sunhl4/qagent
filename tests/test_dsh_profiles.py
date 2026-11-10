@@ -8,10 +8,10 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def test_minimal_profile_physically_omits_device_plugin() -> None:
-    text = (ROOT / "profiles/company-agent-minimal/cordis.patch.yml").read_text()
-    manifest = (ROOT / "profiles/company-agent-minimal/package.json").read_text()
-    bootstrap = (ROOT / "scripts/bootstrap_dsh.sh").read_text()
-    start = (ROOT / "scripts/start_runtime.sh").read_text()
+    text = (ROOT / "profiles/company-agent-minimal/cordis.patch.yml").read_text(encoding="utf-8")
+    manifest = (ROOT / "profiles/company-agent-minimal/package.json").read_text(encoding="utf-8")
+    bootstrap = (ROOT / "scripts/bootstrap_dsh.sh").read_text(encoding="utf-8")
+    start = (ROOT / "scripts/start_runtime.sh").read_text(encoding="utf-8")
     assert "company-agent-device" not in text
     assert "company-agent-device" not in manifest
     assert '"patchReload":"startup"' in manifest
@@ -41,14 +41,14 @@ def test_minimal_profile_physically_omits_device_plugin() -> None:
 
 
 def test_bootstrap_creates_home_before_setting_permissions() -> None:
-    bootstrap = (ROOT / "scripts/bootstrap_dsh.sh").read_text()
+    bootstrap = (ROOT / "scripts/bootstrap_dsh.sh").read_text(encoding="utf-8")
     assert bootstrap.index('mkdir -p "${DSH_HOME}" "${RUNTIME}"') < bootstrap.index(
         'chmod 700 "${DSH_HOME}" "${RUNTIME}"'
     )
 
 
 def test_ci_keeps_source_tree_free_of_installation_artifacts() -> None:
-    workflow = (ROOT / ".github/workflows/ci.yml").read_text()
+    workflow = (ROOT / ".github/workflows/ci.yml").read_text(encoding="utf-8")
     assert 'pip install -e ".[dev]"' not in workflow
     assert "--require-hashes -r runtime/python-dev.lock" in workflow
     assert "scripts/verify_acceptance.py" in workflow
@@ -84,6 +84,7 @@ def test_company_skills_publish_required_frontmatter() -> None:
         "company-plan",
         "company-coding",
         "company-office-desk",
+        "company-literature-review",
     }
     for name in names:
         text = (ROOT / f"skills/{name}/SKILL.md").read_text(encoding="utf-8")
@@ -94,8 +95,8 @@ def test_company_skills_publish_required_frontmatter() -> None:
 
 
 def test_full_profile_hardens_codex() -> None:
-    text = (ROOT / "profiles/company-agent/cordis.patch.yml").read_text()
-    preset = (ROOT / "profiles/company-agent/agent-presets/company-agent/agent.cordis.yml").read_text()
+    text = (ROOT / "profiles/company-agent/cordis.patch.yml").read_text(encoding="utf-8")
+    preset = (ROOT / "profiles/company-agent/agent-presets/company-agent/agent.cordis.yml").read_text(encoding="utf-8")
     assert "permissionMode: never" in text
     assert "inheritsParentContext: false" in text
     assert "tool-subagent-codex" not in text
@@ -108,37 +109,37 @@ def test_full_profile_hardens_codex() -> None:
     assert "COMPANY_AGENT_SKILL_ROOT" in text
     assert "skill-filesystem" in text
     assert "tool-skill" in text
-    assert '"patchReload":"startup"' in (ROOT / "profiles/company-agent/package.json").read_text()
-    assert "dsh-cli.mjs" in (ROOT / "scripts/start_runtime.sh").read_text()
-    assert "node_modules/node/bin/node" in (ROOT / "scripts/start_runtime.sh").read_text()
-    assert 'NODE_PACKAGE_VERSION="22.22.0"' in (ROOT / "scripts/bootstrap_dsh.sh").read_text()
-    assert 'PNPM_VERSION="12.5.1"' in (ROOT / "scripts/bootstrap_dsh.sh").read_text()
-    assert "invalid COMPANY_AGENT_PRESET" in (ROOT / "scripts/start_runtime.sh").read_text()
-    assert "COMPANY_AGENT_DSH_PORT must be an integer" in (ROOT / "scripts/start_runtime.sh").read_text()
+    assert '"patchReload":"startup"' in (ROOT / "profiles/company-agent/package.json").read_text(encoding="utf-8")
+    assert "dsh-cli.mjs" in (ROOT / "scripts/start_runtime.sh").read_text(encoding="utf-8")
+    assert "node_modules/node/bin/node" in (ROOT / "scripts/start_runtime.sh").read_text(encoding="utf-8")
+    assert 'NODE_PACKAGE_VERSION="22.22.0"' in (ROOT / "scripts/bootstrap_dsh.sh").read_text(encoding="utf-8")
+    assert 'PNPM_VERSION="12.5.1"' in (ROOT / "scripts/bootstrap_dsh.sh").read_text(encoding="utf-8")
+    assert "invalid COMPANY_AGENT_PRESET" in (ROOT / "scripts/start_runtime.sh").read_text(encoding="utf-8")
+    assert "COMPANY_AGENT_DSH_PORT must be an integer" in (ROOT / "scripts/start_runtime.sh").read_text(encoding="utf-8")
     assert (
         "company-agent-minimal only supports boot or algo presets"
-        in (ROOT / "scripts/start_runtime.sh").read_text()
+        in (ROOT / "scripts/start_runtime.sh").read_text(encoding="utf-8")
     )
 
 
 def test_runtime_lock_matches_declared_pins() -> None:
-    pins = json.loads((ROOT / "pins.json").read_text())
-    runtime = json.loads((ROOT / "runtime/package.json").read_text())
-    lock = (ROOT / "runtime/pnpm-lock.yaml").read_text()
+    pins = json.loads((ROOT / "pins.json").read_text(encoding="utf-8"))
+    runtime = json.loads((ROOT / "runtime/package.json").read_text(encoding="utf-8"))
+    lock = (ROOT / "runtime/pnpm-lock.yaml").read_text(encoding="utf-8")
     assert runtime["dependencies"]["@deepseek-ai/dsh"] == pins["deepseek_harness"]
     assert runtime["engines"]["runtime"]["version"] == pins["dsh_node"]
     assert f"specifier: {pins['deepseek_harness']}" in lock
     assert f"specifier: runtime:{pins['dsh_node']}" in lock
-    bootstrap = (ROOT / "scripts/bootstrap_dsh.sh").read_text()
+    bootstrap = (ROOT / "scripts/bootstrap_dsh.sh").read_text(encoding="utf-8")
     assert f'PNPM_VERSION="{pins["pnpm"]}"' in bootstrap
     assert "--frozen-lockfile" in bootstrap
 
 
 def test_dsh_plugins_register_contract_catalog() -> None:
-    core = (ROOT / "packages/company-agent-core/src/index.js").read_text()
-    runtime = (ROOT / "packages/company-agent-core/src/runtime.js").read_text()
-    quantum = (ROOT / "packages/company-agent-quantum/src/index.js").read_text()
-    device = (ROOT / "packages/company-agent-device/src/index.js").read_text()
+    core = (ROOT / "packages/company-agent-core/src/index.js").read_text(encoding="utf-8")
+    runtime = (ROOT / "packages/company-agent-core/src/runtime.js").read_text(encoding="utf-8")
+    quantum = (ROOT / "packages/company-agent-quantum/src/index.js").read_text(encoding="utf-8")
+    device = (ROOT / "packages/company-agent-device/src/index.js").read_text(encoding="utf-8")
     for text in (core, quantum, device):
         assert "registerCapabilityTools" in text
     assert 'runCliSync(["tools", "--preset", configuredPreset()])' in runtime
@@ -148,7 +149,7 @@ def test_dsh_plugins_register_contract_catalog() -> None:
 
 def test_dsh_plugins_are_plain_javascript_runtime_artifacts() -> None:
     for package in ("policy", "core", "quantum", "device", "latex"):
-        manifest = (ROOT / f"packages/company-agent-{package}/package.json").read_text()
+        manifest = (ROOT / f"packages/company-agent-{package}/package.json").read_text(encoding="utf-8")
         assert '"private": true' in manifest
         assert "src/index.js" in manifest
         assert (ROOT / f"packages/company-agent-{package}/src/index.js").is_file()
@@ -157,10 +158,10 @@ def test_dsh_plugins_are_plain_javascript_runtime_artifacts() -> None:
 
 def test_dsh_plugins_only_register_and_bridge() -> None:
     for path in (ROOT / "packages").glob("*/src/index.js"):
-        text = path.read_text()
+        text = path.read_text(encoding="utf-8")
         assert "fetch(" not in text
         assert "company_quantum" not in text
-    policy = (ROOT / "packages/company-agent-policy/src/index.js").read_text()
+    policy = (ROOT / "packages/company-agent-policy/src/index.js").read_text(encoding="utf-8")
     assert "policyDecision" in policy
     assert 'startsWith("company_")' in policy
     assert 'startsWith("quantum_")' in policy
@@ -186,7 +187,7 @@ def test_profile_reenables_managed_builtins_by_full_row_override() -> None:
     ):
         body = row(name)
         assert re.search(r"(?m)^  disabled: false$", body), name
-    assert "readMaxBytes: 51200" in row("tool-fs")
+    assert "readMaxBytes: 131072" in row("tool-fs")
     assert "sampleOverCapGlobResults: false" in row("tool-fs-search")
     assert "fetch: false" in row("tool-web")
     assert "allowParallelInProgress: false" in row("tool-todo")
@@ -200,7 +201,7 @@ def test_profile_reenables_managed_builtins_by_full_row_override() -> None:
 
 def test_profile_mounts_company_local_model_route_and_default() -> None:
     text = (ROOT / "profiles/company-agent/cordis.patch.yml").read_text(encoding="utf-8")
-    preset = (ROOT / "profiles/company-agent/agent-presets/company-agent/agent.cordis.yml").read_text()
+    preset = (ROOT / "profiles/company-agent/agent-presets/company-agent/agent.cordis.yml").read_text(encoding="utf-8")
     assert "providers:" in text and "company-local:" in text
     assert "baseURL: http://127.0.0.1:8000/v1" in text
     assert "api: openai-completions" in text
@@ -219,25 +220,25 @@ def test_profile_mounts_company_local_model_route_and_default() -> None:
     assert "baseURL: http://192.168.110.150:4000/v1" in text
     assert "apiKeyEnv: COMPANY_RELAY_API_KEY" in text
     assert "COMPANY_RELAY_API_KEY" in (
-        (ROOT / "src/company_agent/cli.py").read_text()
+        (ROOT / "src/company_agent/cli.py").read_text(encoding="utf-8")
     )
     default_block = text.split("- id: agent-default-model", 1)[1].split("- id: ", 1)[0]
     assert "provider: company-relay" in default_block
     assert "model: yaozheng-GLM-5.3-Flash" in default_block
     assert "COMPANY_AGENT_LOCAL_MODEL_TOKEN" in (
-        (ROOT / "src/company_agent/cli.py").read_text()
+        (ROOT / "src/company_agent/cli.py").read_text(encoding="utf-8")
     )
     assert "信任分区" in preset
     assert "quantum_device_run" in preset
 
 
 def test_start_runtime_syncs_skills_from_registry() -> None:
-    start = (ROOT / "scripts/start_runtime.sh").read_text()
+    start = (ROOT / "scripts/start_runtime.sh").read_text(encoding="utf-8")
     assert 'rm -rf -- "${skills_dst}"' in start
     # The mount root is composed by the admission registry, then rechecked.
     assert 'verify_skills.py" sync' in start
     assert 'verify_skills.py" verify' in start
-    verify = (ROOT / "scripts/verify_dsh_profiles.py").read_text()
+    verify = (ROOT / "scripts/verify_dsh_profiles.py").read_text(encoding="utf-8")
     assert "load_skills()" in verify
     # The registry is the single admission record; docs-research must be admitted.
     registry = json.loads((ROOT / "contracts/skills.json").read_text(encoding="utf-8"))

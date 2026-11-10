@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 from threading import Thread
 
@@ -259,3 +260,48 @@ def test_concurrent_accept_and_bind_keep_one_record(tmp_path: Path) -> None:
     assert len(bound) == 1
     assert conflicts == ["execution binding conflict"]
     assert bound[0] in {"dsh:session-1", "dsh:session-2"}
+
+
+def test_catalog_and_cli_omit_trigger_text(tmp_path: Path, monkeypatch, capsys) -> None:
+    monkeypatch.setenv("COMPANY_AGENT_WORK_ITEM_DB", str(tmp_path / "w.sqlite3"))
+    with WorkItemStore() as store:
+        store.receive("company", "thread", "alice", "secret trigger body", tenant_id="local")
+        opened = store.receive(
+            "company", "thread-2", "alice", "another secret", addressed="mention", tenant_id="local",
+        )
+        accepted = store.evaluate(
+            opened["trigger_id"], mode="auto", scope="lab", title="Visible  title",
+            reason="request", evidence="card", tenant_id="local",
+        )
+        store.bind_execution(
+            accepted["assignment_id"], "dsh:session-1", "company.workflow", tenant_id="local",
+        )
+        foreign = store.receive("company", "thread-3", "bob", "foreign secret", tenant_id="tenant-b")
+        store.evaluate(
+            foreign["trigger_id"], mode="auto", scope="boot", title="Foreign",
+            reason="request", evidence="x", tenant_id="tenant-b",
+        )
+        listed = store.catalog("local")
+        store.db.execute(
+            "UPDATE assignments SET session_ref=? WHERE assignment_id=?",
+            ("not a session", accepted["assignment_id"]),
+        )
+        store.db.commit()
+        hidden = store.catalog("local")
+    assert listed["observed"] == 1
+    assert listed["truncated"] is False
+    assert listed["items"][0]["title"] == "Visible title"
+    assert listed["items"][0]["mandate"] == "lab"
+    assert listed["items"][0]["state"] == "open"
+    assert listed["items"][0]["session_ref"] == "dsh:session-1"
+    assert "secret" not in json.dumps(listed)
+    assert "Foreign" not in json.dumps(listed)
+    assert hidden["items"][0]["session_ref"] == ""
+    from company_agent.cli import main
+
+    assert main(["automation", "--tenant", "local"]) == 0
+    raw = capsys.readouterr().out
+    payload = json.loads(raw)
+    assert payload["available"] is True
+    assert payload["items"][0]["ticket_id"] == listed["items"][0]["ticket_id"]
+    assert "secret" not in raw

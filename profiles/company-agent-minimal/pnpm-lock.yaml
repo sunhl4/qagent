@@ -11,63 +11,45 @@ importers:
       '@unitqc/company-agent-core':
         specifier: file:../../packages/company-agent-core
         version: file:../../packages/company-agent-core
-      '@unitqc/company-agent-hpc':
-        specifier: file:../../packages/company-agent-hpc
-        version: file:../../packages/company-agent-hpc
       '@unitqc/company-agent-latex':
         specifier: file:../../packages/company-agent-latex
         version: file:../../packages/company-agent-latex
+      '@unitqc/company-agent-literature':
+        specifier: file:../../packages/company-agent-literature
+        version: file:../../packages/company-agent-literature
       '@unitqc/company-agent-office':
         specifier: file:../../packages/company-agent-office
         version: file:../../packages/company-agent-office
-      '@unitqc/company-agent-plan':
-        specifier: file:../../packages/company-agent-plan
-        version: file:../../packages/company-agent-plan
       '@unitqc/company-agent-policy':
         specifier: file:../../packages/company-agent-policy
         version: file:../../packages/company-agent-policy
-      '@unitqc/company-agent-quantum':
-        specifier: file:../../packages/company-agent-quantum
-        version: file:../../packages/company-agent-quantum
-      '@unitqc/company-agent-research':
-        specifier: file:../../packages/company-agent-research
-        version: file:../../packages/company-agent-research
 
 packages:
 
   '@unitqc/company-agent-core@file:../../packages/company-agent-core':
     resolution: {directory: ../../packages/company-agent-core, type: directory}
 
-  '@unitqc/company-agent-hpc@file:../../packages/company-agent-hpc':
-    resolution: {directory: ../../packages/company-agent-hpc, type: directory}
-
   '@unitqc/company-agent-latex@file:../../packages/company-agent-latex':
     resolution: {directory: ../../packages/company-agent-latex, type: directory}
+
+  '@unitqc/company-agent-literature@file:../../packages/company-agent-literature':
+    resolution: {directory: ../../packages/company-agent-literature, type: directory}
 
   '@unitqc/company-agent-office@file:../../packages/company-agent-office':
     resolution: {directory: ../../packages/company-agent-office, type: directory}
 
-  '@unitqc/company-agent-plan@file:../../packages/company-agent-plan':
-    resolution: {directory: ../../packages/company-agent-plan, type: directory}
-
   '@unitqc/company-agent-policy@file:../../packages/company-agent-policy':
     resolution: {directory: ../../packages/company-agent-policy, type: directory}
-
-  '@unitqc/company-agent-quantum@file:../../packages/company-agent-quantum':
-    resolution: {directory: ../../packages/company-agent-quantum, type: directory}
-
-  '@unitqc/company-agent-research@file:../../packages/company-agent-research':
-    resolution: {directory: ../../packages/company-agent-research, type: directory}
 
 snapshots:
 
   '@unitqc/company-agent-core@file:../../packages/company-agent-core': {}
 
-  '@unitqc/company-agent-hpc@file:../../packages/company-agent-hpc':
+  '@unitqc/company-agent-latex@file:../../packages/company-agent-latex':
     dependencies:
       '@unitqc/company-agent-core': file:../../packages/company-agent-core
 
-  '@unitqc/company-agent-latex@file:../../packages/company-agent-latex':
+  '@unitqc/company-agent-literature@file:../../packages/company-agent-literature':
     dependencies:
       '@unitqc/company-agent-core': file:../../packages/company-agent-core
 
@@ -75,18 +57,6 @@ snapshots:
     dependencies:
       '@unitqc/company-agent-core': file:../../packages/company-agent-core
 
-  '@unitqc/company-agent-plan@file:../../packages/company-agent-plan':
-    dependencies:
-      '@unitqc/company-agent-core': file:../../packages/company-agent-core
-
   '@unitqc/company-agent-policy@file:../../packages/company-agent-policy':
-    dependencies:
-      '@unitqc/company-agent-core': file:../../packages/company-agent-core
-
-  '@unitqc/company-agent-quantum@file:../../packages/company-agent-quantum':
-    dependencies:
-      '@unitqc/company-agent-core': file:../../packages/company-agent-core
-
-  '@unitqc/company-agent-research@file:../../packages/company-agent-research':
     dependencies:
       '@unitqc/company-agent-core': file:../../packages/company-agent-core

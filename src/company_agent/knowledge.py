@@ -178,6 +178,34 @@ def _installed_prefix_knowledge_root() -> Path | None:
     return None
 
 
+def _notes_dir() -> Path | None:
+    configured = str(os.environ.get("COMPANY_AGENT_RESEARCH_STATE") or "").strip()
+    path = Path(configured).expanduser() if configured else Path.home() / ".dsh" / "research-clock"
+    if not path.is_absolute():
+        return None
+    return path / "notes"
+
+
+def write_note(args: Mapping[str, Any]) -> dict[str, Any]:
+    experiment_id = args.get("experiment_id")
+    stop_reason = args.get("stop_reason")
+    sentence = args.get("sentence")
+    if not isinstance(experiment_id, str) or not isinstance(stop_reason, str):
+        raise ValueError("knowledge note is invalid")
+    if not isinstance(sentence, str) or not sentence.strip() or "\n" in sentence or "\r" in sentence:
+        raise ValueError("sentence is invalid")
+    folder = _notes_dir()
+    if folder is None:
+        raise ValueError("research state path must be absolute")
+    folder.mkdir(parents=True, exist_ok=True)
+    path = folder / f"{experiment_id}.md"
+    path.write_text(
+        f"# {experiment_id}\n\nstop_reason: {stop_reason}\n\n{sentence.strip()}\n",
+        encoding="utf-8",
+    )
+    return {"ok": True, "experiment_id": experiment_id}
+
+
 def roots() -> tuple[tuple[str, Path], ...]:
     workspace = _workspace_knowledge_root()
     installed = None if workspace is not None else (
@@ -205,6 +233,9 @@ def roots() -> tuple[tuple[str, Path], ...]:
             if not candidate.is_dir():
                 raise ValueError("COMPANY_AGENT_KNOWLEDGE_PATH entries must be directories")
             rows.append((f"configured-{index}", candidate))
+    notes = _notes_dir()
+    if notes is not None and notes.is_dir():
+        rows.append(("notes", notes))
     roots_seen: set[Path] = set()
     unique_rows: list[tuple[str, Path]] = []
     for root_id, root in rows:
@@ -252,7 +283,7 @@ def search(args: Mapping[str, Any], *, preset: str = "lab") -> dict[str, Any]:
     for root_id, root in roots():
         if not isinstance(root, Path):
             raise ValueError("knowledge root must be a pathlib.Path")
-        if not re.fullmatch(r"(?:builtin|configured-[1-9][0-9]*)", root_id):
+        if not re.fullmatch(r"(?:builtin|notes|configured-[1-9][0-9]*)", root_id):
             raise ValueError("knowledge root id is invalid")
         try:
             registry = _load_registry(root)

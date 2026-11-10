@@ -12,7 +12,20 @@ const CLI_MAX_BUFFER_BYTES = 1_100_000;
 // diagnostic line parser which consumes (and discards) complete lines.
 const STDERR_TAIL_KEEP_BYTES = 4_000;
 const CLI_PIPE_CLOSE_GRACE_MS = 250;
-const MAX_TOOL_RESULT_BYTES = 64_000;
+const MAX_TOOL_RESULT_BYTES = 131_072;
+const approvalCards = new WeakMap();
+
+export function markApprovalCard(exec) {
+  if (exec && typeof exec === "object") approvalCards.set(exec, true);
+}
+
+export function clearApprovalCard(exec) {
+  if (exec && typeof exec === "object") approvalCards.delete(exec);
+}
+
+export function approvalCardShown(exec) {
+  return Boolean(exec && approvalCards.get(exec) === true);
+}
 const DSH_SCHEMA_KEYS = new Set([
   "type",
   "oneOf",
@@ -38,6 +51,7 @@ PYTHON_SCHEMA_KEYS.delete("oneOf");
 const MAX_DSH_SCHEMA_DEPTH = 32;
 let cachedTools;
 let cachedCompleteTools;
+let cachedVisibleTools;
 
 export function dshSchema(schema, depth = 0) {
   if (!Number.isInteger(depth) || depth < 0) {
@@ -283,6 +297,9 @@ function runCliSync(argv) {
 
 export function parseDiagnostic(line) {
   const prefix = "company-agent-diagnostic:";
+  // Windows text-mode stderr ends the line with CR. The canonical JSON check
+  // compares the raw payload, so a trailing CR would drop every event.
+  if (typeof line === "string" && line.endsWith("\r")) line = line.slice(0, -1);
   if (typeof line !== "string" || !line.startsWith(prefix)
     || Buffer.byteLength(line.slice(prefix.length)) > 2000) return null;
   try {
@@ -468,7 +485,7 @@ function runCli(argv, signal, stdin = "", options = {}) {
       finish(() => {
         const executionLabel = providerOperation === "device.run" ? "device execution" : providerOperation;
         const suffix = providerRequest
-          ? `; ${executionLabel} outcome unknown; do not retry automatically; request_id=${providerRequest}`
+          ? `; ${executionLabel} outcome unknown; do not retry automatically; request_id=${providerRequest}; query status and do not resubmit`
           : "";
         const unknown = (message) => {
           if (providerDiagnostic) {
@@ -576,15 +593,23 @@ function encodeArguments(args) {
   return payload;
 }
 
-export async function authorize(tool, args, signal) {
+export async function authorize(tool, args, signal, session) {
   if (typeof tool !== "string" || tool.length > 128 || !COMPANY_TOOL_PREFIXES.some((prefix) => tool.startsWith(prefix))) {
     return { decision: "deny", error: "invalid tool name" };
   }
-  const payload = await runCli(callArguments("authorize", tool), signal, encodeArguments(args));
+  const payload = await runCli(
+    callArguments("authorize", tool),
+    signal,
+    encodeArguments(args),
+    session ? { session } : {},
+  );
   if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
     return { decision: "deny", error: "invalid authorization result" };
   }
-  if (Object.keys(payload).some((key) => key !== "decision" && key !== "error")) {
+  if (Object.keys(payload).some((key) => key !== "decision" && key !== "error" && key !== "handoff")) {
+    return { decision: "deny", error: "invalid authorization result" };
+  }
+  if ("handoff" in payload && typeof payload.handoff !== "boolean") {
     return { decision: "deny", error: "invalid authorization result" };
   }
   const value = payload.decision;
@@ -593,7 +618,7 @@ export async function authorize(tool, args, signal) {
     || (value !== "deny" && payload.error !== null)) {
     return { decision: "deny", error: "invalid authorization result" };
   }
-  return { decision: value, error: payload.error };
+  return { decision: value, error: payload.error, handoff: payload.handoff === true };
 }
 
 export async function validate(tool, args, signal) {
@@ -713,10 +738,20 @@ function completeToolCatalog() {
 }
 
 export function toolCatalog() {
+  // Model-visible tools only. Policy and invoke still use the preset's visible_tools.
   if (cachedTools === undefined) {
     cachedTools = validateToolRows(runCliSync(["tools", "--preset", configuredPreset()]));
   }
   return cachedTools;
+}
+
+export function visibleToolCatalog() {
+  if (cachedVisibleTools === undefined) {
+    cachedVisibleTools = validateToolRows(runCliSync([
+      "tools", "--preset", configuredPreset(), "--visible",
+    ]));
+  }
+  return cachedVisibleTools;
 }
 
 export function registerTool(ctx, contract) {
@@ -812,17 +847,24 @@ export function registerTool(ctx, contract) {
       // DSH invokes this handler only after pre-execute policy and user approval.
       // Only an ask decision needs the reserved approval marker; allow calls must
       // also work in minimal profiles, which cannot carry device approval.
-      const { decision } = await authorize(name, args, exec?.signal);
-      // Termination-budget turn key: scope the durable ledger to this session
-      // (exec.agent.id is the session id per dsh-agent's public Agent face) so
-      // counters restart with every session instead of one process lifetime.
-      const turn = String(exec?.agent?.id ?? exec?.agent?.session?.header?.id ?? "");
-      const hostSession = name === "company_work_item" && turn ? `dsh:${turn}` : undefined;
+      // Termination-budget turn key: a session keeps its own ledger. A call
+      // with no session is scoped to this desktop process, so an exhausted
+      // ledger from another process cannot block the next company_work_item.
+      const sessionTurn = String(exec?.agent?.id ?? exec?.agent?.session?.header?.id ?? "");
+      const turn = sessionTurn || `dsh-host:${process.pid}`;
+      const hostSession = sessionTurn ? `dsh:${sessionTurn}` : undefined;
+      const { decision } = await authorize(name, args, exec?.signal, hostSession);
+      // A second ask is a human approval only when pre-execute already showed
+      // the card. An allow that becomes ask after the grant expires does not run.
+      const approved = decision === "ask" && approvalCardShown(exec);
       const needsWorkspaceHeader = name === "quantum_cloud_submit" || name === "hpc_stage_file"
-        || name === "hpc_file_fetch" || name.startsWith("company_latex_");
+        || name === "hpc_file_fetch" || name.startsWith("company_latex_")
+        || name.startsWith("company_literature_")
+        || name === "company_sign_receipt" || name === "quantum_cloud_result"
+        || name === "quantum_cloud_result_page";
       const result = needsWorkspaceHeader
-        ? await invoke(name, args, decision === "ask", exec?.signal, exec?.agent?.session?.header?.cwd, turn || undefined, hostSession)
-        : await invoke(name, args, decision === "ask", exec?.signal, undefined, turn || undefined, hostSession);
+        ? await invoke(name, args, approved, exec?.signal, exec?.agent?.session?.header?.cwd, turn || undefined, hostSession)
+        : await invoke(name, args, approved, exec?.signal, undefined, turn || undefined, hostSession);
       if (result.status === "ok") {
         if (result.decision !== "allow" && result.decision !== "ask") {
           throw new Error(`${name}: invalid successful decision`);

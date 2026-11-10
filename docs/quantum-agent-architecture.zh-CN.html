@@ -412,9 +412,8 @@
     ];
     let currentView = 'welcome';
     const openViews = ['welcome'];
-    // Connection settings live in DSH's native Plugins page; the page only
-    // carries the portal previews it renders itself.
-    const connectionUrls = {cloud:'https://220.178.61.185:8443',hpc:'http://192.168.110.37'};
+    // Connection settings live in DSH's native Plugins page. An unset portal
+    // stays closed: this page does not keep a portal address of its own.
     const demoSessions = {
       compare:'线路对比 / 模拟与资源估计',
       analysis:'线路对比 / 结果分析',
@@ -572,7 +571,7 @@
       document.querySelectorAll('[data-filter]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.filter === currentFilter)));
     }
     function viewWorkbench() {
-      return `<div class="content-head"><h3>工作台</h3><button class="button" data-workbench-refresh>刷新任务</button></div><p class="center-intro">正在运行、排队、历史与待审批任务，统一按项目查看。</p><div id="workbench-real" aria-live="polite"><p class="small-note">正在读取运行 / 排队 / 历史任务…</p></div><div class="stats"><div class="stat" id="stat-running"><b>—</b><span>运行中</span></div><div class="stat" id="stat-queued"><b>—</b><span>排队中</span></div><div class="stat" id="stat-completed"><b>—</b><span>已完成</span></div><div class="stat" id="stat-approval"><b>—</b><span>待审批</span></div></div><div class="filter-row" aria-label="示例任务筛选"><button class="filter" data-filter="all">全部</button><button class="filter" data-filter="running">运行</button><button class="filter" data-filter="queued">排队</button><button class="filter" data-filter="completed">历史</button><button class="filter" data-filter="approval">待审批</button></div><div class="task-list" id="task-list"></div><p class="report-note" style="margin-top:18px">任务清单优先展示云平台与集群返回的真实任务；示例行为布局演示。审批队列、进度取消与计费记录由平台服务返回。</p>`;
+      return `<div class="content-head"><h3>工作台</h3><button class="button" data-workbench-refresh>刷新任务</button></div><p class="center-intro">正在运行、排队、历史与待审批任务，统一按项目查看。</p><div id="workbench-real" aria-live="polite"><p class="small-note">正在读取运行 / 排队 / 历史任务…</p></div><div class="stats"><div class="stat" id="stat-running"><b>—</b><span>运行中</span></div><div class="stat" id="stat-queued"><b>—</b><span>排队中</span></div><div class="stat" id="stat-completed"><b>—</b><span>已完成</span></div><div class="stat" id="stat-approval"><b>—</b><span>待审批</span></div></div><div class="filter-row" aria-label="示例任务筛选"><button class="filter" data-filter="all">全部</button><button class="filter" data-filter="running">运行</button><button class="filter" data-filter="queued">排队</button><button class="filter" data-filter="completed">历史</button><button class="filter" data-filter="approval">待审批</button></div><div class="task-list" id="task-list"></div><p class="report-note" style="margin-top:18px">上方受理回执来自服务端回执；云平台与集群状态仍各自读取。示例行为布局演示。审批和账单仍是 not_projected，不在这里显示成已批准或已计费。</p>`;
     }
     function viewFiles() {
       return `<h3>文件与线路</h3><p class="center-intro">用户上传 → 格式与安全校验 → 平台注册 → 版本化引用。</p><div class="file-preview"><header>实验输入 / input.qasm · 文件查看器设计示意</header><div class="file-lines"><span class="comment">// 此处展示线路文件，正文经鉴权读取</span><span>格式　　OpenQASM · 版本待解析</span><span>内容　　门操作 / 参数 / 测量定义</span><span>校验　　语法 · 门集 · 资源上限</span><span>注册　　通过校验后获得 circuit_id</span><span class="comment">// 完整电路不经模型工具结果返回</span></div></div><dl class="metadata-grid"><div><dt>存储归属</dt><dd>用户租户 / 当前项目</dd></div><div><dt>内容版本</dt><dd>由受控上传服务生成</dd></div><div><dt>上下文引用</dt><dd>显式选择、授权后加入</dd></div><div><dt>默认执行行为</dt><dd>仅上传，不自动运行</dd></div></dl><div class="notice warning">QASM 上传 / 导入是待补齐能力；现有电路导出工具不等于支持任意上传线路。</div>`;
@@ -606,9 +605,7 @@
     }
     function viewPortal(kind) {
       const name = kind === 'cloud' ? '云平台' : '超算';
-      const localPortal = `/company-workspace/portal/${kind}/`;
-      const initialFrame = ` src="${localPortal}"`;
-      return `<div class="content-head"><h3>${name}</h3><span class="muted-status" id="${kind}-head-status">检测中…</span></div><div class="portal-toolbar"><span>页面已嵌入中栏，可直接操作。连接管理入口：侧栏底部「设置」→「平台连接」。</span><a id="${kind}-open-link" class="button" href="${connectionUrls[kind]}" target="_blank" rel="noopener noreferrer">在浏览器打开 ↗</a></div><iframe class="portal-frame" title="${name}页面"${initialFrame} referrerpolicy="no-referrer" data-portal-frame="${kind}"></iframe><div id="${kind}-panel-body" aria-live="polite"><div class="remote-section-label">连接状态</div><p class="small-note">正在读取服务状态…</p></div><div class="form-actions" style="margin-top:14px"><button class="button" data-remote-refresh="${kind}">刷新状态</button></div>`;
+      return `<div class="content-head"><h3>${name}</h3><span class="muted-status" id="${kind}-head-status">检测中…</span></div><div class="portal-toolbar"><span>页面已嵌入中栏，可直接操作。连接管理入口：侧栏底部「设置」→「平台连接」。</span><a id="${kind}-open-link" class="button" href="#" target="_blank" rel="noopener noreferrer">在浏览器打开 ↗</a></div><iframe class="portal-frame" title="${name}页面" referrerpolicy="no-referrer" data-portal-frame="${kind}"></iframe><div id="${kind}-panel-body" aria-live="polite"><div class="remote-section-label">连接状态</div><p class="small-note">正在读取服务状态…</p></div><div class="form-actions" style="margin-top:14px"><button class="button" data-remote-refresh="${kind}">刷新状态</button></div>`;
     }
     function viewFile(key) {
       const file = demoFiles[key];
@@ -625,6 +622,9 @@
       : status.reason === 'auth_failed' ? '认证失败'
       : status.reason === 'unreachable' || status.reason === 'no_backend' ? '未连接'
       : status.reason === 'unconfigured' ? '未配置'
+      : status.reason === 'portal_ok_without_ssh' ? '门户已通'
+      : status.reason === 'probe_error' ? '探测失败'
+      : status.reason === 'missing_endpoint' ? '未配置地址'
       : '未连接';
     const chipClassOf = status => !status ? 'chip'
       : status.connected ? 'chip ok'
@@ -664,8 +664,8 @@
     function deviceTable(rowsData) {
       if (!rowsData) return `<div class="empty-state compact"><p>设备清单暂不可读；可稍后刷新。</p></div>`;
       if (!rowsData.length) return `<div class="empty-state compact"><p>当前没有可用设备记录。</p></div>`;
-      const head = `<tr><th>设备</th><th>名称</th><th>状态</th><th>量子比特</th></tr>`;
-      const body = rowsData.map(d => `<tr><td class="mono">${escapeHtml(d.id || '—')}</td><td>${escapeHtml(d.name || '—')}</td><td><span class="${taskChipClass(d.status)}">${escapeHtml(d.status || '未知')}</span></td><td>${escapeHtml(d.qubits || '—')}</td></tr>`).join('');
+      const head = `<tr><th>设备</th><th>名称</th><th>类型</th><th>状态</th><th>量子比特</th></tr>`;
+      const body = rowsData.map(d => `<tr><td class="mono">${escapeHtml(d.id || '—')}</td><td>${escapeHtml(d.name || '—')}</td><td>${escapeHtml(d.kind || d.chip_type || '—')}</td><td><span class="${taskChipClass(d.state || d.status)}">${escapeHtml(d.state || d.status || '未知')}</span></td><td>${escapeHtml(d.qubits || '—')}</td></tr>`).join('');
       return `<table class="jobs-table">${head}${body}</table>`;
     }
     function paintCloud() {
@@ -674,9 +674,12 @@
       const head = document.getElementById('cloud-head-status');
       if (head) {head.textContent = remoteChipText(panel.status);head.className = chipClassOf(panel.status);}
       const frame = document.querySelector('[data-portal-frame="cloud"]');
-      if (frame && panel.status?.portal && frame.src !== `/company-workspace/portal/cloud/`) frame.src = `/company-workspace/portal/cloud/`;
+      if (frame) {
+        frame.hidden = !panel.status?.portal;
+        if (!frame.hidden && frame.src !== `/company-workspace/portal/cloud/`) frame.src = `/company-workspace/portal/cloud/`;
+      }
       const open = document.getElementById('cloud-open-link');
-      if (open) {open.hidden = !panel.status?.portal;open.href = panel.status?.portal || connectionUrls.cloud || '#';}
+      if (open) {open.hidden = !panel.status?.portal;open.href = panel.status?.portal || '#';}
       const el = document.getElementById('cloud-panel-body');
       if (!el) return;
       if (!panel.status || !panel.status.connected) {
@@ -704,7 +707,7 @@
       const el = document.getElementById('hpc-panel-body');
       if (!el) return;
       const open = document.getElementById('hpc-open-link');
-      if (open) {open.hidden = !status?.portal;open.href = status?.portal || connectionUrls.hpc || '#';}
+      if (open) {open.hidden = !status?.portal;open.href = status?.portal || '#';}
       const frame = document.querySelector('[data-portal-frame="hpc"]');
       if (frame) {
         frame.hidden = !status?.portal;
@@ -721,12 +724,16 @@
       }
       const chip = statusChip('hpc');
       const jobsNote = status.sshOk ? '' : `<p class="small-note">登录节点 SSH（${status.user || ''}@${status.host || ''}）暂不可用，作业表暂缺。${status.sshDetail || ''}</p>`;
+      if (!status.connected || status.sshOk === false) {
+        el.innerHTML = `<div class="remote-section-label">集群门户</div>${portalBody(status)}<div class="remote-section-label">作业情况</div>${chip}${honestBox('登录节点未接通', '门户可以打开，但作业表和远端目录先不显示成空结果。登录节点 SSH 接通后再读取 squeue / sacct。')}`;
+        return;
+      }
       if (!panel.overview) {
         el.innerHTML = `<div class="remote-section-label">集群门户（${status.embeddable ? '嵌入展示' : '禁止嵌入 · ' + (status.framePolicy === 'self' ? 'SAMEORIGIN' : status.framePolicy === 'deny' ? 'DENY' : 'frame-ancestors 限制')}）</div>${portalBody(status)}<div class="remote-section-label">作业情况</div>${chip}<p class="small-note">正在读取 squeue / sacct…</p>${jobsNote}`;
         return;
       }
-      const runningTable = slurmTable(panel.overview.running, ['job','part','state','elapsed','start'], '当前没有运行或排队中的作业（squeue）。');
-      const historyTable = slurmTable(panel.overview.history, ['job','part','state','elapsed','end'], '近 7 天无集群作业记录。');
+      const runningTable = slurmTable(panel.overview.running, ['job','name','part','state','elapsed','start','nodes'], '当前没有运行或排队中的作业（squeue）。');
+      const historyTable = slurmTable(panel.overview.history, ['job','name','part','state','elapsed','end'], '近 7 天无集群作业记录。');
       el.innerHTML = `<div class="remote-section-label">集群门户</div>${portalBody(status)}<div class="remote-section-label">运行 / 排队任务（squeue）</div>${runningTable}<div class="remote-section-label">近期历史作业（sacct · 近 7 天）</div>${historyTable}<div class="remote-section-label">超算远端目录</div>${panel.overview.files?.length ? `<div class="file-list">${panel.overview.files.map(file => `<div class="resource-row"><strong>${escapeHtml(file.name)}</strong><small>${escapeHtml(file.kind)}</small></div>`).join('')}</div>` : honestBox('目录未展开', panel.overview.filesNote || '远端目录通过 SSH 读取；上传、下载、创建和删除仍由对话工具执行并逐次审批。')}<p class="small-note">作业提交：在右侧对话让 Agent 组织 sbatch 作业（按集群 hpc 分区约定）；结果回收到 $HOME 下工程目录后由 Agent 汇总分析。</p>`;
     }
     function portalBody(status) {
@@ -736,7 +743,7 @@
     function slurmTable(rowsData, columns, emptyText) {
       if (rowsData === null) return `<p class="small-note">数据暂不可用。</p>`;
       if (!rowsData.length) return `<div class="empty-state compact"><p>${emptyText}</p></div>`;
-      const labels = {job:'作业', id:'任务', device:'设备', part:'分区', state:'状态', elapsed:'运行时长', start:'开始', submitted:'提交', updated:'更新', end:'结束'};
+      const labels = {job:'作业', id:'任务', name:'名称', nodes:'节点', device:'设备', part:'分区', state:'状态', elapsed:'运行时长', start:'开始', submitted:'提交', updated:'更新', end:'结束'};
       const space = value => String(value == null || value === '' ? '—' : value).replace(/\s+/g, ' ');
       const head = `<tr>${columns.map(col => `<th>${labels[col] || col}</th>`).join('')}</tr>`;
       const body = rowsData.map(row => `<tr>${columns.map(col => `<td class="${col === 'job' || col === 'id' ? 'mono' : ''}">${escapeHtml(space(row[col]))}</td>`).join('')}</tr>`).join('');
@@ -769,13 +776,63 @@
       }
       if (kind === 'cloud') paintCloud(); else paintHpc();
     }
+    let receiptTasks = {available:false, tasks:[], reason:'unread'};
+    async function loadReceiptTasks() {
+      if (typeof fetch !== 'function') {receiptTasks = {available:false, tasks:[], reason:'no_backend'}; return;}
+      try {
+        const res = await fetch('/company-workspace/workbench/tasks');
+        if (!res.ok) {receiptTasks = {available:false, tasks:[], reason:'receipt_unavailable'}; return;}
+        const body = await res.json();
+        receiptTasks = body && typeof body === 'object' ? body : {available:false, tasks:[], reason:'receipt_unavailable'};
+      } catch {
+        receiptTasks = {available:false, tasks:[], reason:'unreachable'};
+      }
+    }
+    function receiptBlock() {
+      const body = receiptTasks;
+      if (!body || body.available !== true) {
+        const reason = body && body.reason === 'unconfigured' ? '本机未配置回执读取。' : '回执暂不可用，空列表不当成没有任务。';
+        return `<div class="remote-section-label">受理回执</div>${honestBox('受理回执未就绪', reason)}`;
+      }
+      const rows = Array.isArray(body.tasks) ? body.tasks.slice(0, 24) : [];
+      if (!rows.length) return `<div class="remote-section-label">受理回执</div><div class="empty-state compact"><p>当前没有云、超算或设备的受理回执。</p></div>`;
+      const names = {'cloud.submit':'云平台受理','hpc.submit':'超算受理','device.run':'设备受理'};
+      const states = {completed:'已完成', refused:'已拒绝', unknown:'结果未知'};
+      const head = `<tr><th>受理</th><th>状态</th><th>平台引用</th><th>连接</th></tr>`;
+      const line = rows.map(task => `<tr><td>${escapeHtml(names[task.operation] || task.operation || '—')}</td><td>${escapeHtml(states[task.status] || task.status || 'unknown')}</td><td class="mono">${escapeHtml(task.business_ref || '—')}</td><td>${escapeHtml(task.connection_state || '—')}</td></tr>`).join('');
+      return `<div class="remote-section-label">受理回执（${rows.length}）</div><table class="jobs-table">${head}${line}</table><p class="small-note">来自 /company-workspace/workbench/tasks。审批和账单仍是 not_projected，这里不显示成已批准或已计费。</p>`;
+    }
+    async function mountLocalWorkspace() {
+      const el = document.getElementById('local-workspace-real');
+      if (!el) return;
+      if (typeof fetch !== 'function') {el.innerHTML = honestBox('本机工作区未就绪', '工作区目录暂不可读，不显示成空目录。'); return;}
+      try {
+        const res = await fetch('/company-workspace/workspace');
+        if (!res.ok) {el.innerHTML = honestBox('本机工作区未就绪', '工作区目录暂不可读，不显示成空目录。'); return;}
+        const body = await res.json();
+        if (!body || body.ready !== true) {
+          el.innerHTML = honestBox('尚未选择本机目录', escapeHtml(body && body.note || '请先用 DSH 原生工作区选择器选择真实本机目录。'));
+          return;
+        }
+        const workspace = Array.isArray(body.workspaces) ? body.workspaces[0] : null;
+        const entries = Array.isArray(body.entries) ? body.entries.slice(0, 64) : [];
+        const title = escapeHtml(workspace && (workspace.title || workspace.path) || 'Workspace');
+        const listed = entries.length
+          ? entries.map(entry => `<div class="resource-row"><strong>${escapeHtml(entry.name || '—')}</strong><small>${escapeHtml(entry.kind || 'file')}</small></div>`).join('')
+          : '<div class="empty-state compact"><p>这个目录里没有可列出的条目。</p></div>';
+        el.className = '';
+        el.innerHTML = `<div class="remote-section-label">${title}</div><p class="small-note">${escapeHtml(workspace && workspace.path || '')}</p>${listed}`;
+      } catch {
+        el.innerHTML = honestBox('本机工作区未就绪', '工作区目录暂不可读，不显示成空目录。');
+      }
+    }
     async function mountWorkbench() {
       const el = document.getElementById('workbench-real');
       if (!el) return;
       el.innerHTML = `<p class="small-note">正在读取运行 / 排队 / 历史任务…</p>`;
-      await Promise.all([loadRemoteStatus('hpc'), loadRemoteStatus('cloud')]);
+      await Promise.all([loadRemoteStatus('hpc'), loadRemoteStatus('cloud'), loadReceiptTasks()]);
       const h = remotePanels.hpc, c = remotePanels.cloud;
-      const blocks = [];
+      const blocks = [receiptBlock()];
       if (h.status && h.status.connected && h.overview && h.overview.reason === 'ok') {
         const runningCount = (h.overview.running || []).length;
         const histCount = (h.overview.history || []).length;
@@ -831,6 +888,7 @@
       document.getElementById('center-content').innerHTML = views[name].render();
       setMobilePanel('content');
       if (name === 'workbench') {renderTaskRows();mountWorkbench();}
+      if (name === 'local-workspace') mountLocalWorkspace();
       if (name === 'cloud' || name === 'hpc') mountRemote(name);
     }
     function closeView(name) {

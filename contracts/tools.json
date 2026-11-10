@@ -28,7 +28,9 @@
               "summary",
               "signal",
               "bind",
-              "reconcile"
+              "reconcile",
+              "attach_plan",
+              "escalate"
             ]
           },
           "source": {
@@ -137,6 +139,34 @@
           },
           "tool_pack": {
             "type": "string"
+          },
+          "plan_steps": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 16,
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            }
+          },
+          "from_preset": {
+            "type": "string",
+            "enum": [
+              "boot",
+              "lab",
+              "algo",
+              "sign"
+            ]
+          },
+          "to_preset": {
+            "type": "string",
+            "enum": [
+              "boot",
+              "lab",
+              "algo",
+              "sign"
+            ]
           }
         },
         "additionalProperties": false
@@ -223,6 +253,28 @@
           },
           "tool_pack": {
             "type": "string"
+          },
+          "plan_hash": {
+            "type": "string",
+            "maxLength": 64
+          },
+          "from_preset": {
+            "type": "string",
+            "enum": [
+              "boot",
+              "lab",
+              "algo",
+              "sign"
+            ]
+          },
+          "to_preset": {
+            "type": "string",
+            "enum": [
+              "boot",
+              "lab",
+              "algo",
+              "sign"
+            ]
           }
         },
         "additionalProperties": false
@@ -264,6 +316,7 @@
             "required": [
               "regime",
               "subject",
+              "class",
               "services"
             ],
             "properties": {
@@ -280,6 +333,15 @@
                 "type": "string",
                 "minLength": 1,
                 "maxLength": 253
+              },
+              "class": {
+                "type": "string",
+                "enum": [
+                  "",
+                  "internal",
+                  "external"
+                ],
+                "maxLength": 8
               },
               "services": {
                 "type": "object",
@@ -367,6 +429,129 @@
                     },
                     "additionalProperties": false
                   },
+                  "quantum.simulation": {
+                    "type": "object",
+                    "required": [
+                      "service",
+                      "enabled",
+                      "reason"
+                    ],
+                    "properties": {
+                      "service": {
+                        "type": "string",
+                        "const": "quantum.simulation"
+                      },
+                      "enabled": {
+                        "type": "boolean"
+                      },
+                      "reason": {
+                        "type": "string",
+                        "enum": [
+                          "approved",
+                          "pending",
+                          "revoked",
+                          "expired",
+                          "subject_absent",
+                          "registry_unavailable",
+                          "untrusted_subject"
+                        ],
+                        "maxLength": 24
+                      },
+                      "approved_by": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 64
+                      },
+                      "expires_epoch": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  "quantum.compilation": {
+                    "type": "object",
+                    "required": [
+                      "service",
+                      "enabled",
+                      "reason"
+                    ],
+                    "properties": {
+                      "service": {
+                        "type": "string",
+                        "const": "quantum.compilation"
+                      },
+                      "enabled": {
+                        "type": "boolean"
+                      },
+                      "reason": {
+                        "type": "string",
+                        "enum": [
+                          "approved",
+                          "pending",
+                          "revoked",
+                          "expired",
+                          "subject_absent",
+                          "registry_unavailable",
+                          "untrusted_subject"
+                        ],
+                        "maxLength": 24
+                      },
+                      "approved_by": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 64
+                      },
+                      "expires_epoch": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  "quantum.device": {
+                    "type": "object",
+                    "required": [
+                      "service",
+                      "enabled",
+                      "reason"
+                    ],
+                    "properties": {
+                      "service": {
+                        "type": "string",
+                        "const": "quantum.device"
+                      },
+                      "enabled": {
+                        "type": "boolean"
+                      },
+                      "reason": {
+                        "type": "string",
+                        "enum": [
+                          "approved",
+                          "pending",
+                          "revoked",
+                          "expired",
+                          "subject_absent",
+                          "registry_unavailable",
+                          "untrusted_subject"
+                        ],
+                        "maxLength": 24
+                      },
+                      "approved_by": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 64
+                      },
+                      "expires_epoch": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                      }
+                    },
+                    "additionalProperties": false
+                  },
                   "compute.cloud": {
                     "type": "object",
                     "required": [
@@ -419,6 +604,375 @@
                       "service": {
                         "type": "string",
                         "const": "compute.hpc"
+                      },
+                      "enabled": {
+                        "type": "boolean"
+                      },
+                      "reason": {
+                        "type": "string",
+                        "enum": [
+                          "approved",
+                          "pending",
+                          "revoked",
+                          "expired",
+                          "subject_absent",
+                          "registry_unavailable",
+                          "untrusted_subject"
+                        ],
+                        "maxLength": 24
+                      },
+                      "approved_by": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 64
+                      },
+                      "expires_epoch": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  "company.knowledge": {
+                    "type": "object",
+                    "required": [
+                      "service",
+                      "enabled",
+                      "reason"
+                    ],
+                    "properties": {
+                      "service": {
+                        "type": "string",
+                        "const": "company.knowledge"
+                      },
+                      "enabled": {
+                        "type": "boolean"
+                      },
+                      "reason": {
+                        "type": "string",
+                        "enum": [
+                          "approved",
+                          "pending",
+                          "revoked",
+                          "expired",
+                          "subject_absent",
+                          "registry_unavailable",
+                          "untrusted_subject"
+                        ],
+                        "maxLength": 24
+                      },
+                      "approved_by": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 64
+                      },
+                      "expires_epoch": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  "company.workflow": {
+                    "type": "object",
+                    "required": [
+                      "service",
+                      "enabled",
+                      "reason"
+                    ],
+                    "properties": {
+                      "service": {
+                        "type": "string",
+                        "const": "company.workflow"
+                      },
+                      "enabled": {
+                        "type": "boolean"
+                      },
+                      "reason": {
+                        "type": "string",
+                        "enum": [
+                          "approved",
+                          "pending",
+                          "revoked",
+                          "expired",
+                          "subject_absent",
+                          "registry_unavailable",
+                          "untrusted_subject"
+                        ],
+                        "maxLength": 24
+                      },
+                      "approved_by": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 64
+                      },
+                      "expires_epoch": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  "company.latex": {
+                    "type": "object",
+                    "required": [
+                      "service",
+                      "enabled",
+                      "reason"
+                    ],
+                    "properties": {
+                      "service": {
+                        "type": "string",
+                        "const": "company.latex"
+                      },
+                      "enabled": {
+                        "type": "boolean"
+                      },
+                      "reason": {
+                        "type": "string",
+                        "enum": [
+                          "approved",
+                          "pending",
+                          "revoked",
+                          "expired",
+                          "subject_absent",
+                          "registry_unavailable",
+                          "untrusted_subject"
+                        ],
+                        "maxLength": 24
+                      },
+                      "approved_by": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 64
+                      },
+                      "expires_epoch": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  "company.office": {
+                    "type": "object",
+                    "required": [
+                      "service",
+                      "enabled",
+                      "reason"
+                    ],
+                    "properties": {
+                      "service": {
+                        "type": "string",
+                        "const": "company.office"
+                      },
+                      "enabled": {
+                        "type": "boolean"
+                      },
+                      "reason": {
+                        "type": "string",
+                        "enum": [
+                          "approved",
+                          "pending",
+                          "revoked",
+                          "expired",
+                          "subject_absent",
+                          "registry_unavailable",
+                          "untrusted_subject"
+                        ],
+                        "maxLength": 24
+                      },
+                      "approved_by": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 64
+                      },
+                      "expires_epoch": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  "company.plan": {
+                    "type": "object",
+                    "required": [
+                      "service",
+                      "enabled",
+                      "reason"
+                    ],
+                    "properties": {
+                      "service": {
+                        "type": "string",
+                        "const": "company.plan"
+                      },
+                      "enabled": {
+                        "type": "boolean"
+                      },
+                      "reason": {
+                        "type": "string",
+                        "enum": [
+                          "approved",
+                          "pending",
+                          "revoked",
+                          "expired",
+                          "subject_absent",
+                          "registry_unavailable",
+                          "untrusted_subject"
+                        ],
+                        "maxLength": 24
+                      },
+                      "approved_by": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 64
+                      },
+                      "expires_epoch": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  "company.portal": {
+                    "type": "object",
+                    "required": [
+                      "service",
+                      "enabled",
+                      "reason"
+                    ],
+                    "properties": {
+                      "service": {
+                        "type": "string",
+                        "const": "company.portal"
+                      },
+                      "enabled": {
+                        "type": "boolean"
+                      },
+                      "reason": {
+                        "type": "string",
+                        "enum": [
+                          "approved",
+                          "pending",
+                          "revoked",
+                          "expired",
+                          "subject_absent",
+                          "registry_unavailable",
+                          "untrusted_subject"
+                        ],
+                        "maxLength": 24
+                      },
+                      "approved_by": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 64
+                      },
+                      "expires_epoch": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  "company.research": {
+                    "type": "object",
+                    "required": [
+                      "service",
+                      "enabled",
+                      "reason"
+                    ],
+                    "properties": {
+                      "service": {
+                        "type": "string",
+                        "const": "company.research"
+                      },
+                      "enabled": {
+                        "type": "boolean"
+                      },
+                      "reason": {
+                        "type": "string",
+                        "enum": [
+                          "approved",
+                          "pending",
+                          "revoked",
+                          "expired",
+                          "subject_absent",
+                          "registry_unavailable",
+                          "untrusted_subject"
+                        ],
+                        "maxLength": 24
+                      },
+                      "approved_by": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 64
+                      },
+                      "expires_epoch": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  "company.literature": {
+                    "type": "object",
+                    "required": [
+                      "service",
+                      "enabled",
+                      "reason"
+                    ],
+                    "properties": {
+                      "service": {
+                        "type": "string",
+                        "const": "company.literature"
+                      },
+                      "enabled": {
+                        "type": "boolean"
+                      },
+                      "reason": {
+                        "type": "string",
+                        "enum": [
+                          "approved",
+                          "pending",
+                          "revoked",
+                          "expired",
+                          "subject_absent",
+                          "registry_unavailable",
+                          "untrusted_subject"
+                        ],
+                        "maxLength": 24
+                      },
+                      "approved_by": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 64
+                      },
+                      "expires_epoch": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  "company.dingtalk": {
+                    "type": "object",
+                    "required": [
+                      "service",
+                      "enabled",
+                      "reason"
+                    ],
+                    "properties": {
+                      "service": {
+                        "type": "string",
+                        "const": "company.dingtalk"
                       },
                       "enabled": {
                         "type": "boolean"
@@ -532,7 +1086,9 @@
                     "document",
                     "plan",
                     "portal",
-                    "research"
+                    "research",
+                    "literature",
+                    "channel"
                   ]
                 },
                 "provider": {
@@ -962,6 +1518,14 @@
               },
               "additionalProperties": false
             }
+          },
+          "record": {
+            "type": "boolean"
+          },
+          "tenant_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
           }
         },
         "additionalProperties": false
@@ -1135,6 +1699,10 @@
                 "twin_id"
               ]
             }
+          },
+          "plan_hash": {
+            "type": "string",
+            "maxLength": 64
           }
         },
         "additionalProperties": false
@@ -2473,6 +3041,17 @@
             "type": "integer",
             "minimum": 100,
             "maximum": 1000
+          },
+          "experiment_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$",
+            "maxLength": 64
+          },
+          "program_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "minLength": 64,
+            "maxLength": 64
           }
         },
         "additionalProperties": false
@@ -2484,7 +3063,8 @@
           "cloud_task",
           "target",
           "state",
-          "shots"
+          "shots",
+          "program_sha256"
         ],
         "properties": {
           "provider": {
@@ -2508,6 +3088,12 @@
             "type": "integer",
             "minimum": 100,
             "maximum": 1000
+          },
+          "program_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "minLength": 64,
+            "maxLength": 64
           }
         },
         "additionalProperties": false
@@ -2566,7 +3152,7 @@
       "operation": "cloud.result",
       "input_handles": [],
       "output_handles": [],
-      "description": "Reclaim a completed UQC simulator task result by its actual receipt as a bounded analysis summary: total shots and the at-most-eight most probable basis states as scientific-metrics probabilities. Full raw counts stay on the cloud platform web page; the platform SDK cannot cancel in-flight simulator tasks.",
+      "description": "Reclaim a completed UQC simulator task result by its actual receipt as a bounded analysis summary: total shots and the most probable basis states, 32 by default and 64 at most. The full probability table is written under the workspace .company-agent/results directory; this result names that relative path, the omitted state count, and one page. Full raw counts stay on the cloud platform web page and never enter the tool result. The platform SDK cannot cancel in-flight simulator tasks.",
       "parameters": {
         "type": "object",
         "required": [
@@ -2577,6 +3163,11 @@
             "type": "string",
             "pattern": "^[A-Za-z0-9_.:-]{1,128}$",
             "maxLength": 128
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 64
           }
         },
         "additionalProperties": false
@@ -2633,7 +3224,7 @@
                   },
                   "items": {
                     "type": "array",
-                    "maxItems": 8,
+                    "maxItems": 64,
                     "items": {
                       "type": "object",
                       "required": [
@@ -2678,6 +3269,15 @@
                   }
                 },
                 "additionalProperties": false
+              },
+              "omitted_states": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 256
+              },
+              "artifact_path": {
+                "type": "string",
+                "maxLength": 180
               }
             },
             "maxProperties": 8,
@@ -2823,6 +3423,17 @@
             "type": "string",
             "pattern": "^[0-9]{1,3}:[0-9]{2}:[0-9]{2}$",
             "maxLength": 11
+          },
+          "experiment_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$",
+            "maxLength": 64
+          },
+          "program_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "minLength": 64,
+            "maxLength": 64
           }
         },
         "additionalProperties": false
@@ -3463,6 +4074,17 @@
             "type": "integer",
             "minimum": 1,
             "maximum": 1000000
+          },
+          "experiment_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$",
+            "maxLength": 64
+          },
+          "program_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "minLength": 64,
+            "maxLength": 64
           }
         },
         "additionalProperties": false
@@ -4156,7 +4778,7 @@
           },
           "errors": {
             "type": "array",
-            "maxItems": 8,
+            "maxItems": 32,
             "items": {
               "type": "object",
               "required": [
@@ -6658,7 +7280,10 @@
           },
           "granularity": {
             "type": "string",
-            "enum": ["line", "word"],
+            "enum": [
+              "line",
+              "word"
+            ],
             "default": "line",
             "description": "line compares visible lines or paragraphs. word compares CJK runs and ASCII words and can mark a unique relocation as moved."
           },
@@ -6669,7 +7294,10 @@
           },
           "ocr_mode": {
             "type": "string",
-            "enum": ["off", "on"],
+            "enum": [
+              "off",
+              "on"
+            ],
             "default": "off",
             "description": "on OCRs an empty PDF text layer. off refuses that PDF. Other kinds ignore it."
           }
@@ -6915,7 +7543,10 @@
             "description": "When present, path and edits are ignored and every file is prechecked before the first write.",
             "items": {
               "type": "object",
-              "required": ["path", "edits"],
+              "required": [
+                "path",
+                "edits"
+              ],
               "additionalProperties": false,
               "properties": {
                 "path": {
@@ -6928,12 +7559,27 @@
                   "maxItems": 128,
                   "items": {
                     "type": "object",
-                    "required": ["find", "replace"],
+                    "required": [
+                      "find",
+                      "replace"
+                    ],
                     "additionalProperties": false,
                     "properties": {
-                      "find": {"type": "string", "minLength": 1, "maxLength": 4000},
-                      "replace": {"type": "string", "maxLength": 4000},
-                      "occurrences": {"type": "string", "enum": ["all"]}
+                      "find": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 4000
+                      },
+                      "replace": {
+                        "type": "string",
+                        "maxLength": 4000
+                      },
+                      "occurrences": {
+                        "type": "string",
+                        "enum": [
+                          "all"
+                        ]
+                      }
                     }
                   }
                 }
@@ -8936,7 +9582,24 @@
           "max_attempts": {
             "type": "integer",
             "minimum": 1,
-            "maximum": 5
+            "maximum": 20
+          },
+          "metric_kind": {
+            "type": "string",
+            "enum": [
+              "probability",
+              "objective"
+            ]
+          },
+          "metric_unit": {
+            "type": "string",
+            "enum": [
+              "dimensionless",
+              "hartree",
+              "eV",
+              "second",
+              "count"
+            ]
           }
         },
         "additionalProperties": false
@@ -8995,7 +9658,7 @@
           "max_attempts": {
             "type": "integer",
             "minimum": 1,
-            "maximum": 5
+            "maximum": 20
           },
           "max_cost": {
             "type": "integer",
@@ -9023,7 +9686,7 @@
       "operation": "research.run",
       "input_handles": [],
       "output_handles": [],
-      "description": "Run one bounded research-layer loop on the local stub clock after approval. The budget covers the whole loop, and each attempt reserves an equal share on the same file. A keep stops the loop. Returns the stop reason, attempt count, each keep-or-discard decision, remaining budget, and failure count. Records a research candidate only when the loop keeps a result or exhausts the budget. The returned trigger_id stays a candidate until company_work_item evaluate uses mode auto and strength explicit, which opens one assignment in the current DSH session. Office files and charts are produced by the company office tools for WPS. qpu records a lab device-approval handoff and does not call a device. The stub does not submit HPC or cloud work. resource_type hpc returns a handoff that names hpc_submit and does not submit. resource_type cloud returns a handoff that names quantum_cloud_submit and does not submit. When COMPANY_AGENT_RESEARCH_ROOT is an absolute directory and changed_path is a val_loss log inside it, the executor is local; otherwise it stays stub. Each line is one attempt, or lines sharing attempt=N are one attempt with seeds. A Git repository writes only that attempt into the worktree copy of changed_path and makes one local commit; the candidate file in the main directory stays unchanged. A discard removes the worktree when that commit is clean, and a dirty worktree is left in place. The tool result does not include the worktree path. Its metric reading is the mean val_loss. Optional baseline_train_time_seconds discards an attempt whose train_time_seconds mean exceeds that baseline by more than 10 percent. Optional min_seeds, or a relative standard deviation above 0.5, stops the loop and names changed_path. A kept card cannot be run again until hypothesis or falsifier changes. A handoff receipt names next_tool and sets approval_still_required, so the next submit still needs its own approval. On a handoff, next_fields names the required arguments of that submit. Otherwise next_fields names only the card fields that must change.",
+      "description": "Run one bounded research loop after approval, or inside a session grant. max_attempts is at most 20. The loop does not submit HPC, cloud, or a device. resource_type hpc, cloud, or qpu returns a handoff that names the next tool. A later submit inside the remaining grant runs on that card; otherwise it asks again. The receipt names next_tool, approval_still_required, next_fields, and charter_action. Slot values stay out of the receipt. A keep stops the loop. Local execution needs COMPANY_AGENT_RESEARCH_ROOT and a val_loss log; otherwise the executor stays a stub.",
       "parameters": {
         "type": "object",
         "required": [
@@ -9138,12 +9801,29 @@
           "max_attempts": {
             "type": "integer",
             "minimum": 1,
-            "maximum": 5
+            "maximum": 20
           },
           "idempotency_key": {
             "type": "string",
             "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,79}$",
             "maxLength": 80
+          },
+          "metric_kind": {
+            "type": "string",
+            "enum": [
+              "probability",
+              "objective"
+            ]
+          },
+          "metric_unit": {
+            "type": "string",
+            "enum": [
+              "dimensionless",
+              "hartree",
+              "eV",
+              "second",
+              "count"
+            ]
           }
         },
         "additionalProperties": false
@@ -9168,7 +9848,9 @@
           "resource_type",
           "next_tool",
           "approval_still_required",
-          "next_fields"
+          "next_fields",
+          "charter_action",
+          "charter_fields"
         ],
         "properties": {
           "ok": {
@@ -9208,7 +9890,7 @@
           "attempts": {
             "type": "integer",
             "minimum": 0,
-            "maximum": 5
+            "maximum": 20
           },
           "decision": {
             "type": "string",
@@ -9223,8 +9905,8 @@
           },
           "decisions": {
             "type": "string",
-            "maxLength": 48,
-            "pattern": "^$|^(keep|discard|extend|stop|escalate|none)(,(keep|discard|extend|stop|escalate|none)){0,4}$"
+            "maxLength": 179,
+            "pattern": "^$|^(keep|discard|extend|stop|escalate|none)(,(keep|discard|extend|stop|escalate|none)){0,19}$"
           },
           "remaining_budget": {
             "type": "number",
@@ -9291,6 +9973,20 @@
             "type": "string",
             "maxLength": 32,
             "pattern": "^$|^(hypothesis,falsifier|max_cost|changed_path|job_name,script|program_path,target,shots|circuit_id,shots)$"
+          },
+          "charter_action": {
+            "type": "string",
+            "enum": [
+              "",
+              "opened",
+              "changed",
+              "same"
+            ]
+          },
+          "charter_fields": {
+            "type": "string",
+            "maxLength": 40,
+            "pattern": "^$|^(hypothesis(,baseline)?(,metric)?(,budget)?|baseline(,metric)?(,budget)?|metric(,budget)?|budget)$"
           }
         },
         "additionalProperties": false
@@ -9302,7 +9998,7 @@
       "operation": "research.status",
       "input_handles": [],
       "output_handles": [],
-      "description": "Read the latest short record for one experiment: stop reason, attempts, each keep-or-discard decision, remaining budget, failure count, the resource type, the next tool when a handoff is waiting, and the card fields the next card must change. Does not return logs, hypotheses, or session text.",
+      "description": "Read the latest short record for one experiment: stop reason, attempts, each keep-or-discard decision, remaining budget, failure count, the resource type, the next tool when a handoff is waiting, and the card fields the next card must change. charter_action and charter_fields say whether the charter slots hypothesis, baseline, metric and budget were opened, changed, or left the same. Does not return logs, hypotheses, slot values, or session text.",
       "parameters": {
         "type": "object",
         "required": [
@@ -9339,7 +10035,9 @@
           "resource_type",
           "next_tool",
           "approval_still_required",
-          "next_fields"
+          "next_fields",
+          "charter_action",
+          "charter_fields"
         ],
         "properties": {
           "ok": {
@@ -9383,7 +10081,7 @@
           "attempts": {
             "type": "integer",
             "minimum": 0,
-            "maximum": 5
+            "maximum": 20
           },
           "decision": {
             "type": "string",
@@ -9398,8 +10096,8 @@
           },
           "decisions": {
             "type": "string",
-            "maxLength": 48,
-            "pattern": "^$|^(keep|discard|extend|stop|escalate|none)(,(keep|discard|extend|stop|escalate|none)){0,4}$"
+            "maxLength": 179,
+            "pattern": "^$|^(keep|discard|extend|stop|escalate|none)(,(keep|discard|extend|stop|escalate|none)){0,19}$"
           },
           "remaining_budget": {
             "type": "number",
@@ -9438,6 +10136,20 @@
             "type": "string",
             "maxLength": 32,
             "pattern": "^$|^(hypothesis,falsifier|max_cost|changed_path|job_name,script|program_path,target,shots|circuit_id,shots)$"
+          },
+          "charter_action": {
+            "type": "string",
+            "enum": [
+              "",
+              "opened",
+              "changed",
+              "same"
+            ]
+          },
+          "charter_fields": {
+            "type": "string",
+            "maxLength": 40,
+            "pattern": "^$|^(hypothesis(,baseline)?(,metric)?(,budget)?|baseline(,metric)?(,budget)?|metric(,budget)?|budget)$"
           }
         },
         "additionalProperties": false
@@ -9526,6 +10238,1280 @@
             "type": "string",
             "const": "CNY"
           }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "company_literature_search",
+      "capability": "company.literature",
+      "operation": "literature.search",
+      "input_handles": [],
+      "output_handles": [],
+      "description": "Run one bounded literature search from an injected workspace fixture. Each admitted source returns at most the first page. exhaustive is false and citation hops stay at one. The receipt is counts and paper ids.",
+      "parameters": {
+        "type": "object",
+        "required": [
+          "query",
+          "fixture"
+        ],
+        "properties": {
+          "query": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "fixture": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200,
+            "pattern": "^(?:[A-Za-z0-9][A-Za-z0-9._-]{0,63})(?:/(?:[A-Za-z0-9][A-Za-z0-9._-]{0,63})){0,8}$"
+          },
+          "year_from": {
+            "type": "integer",
+            "minimum": 1900,
+            "maximum": 2100
+          }
+        },
+        "additionalProperties": false
+      },
+      "output": {
+        "type": "object",
+        "required": [
+          "exhaustive",
+          "citation_hops",
+          "returned",
+          "paper_ids",
+          "truncated",
+          "sources"
+        ],
+        "properties": {
+          "exhaustive": {
+            "type": "boolean",
+            "const": false
+          },
+          "citation_hops": {
+            "type": "integer",
+            "const": 1
+          },
+          "returned": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 60
+          },
+          "paper_ids": {
+            "type": "array",
+            "maxItems": 60,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"
+            }
+          },
+          "truncated": {
+            "type": "boolean"
+          },
+          "sources": {
+            "type": "array",
+            "minItems": 5,
+            "maxItems": 5,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "source",
+                "returned",
+                "truncated"
+              ],
+              "properties": {
+                "source": {
+                  "type": "string",
+                  "enum": [
+                    "arxiv",
+                    "openalex",
+                    "semantic_scholar",
+                    "crossref",
+                    "europe_pmc"
+                  ]
+                },
+                "returned": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 12
+                },
+                "truncated": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "company_literature_fetch",
+      "capability": "company.literature",
+      "operation": "literature.fetch",
+      "input_handles": [],
+      "output_handles": [],
+      "description": "Copy one paper fixture from the workspace into the literature directory. A directory or tar archive is accepted only inside the file-count, byte, and suffix bounds. The receipt is the pinned version and counts.",
+      "parameters": {
+        "type": "object",
+        "required": [
+          "paper_id",
+          "fixture"
+        ],
+        "properties": {
+          "paper_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$",
+            "maxLength": 64
+          },
+          "fixture": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200,
+            "pattern": "^(?:[A-Za-z0-9][A-Za-z0-9._-]{0,63})(?:/(?:[A-Za-z0-9][A-Za-z0-9._-]{0,63})){0,8}$"
+          }
+        },
+        "additionalProperties": false
+      },
+      "output": {
+        "type": "object",
+        "required": [
+          "paper_id",
+          "source_kind",
+          "version",
+          "files",
+          "bytes"
+        ],
+        "properties": {
+          "paper_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"
+          },
+          "source_kind": {
+            "type": "string",
+            "enum": [
+              "arxiv_src",
+              "jats",
+              "html",
+              "pdf_text",
+              "figure_asset"
+            ]
+          },
+          "version": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"
+          },
+          "files": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 40
+          },
+          "bytes": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2000000
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "company_literature_index",
+      "capability": "company.literature",
+      "operation": "literature.index",
+      "input_handles": [],
+      "output_handles": [],
+      "description": "Write formula, attachment, and code ledgers for one fetched paper. The receipt contains source kind, version, counts, and formula ids. It does not admit a metric to the research clock.",
+      "parameters": {
+        "type": "object",
+        "required": [
+          "paper_id"
+        ],
+        "properties": {
+          "paper_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$",
+            "maxLength": 64
+          }
+        },
+        "additionalProperties": false
+      },
+      "output": {
+        "type": "object",
+        "required": [
+          "paper_id",
+          "source_kind",
+          "version",
+          "formula_count",
+          "attachment_count",
+          "code_count",
+          "formula_ids",
+          "truncated",
+          "platform_metric_eligible",
+          "clock_admitted"
+        ],
+        "properties": {
+          "paper_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"
+          },
+          "source_kind": {
+            "type": "string",
+            "enum": [
+              "arxiv_src",
+              "jats",
+              "html",
+              "pdf_text",
+              "figure_asset"
+            ]
+          },
+          "version": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"
+          },
+          "formula_count": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 64
+          },
+          "attachment_count": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 64
+          },
+          "code_count": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 8
+          },
+          "formula_ids": {
+            "type": "array",
+            "maxItems": 32,
+            "items": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,79}$"
+            }
+          },
+          "truncated": {
+            "type": "boolean"
+          },
+          "platform_metric_eligible": {
+            "type": "boolean",
+            "const": false
+          },
+          "clock_admitted": {
+            "type": "boolean",
+            "const": false
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "company_grant_open",
+      "capability": "company.workflow",
+      "operation": "grant.open",
+      "input_handles": [],
+      "output_handles": [],
+      "description": "Open one session grant after a single approval. A grant that names device, HPC, or cloud submission must carry a subject: kind, id, resource, and a shots or node-hour limit. Later matching calls consume the count. A research handoff makes the next named submission ask again and does not consume the old grant. boot and algo still deny device, HPC, and cloud submission.",
+      "parameters": {
+        "type": "object",
+        "required": [
+          "tools",
+          "max_calls",
+          "ttl_seconds"
+        ],
+        "properties": {
+          "tools": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 19,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "enum": [
+                "quantum_device_run",
+                "hpc_submit",
+                "hpc_stage_file",
+                "hpc_job_cancel",
+                "hpc_dir_create",
+                "hpc_file_remove",
+                "quantum_cloud_submit",
+                "company_latex_edit",
+                "company_latex_batch_edit",
+                "company_latex_revert",
+                "company_latex_push",
+                "company_latex_overleaf_push",
+                "company_latex_issue_note",
+                "company_plan_issue_create",
+                "company_plan_note_create",
+                "company_plan_issue_write",
+                "company_plan_milestone_create",
+                "company_research_run",
+                "company_dingtalk_reply"
+              ]
+            }
+          },
+          "max_calls": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 20
+          },
+          "ttl_seconds": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 14400
+          },
+          "subject": {
+            "type": "object",
+            "required": [
+              "kind",
+              "id",
+              "resource",
+              "limit_kind",
+              "limit"
+            ],
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "circuit",
+                  "experiment",
+                  "program"
+                ]
+              },
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              },
+              "resource": {
+                "type": "string",
+                "enum": [
+                  "hpc",
+                  "cloud",
+                  "device"
+                ]
+              },
+              "limit_kind": {
+                "type": "string",
+                "enum": [
+                  "shots",
+                  "node_hours"
+                ]
+              },
+              "limit": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 1000000
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      "output": {
+        "type": "object",
+        "required": [
+          "ok",
+          "expires_epoch",
+          "max_calls",
+          "tools"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "expires_epoch": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "max_calls": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 20
+          },
+          "tools": {
+            "type": "array",
+            "maxItems": 19,
+            "items": {
+              "type": "object",
+              "required": [
+                "name",
+                "remaining"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 64
+                },
+                "remaining": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 20
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "subject": {
+            "type": "object",
+            "required": [
+              "kind",
+              "id",
+              "resource",
+              "limit_kind",
+              "limit"
+            ],
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "circuit",
+                  "experiment",
+                  "program"
+                ]
+              },
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              },
+              "resource": {
+                "type": "string",
+                "enum": [
+                  "hpc",
+                  "cloud",
+                  "device"
+                ]
+              },
+              "limit_kind": {
+                "type": "string",
+                "enum": [
+                  "shots",
+                  "node_hours"
+                ]
+              },
+              "limit": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 1000000
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "company_session_status",
+      "capability": "company.workflow",
+      "operation": "session.status",
+      "input_handles": [],
+      "output_handles": [],
+      "description": "Report the current profile, preset, remaining session grant, missing configuration names, research executor, pending handoff, unknown submissions, and bound plan hash. Values and secrets are not returned.",
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "output": {
+        "type": "object",
+        "required": [
+          "profile",
+          "preset",
+          "grant",
+          "missing_env",
+          "executor",
+          "handoff",
+          "unknown",
+          "plan_hash"
+        ],
+        "properties": {
+          "profile": {
+            "type": "string",
+            "enum": [
+              "company-agent",
+              "company-agent-minimal",
+              "unset"
+            ]
+          },
+          "preset": {
+            "type": "string",
+            "enum": [
+              "boot",
+              "lab",
+              "algo",
+              "sign"
+            ]
+          },
+          "grant": {
+            "type": "object",
+            "required": [
+              "active",
+              "expires_epoch",
+              "tools"
+            ],
+            "properties": {
+              "active": {
+                "type": "boolean"
+              },
+              "expires_epoch": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "tools": {
+                "type": "array",
+                "maxItems": 19,
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "name",
+                    "remaining"
+                  ],
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 64
+                    },
+                    "remaining": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 20
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "subject": {
+                "type": "object",
+                "required": [
+                  "kind",
+                  "id",
+                  "resource",
+                  "limit_kind",
+                  "limit"
+                ],
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "circuit",
+                      "experiment",
+                      "program"
+                    ]
+                  },
+                  "id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128
+                  },
+                  "resource": {
+                    "type": "string",
+                    "enum": [
+                      "hpc",
+                      "cloud",
+                      "device"
+                    ]
+                  },
+                  "limit_kind": {
+                    "type": "string",
+                    "enum": [
+                      "shots",
+                      "node_hours"
+                    ]
+                  },
+                  "limit": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 1000000
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "additionalProperties": false
+          },
+          "missing_env": {
+            "type": "array",
+            "maxItems": 32,
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            }
+          },
+          "executor": {
+            "type": "string",
+            "enum": [
+              "stub",
+              "local",
+              "handoff",
+              "unset"
+            ]
+          },
+          "handoff": {
+            "type": "object",
+            "required": [
+              "pending",
+              "experiment_id",
+              "next_tool"
+            ],
+            "properties": {
+              "pending": {
+                "type": "boolean"
+              },
+              "experiment_id": {
+                "type": "string",
+                "maxLength": 64
+              },
+              "next_tool": {
+                "type": "string",
+                "maxLength": 64
+              }
+            },
+            "additionalProperties": false
+          },
+          "unknown": {
+            "type": "array",
+            "maxItems": 8,
+            "items": {
+              "type": "object",
+              "required": [
+                "tool",
+                "business_ref"
+              ],
+              "properties": {
+                "tool": {
+                  "type": "string",
+                  "maxLength": 64
+                },
+                "business_ref": {
+                  "type": "string",
+                  "maxLength": 128
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "plan_hash": {
+            "type": "string",
+            "maxLength": 64
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "quantum_cloud_result_page",
+      "capability": "compute.cloud",
+      "operation": "cloud.result-page",
+      "input_handles": [],
+      "output_handles": [],
+      "description": "Read the next page of a probability table written by quantum_cloud_result. Returns at most 64 states, the omitted count, and the workspace-relative artifact path. Raw counts, bitstrings, and secrets stay out of the result.",
+      "parameters": {
+        "type": "object",
+        "required": [
+          "cloud_task"
+        ],
+        "properties": {
+          "cloud_task": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_.:-]{1,128}$",
+            "maxLength": 128
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 256
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 64
+          }
+        },
+        "additionalProperties": false
+      },
+      "output": {
+        "type": "object",
+        "required": [
+          "cloud_task",
+          "offset",
+          "limit",
+          "shots",
+          "omitted_states",
+          "artifact_path",
+          "items"
+        ],
+        "properties": {
+          "cloud_task": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_.:-]{1,128}$",
+            "maxLength": 128
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 256
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 64
+          },
+          "shots": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1000000000
+          },
+          "omitted_states": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 256
+          },
+          "artifact_path": {
+            "type": "string",
+            "maxLength": 180
+          },
+          "items": {
+            "type": "array",
+            "maxItems": 64,
+            "items": {
+              "type": "object",
+              "required": [
+                "name",
+                "kind",
+                "value",
+                "unit"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "pattern": "^[a-z][a-z0-9_]{0,63}$",
+                  "maxLength": 64
+                },
+                "kind": {
+                  "type": "string",
+                  "enum": [
+                    "probability"
+                  ]
+                },
+                "value": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "unit": {
+                  "type": "string",
+                  "const": "dimensionless"
+                }
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "company_run_dossier",
+      "capability": "company.workflow",
+      "operation": "dossier.read",
+      "input_handles": [],
+      "output_handles": [],
+      "description": "Read the local run dossier for one circuit, asset, or cloud task. Returns short identifiers and a page path. Does not return bitstrings, circuit text, or secrets.",
+      "parameters": {
+        "type": "object",
+        "required": [],
+        "properties": {
+          "circuit_id": {
+            "type": "string",
+            "pattern": "^circ_[A-Za-z0-9_-]+$",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "asset_id": {
+            "type": "string",
+            "pattern": "^asset_[A-Za-z0-9_-]+$",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "cloud_task": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_.:-]{1,128}$",
+            "maxLength": 128
+          }
+        },
+        "additionalProperties": false
+      },
+      "output": {
+        "type": "object",
+        "required": [
+          "ok",
+          "count",
+          "items"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "count": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 8
+          },
+          "items": {
+            "type": "array",
+            "maxItems": 8,
+            "items": {
+              "type": "object",
+              "required": [
+                "catalog_version",
+                "component_id",
+                "asset_id",
+                "circuit_id",
+                "twin_id",
+                "cloud_task",
+                "unknown",
+                "page"
+              ],
+              "properties": {
+                "catalog_version": {
+                  "type": "string",
+                  "maxLength": 64
+                },
+                "component_id": {
+                  "type": "string",
+                  "maxLength": 128
+                },
+                "asset_id": {
+                  "type": "string",
+                  "maxLength": 256
+                },
+                "circuit_id": {
+                  "type": "string",
+                  "maxLength": 256
+                },
+                "twin_id": {
+                  "type": "string",
+                  "maxLength": 256
+                },
+                "cloud_task": {
+                  "type": "string",
+                  "maxLength": 128
+                },
+                "unknown": {
+                  "type": "boolean"
+                },
+                "page": {
+                  "type": "string",
+                  "maxLength": 180
+                }
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "company_literature_draft_card",
+      "capability": "company.literature",
+      "operation": "literature.draft-card",
+      "input_handles": [],
+      "output_handles": [],
+      "description": "Draft an experiment card from one indexed paper. baseline_reproduced is false and the idempotency key is empty. Returns field names and formula anchors only.",
+      "parameters": {
+        "type": "object",
+        "required": [
+          "paper_id"
+        ],
+        "properties": {
+          "paper_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$",
+            "maxLength": 64
+          }
+        },
+        "additionalProperties": false
+      },
+      "output": {
+        "type": "object",
+        "required": [
+          "paper_id",
+          "baseline_reproduced",
+          "idempotency_key",
+          "fields",
+          "anchors"
+        ],
+        "properties": {
+          "paper_id": {
+            "type": "string",
+            "maxLength": 64
+          },
+          "baseline_reproduced": {
+            "type": "boolean",
+            "const": false
+          },
+          "idempotency_key": {
+            "type": "string",
+            "const": ""
+          },
+          "fields": {
+            "type": "array",
+            "maxItems": 24,
+            "items": {
+              "type": "string",
+              "maxLength": 64
+            }
+          },
+          "anchors": {
+            "type": "array",
+            "maxItems": 8,
+            "items": {
+              "type": "string",
+              "maxLength": 80
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "company_sign_receipt",
+      "capability": "company.workflow",
+      "operation": "sign.receipt",
+      "input_handles": [],
+      "output_handles": [],
+      "description": "Write one short sign receipt in the workspace. The file names handles, an approval id, and whether execution is unknown. It does not include circuit text or secrets.",
+      "parameters": {
+        "type": "object",
+        "required": [
+          "approval_id"
+        ],
+        "properties": {
+          "approval_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,63}$",
+            "maxLength": 64
+          },
+          "asset_id": {
+            "type": "string",
+            "pattern": "^asset_[A-Za-z0-9_-]+$",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "circuit_id": {
+            "type": "string",
+            "pattern": "^circ_[A-Za-z0-9_-]+$",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "twin_id": {
+            "type": "string",
+            "pattern": "^twin_[A-Za-z0-9_-]+$",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "unknown": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "output": {
+        "type": "object",
+        "required": [
+          "ok",
+          "path",
+          "unknown"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "path": {
+            "type": "string",
+            "maxLength": 180
+          },
+          "unknown": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "company_knowledge_note",
+      "capability": "company.knowledge",
+      "operation": "knowledge.note",
+      "input_handles": [],
+      "output_handles": [],
+      "description": "After approval in lab, store one short note: an experiment id, a stop reason, and one sentence. The note does not contain the hypothesis or a log.",
+      "parameters": {
+        "type": "object",
+        "required": [
+          "experiment_id",
+          "stop_reason",
+          "sentence"
+        ],
+        "properties": {
+          "experiment_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$",
+            "maxLength": 64
+          },
+          "stop_reason": {
+            "type": "string",
+            "enum": [
+              "kept",
+              "exhausted",
+              "budget_exhausted",
+              "handoff",
+              "stopped",
+              "deadline"
+            ]
+          },
+          "sentence": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          }
+        },
+        "additionalProperties": false
+      },
+      "output": {
+        "type": "object",
+        "required": [
+          "ok",
+          "experiment_id"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "experiment_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$",
+            "maxLength": 64
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "company_catalog_replay",
+      "capability": "company.workflow",
+      "operation": "catalog.replay",
+      "input_handles": [],
+      "output_handles": [],
+      "description": "Replay up to four existing circuit ids on the simulator and compare short metric names and values with the dossier. An unknown execution stops the batch and is not retried.",
+      "parameters": {
+        "type": "object",
+        "required": [
+          "catalog_version",
+          "circuit_ids"
+        ],
+        "properties": {
+          "catalog_version": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          },
+          "circuit_ids": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 4,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "pattern": "^circ_[A-Za-z0-9_-]+$",
+              "minLength": 1,
+              "maxLength": 256
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "output": {
+        "type": "object",
+        "required": [
+          "ok",
+          "stopped",
+          "unknown",
+          "compared",
+          "items"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "stopped": {
+            "type": "boolean"
+          },
+          "unknown": {
+            "type": "boolean"
+          },
+          "compared": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4
+          },
+          "items": {
+            "type": "array",
+            "maxItems": 4,
+            "items": {
+              "type": "object",
+              "required": [
+                "circuit_id",
+                "metric",
+                "previous",
+                "current"
+              ],
+              "properties": {
+                "circuit_id": {
+                  "type": "string",
+                  "maxLength": 256
+                },
+                "metric": {
+                  "type": "string",
+                  "maxLength": 64
+                },
+                "previous": {
+                  "type": "number"
+                },
+                "current": {
+                  "type": "number"
+                }
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "quantum_device_window",
+      "capability": "company.workflow",
+      "operation": "device.window",
+      "input_handles": [],
+      "output_handles": [],
+      "description": "Read the operator window file and the age of the last device identity receipt. Missing or invalid window files fail closed. This call does not reserve the device or submit work.",
+      "parameters": {
+        "type": "object",
+        "required": [],
+        "properties": {},
+        "additionalProperties": false
+      },
+      "output": {
+        "type": "object",
+        "required": [
+          "bookable",
+          "maintenance",
+          "identity_age_seconds",
+          "identity_known"
+        ],
+        "properties": {
+          "bookable": {
+            "type": "boolean"
+          },
+          "maintenance": {
+            "type": "boolean"
+          },
+          "identity_age_seconds": {
+            "type": "integer",
+            "minimum": -1,
+            "maximum": 9007199254740991
+          },
+          "identity_known": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "company_dingtalk_inbox",
+      "capability": "company.dingtalk",
+      "operation": "dingtalk.inbox",
+      "input_handles": [],
+      "output_handles": [],
+      "description": "List DingTalk messages already addressed to the company bot and recorded as Source events. At most 20 rows for one tenant. Does not open a ticket, call DingTalk, or read messages that did not mention the bot.",
+      "parameters": {
+        "type": "object",
+        "required": ["tenant_id"],
+        "properties": {
+          "tenant_id": {"type": "string", "minLength": 1, "maxLength": 80},
+          "thread_id": {"type": "string", "pattern": "^[A-Za-z0-9$:+/=_.-]{1,128}$", "maxLength": 128}
+        },
+        "additionalProperties": false
+      },
+      "output": {
+        "type": "object",
+        "required": ["tenant_id", "count", "items"],
+        "properties": {
+          "tenant_id": {"type": "string", "minLength": 1, "maxLength": 80},
+          "count": {"type": "integer", "minimum": 0, "maximum": 20},
+          "items": {
+            "type": "array",
+            "maxItems": 20,
+            "items": {
+              "type": "object",
+              "required": ["trigger_id", "thread_id", "actor_id", "addressed", "text", "created_at"],
+              "properties": {
+                "trigger_id": {"type": "string", "pattern": "^trg_[0-9a-f]{32}$", "maxLength": 40},
+                "thread_id": {"type": "string", "pattern": "^[A-Za-z0-9$:+/=_.-]{1,128}$", "maxLength": 128},
+                "actor_id": {"type": "string", "minLength": 1, "maxLength": 80},
+                "addressed": {"type": "string", "enum": ["mention", "direct"]},
+                "text": {"type": "string", "minLength": 1, "maxLength": 4000},
+                "created_at": {"type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$", "maxLength": 20}
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "company_dingtalk_reply",
+      "capability": "company.dingtalk",
+      "operation": "dingtalk.reply",
+      "input_handles": [],
+      "output_handles": [],
+      "description": "Send one short text back to the DingTalk conversation of one recorded, addressed Source event. trigger_id must be that event. lab asks before sending; boot, algo and sign deny. Does not start a session loop, and the text is not echoed back.",
+      "parameters": {
+        "type": "object",
+        "required": ["tenant_id", "thread_id", "trigger_id", "text"],
+        "properties": {
+          "tenant_id": {"type": "string", "minLength": 1, "maxLength": 80},
+          "thread_id": {"type": "string", "pattern": "^[A-Za-z0-9$:+/=_.-]{1,128}$", "maxLength": 128},
+          "trigger_id": {"type": "string", "pattern": "^trg_[0-9a-f]{32}$", "maxLength": 40},
+          "text": {"type": "string", "minLength": 1, "maxLength": 2000}
+        },
+        "additionalProperties": false
+      },
+      "output": {
+        "type": "object",
+        "required": ["status", "thread_key", "addressed", "bytes"],
+        "properties": {
+          "status": {"type": "string", "const": "sent"},
+          "thread_key": {"type": "string", "minLength": 10, "maxLength": 160},
+          "addressed": {"type": "string", "enum": ["mention", "direct"]},
+          "bytes": {"type": "integer", "minimum": 1, "maximum": 2000}
         },
         "additionalProperties": false
       }

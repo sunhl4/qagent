@@ -26,6 +26,7 @@ from company_agent.work_items import WorkItemStore, work_item
 _ROOT = Path(__file__).resolve().parents[2]
 _CLI = _ROOT / "research-layer" / "scripts" / "research-cli.mjs"
 _WORKTREE = _ROOT / "research-layer" / "scripts" / "worktree-once.mjs"
+_FAILURE = _ROOT / "scripts" / "failure_once.mjs"
 _MARKERS = ("secret", "token", "password", "prompt", "credential", "api_key")
 _STOPS = {
     "kept", "exhausted", "budget_exhausted", "deadline", "stopped", "escalated",
@@ -34,19 +35,41 @@ _STOPS = {
 _DECISIONS = {"keep", "discard", "extend", "stop", "escalate", "none"}
 _DECISION_ROW = re.compile(
     r"^(?:keep|discard|extend|stop|escalate|none)"
-    r"(?:,(?:keep|discard|extend|stop|escalate|none)){0,4}$"
+    r"(?:,(?:keep|discard|extend|stop|escalate|none)){0,19}$"
 )
 _EXECUTORS = {"stub", "local", "handoff", "none"}
 _NUMBER = r"-?(?:\d+(?:\.\d+)?|\.\d+)"
 _METRIC_LINE = re.compile(
-    rf"^(?:attempt=(?P<attempt>[1-9])\s+)?"
+    rf"^(?:attempt=(?P<attempt>[1-9]|1[0-9]|20)\s+)?"
     rf"(?:seed=(?P<seed>\d{{1,4}})\s+)?"
     rf"val_loss=(?P<loss>{_NUMBER})"
     rf"(?:\s+train_time_seconds=(?P<time>(?:\d+(?:\.\d+)?|\.\d+)))?$"
 )
+_SCIENCE_LINE = re.compile(
+    rf"^(?:attempt=(?P<attempt>[1-9]|1[0-9]|20)\s+)?"
+    rf"(?:seed=(?P<seed>\d{{1,4}})\s+)?"
+    rf"metric=(?P<loss>{_NUMBER})"
+    rf"(?:\s+train_time_seconds=(?P<time>(?:\d+(?:\.\d+)?|\.\d+)))?$"
+)
+_METRIC_KINDS = {"probability", "objective"}
+_METRIC_UNITS = {"dimensionless", "hartree", "eV", "second", "count"}
 _EFFECT = 0.02
 _TIME_LIMIT = 0.1
 _SPREAD_LIMIT = 0.5
+_FAILURE_CODE = re.compile(r"^[A-Z][A-Z0-9_]{0,39}$")
+_FAILURE_INPUTS = {
+    "timeout": {"stage": "execution", "portErrorCode": "TIMEOUT"},
+    "crash": {"stage": "artifacts", "code": "E_ARTIFACT_STORE"},
+    "dirty": {"stage": "artifacts", "code": "E_WORKTREE"},
+}
+_FAILURE_CATEGORIES = {
+    "implementation", "data", "metric", "resource", "hypothesis",
+    "environment", "instability", "policy", "unknown",
+}
+_FAILURE_STAGES = {
+    "compile", "policy", "quote", "submit", "execution", "artifacts",
+    "decision", "unknown_execution", "loop",
+}
 _HANDOFF_TOOLS = {
     "hpc": "hpc_submit",
     "cloud": "quantum_cloud_submit",
@@ -129,7 +152,7 @@ def _spec_fields(args: dict[str, Any]) -> dict[str, Any]:
         "baseline_train_time_seconds": _optional_time(args.get("baseline_train_time_seconds")),
         "min_seeds": _optional_seeds(args.get("min_seeds")),
         "changed_path": changed,
-        "primary_metric": _clean(args.get("primary_metric"), "primary_metric"),
+        "primary_metric": _metric_name(args),
         "direction": args.get("direction"),
         "resource_type": args.get("resource_type"),
         "max_cost": args.get("max_cost"),
@@ -162,6 +185,21 @@ def _call(action: str, fields: dict[str, Any]) -> dict[str, Any]:
     if not isinstance(parsed, dict):
         raise ValueError("research clock failed")
     return parsed
+
+
+def _metric_name(args: dict[str, Any]) -> str:
+    primary = _clean(args.get("primary_metric"), "primary_metric")
+    kind = args.get("metric_kind")
+    unit = args.get("metric_unit")
+    if primary == "val_loss":
+        if kind is not None or unit is not None:
+            raise ValueError("val_loss does not take a metric kind")
+        return primary
+    if kind not in _METRIC_KINDS or unit not in _METRIC_UNITS:
+        raise ValueError("metric kind is invalid")
+    if kind == "probability" and unit != "dimensionless":
+        raise ValueError("probability metric must be dimensionless")
+    return primary
 
 
 def _optional_time(value: object) -> float | None:
@@ -281,7 +319,7 @@ def _public_run(row: dict[str, Any]) -> dict[str, Any]:
         or isinstance(attempts, bool)
         or not isinstance(attempts, int)
         or attempts < 0
-        or attempts > 5
+        or attempts > 20
     ):
         raise ValueError("research record is invalid")
     decisions = _decisions(row.get("decisions", ""), attempts)
@@ -294,6 +332,7 @@ def _public_run(row: dict[str, Any]) -> dict[str, Any]:
     next_fields = _HANDOFF_FIELDS.get(resource_type, "") if stop == "handoff" else _NEXT_FIELDS.get(stop, "")
     if stop == "handoff" and (not next_tool or not next_fields):
         raise ValueError("research record is invalid")
+    charter_action, charter_fields = _charter_public(row)
     return {
         "ok": row.get("ok") is True,
         "executor": executor,
@@ -313,6 +352,8 @@ def _public_run(row: dict[str, Any]) -> dict[str, Any]:
         "next_tool": next_tool,
         "approval_still_required": next_tool != "",
         "next_fields": next_fields,
+        "charter_action": charter_action,
+        "charter_fields": charter_fields,
     }
 
 
@@ -350,6 +391,80 @@ def _next_version(tenant_id: str, experiment_id: str) -> int:
 def _card_fingerprint(fields: dict[str, Any]) -> str:
     raw = f"{fields['hypothesis']}\n{fields['falsifier']}".encode("utf-8")
     return hashlib.sha256(raw).hexdigest()
+
+
+_CHARTER_SLOTS = (
+    ("hypothesis", ("hypothesis", "falsifier")),
+    ("baseline", ("baseline_name", "baseline_source", "baseline_metric", "baseline_reproduced")),
+    ("metric", ("primary_metric", "direction")),
+    ("budget", ("max_cost",)),
+)
+_CHARTER_OPENED = "hypothesis,baseline,metric,budget"
+_CHARTER_FIELDS = re.compile(
+    r"^$|^(hypothesis(,baseline)?(,metric)?(,budget)?|baseline(,metric)?(,budget)?|metric(,budget)?|budget)$"
+)
+_CHARTER_ACTIONS = {"", "opened", "changed", "same"}
+
+
+def _stable_slot(value: object) -> str:
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    if isinstance(value, (int, float)):
+        return format(float(value), ".6g")
+    return str(value)
+
+
+def _charter_slots(fields: dict[str, Any]) -> dict[str, str]:
+    slots = {}
+    for name, keys in _CHARTER_SLOTS:
+        raw = "\n".join(f"{key}={_stable_slot(fields[key])}" for key in keys)
+        slots[name] = hashlib.sha256(raw.encode("utf-8")).hexdigest()
+    return slots
+
+
+def _previous_charter(tenant_id: str, experiment_id: str) -> dict[str, str] | None:
+    names = {name for name, _keys in _CHARTER_SLOTS}
+    for item in reversed(_load()["runs"]):
+        if not isinstance(item, dict):
+            continue
+        if item.get("tenant_id") != tenant_id or item.get("experiment_id") != experiment_id:
+            continue
+        stored = item.get("charter_slots")
+        if (
+            isinstance(stored, dict)
+            and set(stored) == names
+            and all(isinstance(value, str) for value in stored.values())
+        ):
+            return {name: str(stored[name]) for name in names}
+    return None
+
+
+def _attach_charter(row: dict[str, Any], fields: dict[str, Any]) -> None:
+    slots = _charter_slots(fields)
+    previous = _previous_charter(fields["tenant_id"], fields["experiment_id"])
+    if previous is None:
+        action, names = "opened", _CHARTER_OPENED
+    else:
+        changed = [name for name, _keys in _CHARTER_SLOTS if previous[name] != slots[name]]
+        action, names = ("changed", ",".join(changed)) if changed else ("same", "")
+    row["charter_action"] = action
+    row["charter_fields"] = names
+    row["charter_slots"] = slots
+
+
+def _charter_public(row: dict[str, Any]) -> tuple[str, str]:
+    action = row.get("charter_action") or ""
+    names = row.get("charter_fields") or ""
+    if (
+        action not in _CHARTER_ACTIONS
+        or not isinstance(names, str)
+        or _CHARTER_FIELDS.fullmatch(names) is None
+        or (action == "opened" and names != _CHARTER_OPENED)
+        or (action == "changed" and names == "")
+        or (action in {"", "same"} and names != "")
+    ):
+        raise ValueError("research record is invalid")
+    return action, names
 
 
 def _kept_same_card(fields: dict[str, Any]) -> bool:
@@ -399,6 +514,75 @@ def _append_ledger(experiment_id: str, metric: str, status: str, note: str) -> N
     path = _state_dir() / "ledger.tsv"
     with path.open("a", encoding="utf-8") as handle:
         handle.write(f"{experiment_id}\t{metric}\t{status}\t{note}\n")
+
+
+def _unknown_failure() -> dict[str, Any]:
+    return {
+        "category": "unknown",
+        "code": "UNKNOWN_EXECUTION",
+        "stage": "unknown_execution",
+        "retryable": False,
+    }
+
+
+def _accepted_failure(stdout: str) -> dict[str, Any]:
+    try:
+        parsed = json.loads(stdout)
+    except json.JSONDecodeError:
+        return _unknown_failure()
+    if not isinstance(parsed, dict) or parsed.get("ok") is not True:
+        return _unknown_failure()
+    if set(parsed) - {"ok", "category", "code", "stage", "retryable"}:
+        return _unknown_failure()
+    category = parsed.get("category")
+    code = parsed.get("code")
+    stage = parsed.get("stage")
+    retryable = parsed.get("retryable")
+    if (
+        category not in _FAILURE_CATEGORIES
+        or stage not in _FAILURE_STAGES
+        or not isinstance(code, str)
+        or _FAILURE_CODE.fullmatch(code) is None
+        or not isinstance(retryable, bool)
+    ):
+        return _unknown_failure()
+    if category == "unknown":
+        retryable = False
+    return {"category": category, "code": code, "stage": stage, "retryable": retryable}
+
+
+def _classify_failure(note: str) -> dict[str, Any]:
+    payload = _FAILURE_INPUTS.get(note)
+    if payload is None or not _FAILURE.is_file():
+        return _unknown_failure()
+    try:
+        completed = subprocess.run(
+            [_node(), "--experimental-strip-types", str(_FAILURE)],
+            input=json.dumps(payload),
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            timeout=20,
+            check=False,
+        )
+    except (OSError, subprocess.TimeoutExpired, ValueError):
+        return _unknown_failure()
+    if not completed.stdout.strip():
+        return _unknown_failure()
+    return _accepted_failure(completed.stdout)
+
+
+def _record_failure(experiment_id: str, note: str) -> None:
+    record = _classify_failure(note)
+    line = json.dumps(
+        {"experiment_id": experiment_id, **record},
+        ensure_ascii=False,
+        separators=(",", ":"),
+    )
+    path = _state_dir() / "failures.jsonl"
+    with path.open("a", encoding="utf-8", newline="\n") as handle:
+        handle.write(f"{line}\n")
 
 
 def _is_git_repo(root: Path) -> bool:
@@ -473,15 +657,16 @@ def _guard_regressed(baseline: float | None, times: list[float | None]) -> bool:
     return statistics.fmean([float(item) for item in times]) > baseline * (1 + _TIME_LIMIT)
 
 
-def _attempt_rows(lines: list[str]) -> list[dict[str, Any]]:
+def _attempt_rows(lines: list[str], *, science: bool = False) -> list[dict[str, Any]]:
     parsed: list[dict[str, Any]] = []
     saw_attempt = False
     saw_plain = False
+    pattern = _SCIENCE_LINE if science else _METRIC_LINE
     for line in lines:
         if line in {"timeout", "crash"}:
             parsed.append({"kind": line, "text": line})
             continue
-        matched = _METRIC_LINE.fullmatch(line)
+        matched = pattern.fullmatch(line)
         if matched is None:
             parsed.append({"kind": "crash", "text": line})
             continue
@@ -580,7 +765,7 @@ def _local_run(fields: dict[str, Any]) -> dict[str, Any] | None:
     lines = [line.strip() for line in target.read_text(encoding="utf-8").splitlines() if line.strip()]
     if not lines:
         return None
-    rows = _attempt_rows(lines)
+    rows = _attempt_rows(lines, science=fields["primary_metric"] != "val_loss")
     attempts = int(fields["max_attempts"])
     budget = int(fields["max_cost"])
     spent = 0
@@ -603,6 +788,7 @@ def _local_run(fields: dict[str, Any]) -> dict[str, Any] | None:
             failures += 1
             stop = "consecutive_failures"
             _append_ledger(fields["experiment_id"], "0", "crash", "dirty")
+            _record_failure(fields["experiment_id"], "dirty")
             _release_worktree(root, fields["experiment_id"], attempt, opened, keep=False)
             break
         kind = row["kind"]
@@ -611,6 +797,7 @@ def _local_run(fields: dict[str, Any]) -> dict[str, Any] | None:
             failures += 1
             stop = "deadline"
             _append_ledger(fields["experiment_id"], "0", "crash", "timeout")
+            _record_failure(fields["experiment_id"], "timeout")
             _release_worktree(root, fields["experiment_id"], attempt, opened, keep=False)
             break
         if kind != "metric":
@@ -618,6 +805,7 @@ def _local_run(fields: dict[str, Any]) -> dict[str, Any] | None:
             failures += 1
             stop = "consecutive_failures"
             _append_ledger(fields["experiment_id"], "0", "crash", "crash")
+            _record_failure(fields["experiment_id"], "crash")
             _release_worktree(root, fields["experiment_id"], attempt, opened, keep=False)
             break
         losses = [float(item) for item in row["losses"]]
@@ -684,7 +872,10 @@ def _resource_handoff(fields: dict[str, Any], idempotency_key: str, tool: str) -
         "card_fingerprint": _card_fingerprint(fields),
         "resource_type": fields["resource_type"],
     })
+    _attach_charter(row, fields)
     _remember(row)
+    from company_agent.grants import write_handoff
+    write_handoff(fields["experiment_id"], tool)
     return _public_run(row)
 
 
@@ -736,7 +927,10 @@ def run_spec(args: dict[str, Any]) -> dict[str, Any]:
             "card_fingerprint": _card_fingerprint(fields),
             "resource_type": fields["resource_type"],
         })
+        _attach_charter(row, fields)
         _remember(row)
+        from company_agent.grants import write_handoff
+        write_handoff(fields["experiment_id"], "quantum_device_run")
         return _public_run(row)
     handoff_tool = _HANDOFF_TOOLS.get(fields["resource_type"])
     if handoff_tool is not None:
@@ -751,7 +945,7 @@ def run_spec(args: dict[str, Any]) -> dict[str, Any]:
     attempts = result.get("attempts")
     failures = result.get("failure_count")
     decision = result.get("decision")
-    if isinstance(attempts, bool) or not isinstance(attempts, int) or attempts < 0 or attempts > 5:
+    if isinstance(attempts, bool) or not isinstance(attempts, int) or attempts < 0 or attempts > 20:
         raise ValueError("research clock failed")
     if isinstance(failures, bool) or not isinstance(failures, int) or failures < 0 or failures > 32:
         raise ValueError("research clock failed")
@@ -792,6 +986,7 @@ def run_spec(args: dict[str, Any]) -> dict[str, Any]:
         "card_fingerprint": _card_fingerprint(fields),
         "resource_type": fields["resource_type"],
     }
+    _attach_charter(row, fields)
     _remember(row)
     return _public_run(row)
 
@@ -850,6 +1045,8 @@ def read_status(args: dict[str, Any]) -> dict[str, Any]:
             "next_tool": "",
             "approval_still_required": False,
             "next_fields": "",
+            "charter_action": "",
+            "charter_fields": "",
         }
     public = _public_run(found)
     return {
@@ -867,4 +1064,6 @@ def read_status(args: dict[str, Any]) -> dict[str, Any]:
         "next_tool": public["next_tool"],
         "approval_still_required": public["approval_still_required"],
         "next_fields": public["next_fields"],
+        "charter_action": public["charter_action"],
+        "charter_fields": public["charter_fields"],
     }

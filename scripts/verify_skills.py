@@ -21,6 +21,7 @@ import hashlib
 import json
 import shutil
 import sys
+import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -72,7 +73,15 @@ def sync(*, root: Path, profile: str, preset: str) -> int:
         staging.mkdir(mode=0o700)
         for source, _digest in sources:
             shutil.copy(source, staging / source.name)
-        staging.rename(destination)
+        # Windows can briefly deny a directory rename while the copied file is scanned.
+        for attempt in range(5):
+            try:
+                staging.rename(destination)
+                break
+            except PermissionError:
+                if attempt == 4:
+                    raise
+                time.sleep(0.05)
         mounted.append(name)
     for directory in root.rglob("*"):
         if directory.is_dir():

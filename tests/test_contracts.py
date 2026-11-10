@@ -66,6 +66,8 @@ def test_capability_and_tool_catalogs_are_consistent() -> None:
         "company.plan",
         "company.portal",
         "company.research",
+        "company.literature",
+        "company.dingtalk",
     } == set(capabilities)
     for name, row in tools.items():
         assert row["capability"] in capabilities, name
@@ -158,7 +160,10 @@ def test_presets_reference_only_known_tools() -> None:
         assert len(visible) == len(set(visible))
         assert set(visible) <= tools
         visible_union.update(visible)
+        assert set(row["model_tools"]) <= set(visible)
     assert visible_union == tools
+    assert "company_shell" not in tools
+    assert all("company_shell" not in row["visible_tools"] for row in presets.values())
     assert "quantum_device_run" not in presets["boot"]["visible_tools"]
     assert "quantum_device_run" not in presets["algo"]["visible_tools"]
     assert "quantum_device_run" in presets["lab"]["visible_tools"]
@@ -206,7 +211,27 @@ def test_policy_device_identity_matches_capability_contract() -> None:
         "research_run_provider",
         "research_run_ask_presets",
         "research_run_deny_presets",
+        "session_grant",
+        "knowledge_note_tool",
+        "knowledge_note_ask_presets",
+        "knowledge_note_deny_presets",
+        "sign_receipt_tool",
+        "sign_receipt_allow_presets",
+        "catalog_replay_tool",
+        "catalog_replay_allow_presets",
+        "catalog_replay_deny_presets",
+        "device_window_tool",
+        "device_window_allow_presets",
+        "device_window_deny_presets",
+        "dingtalk_reply_tool",
+        "dingtalk_reply_provider",
+        "dingtalk_reply_ask_presets",
+        "dingtalk_reply_deny_presets",
     }
+    assert policy["dingtalk_reply_tool"] == "company_dingtalk_reply"
+    assert policy["dingtalk_reply_provider"] == "company-dingtalk"
+    assert policy["dingtalk_reply_ask_presets"] == ["lab"]
+    assert policy["dingtalk_reply_deny_presets"] == ["boot", "algo", "sign"]
     device = next(item for item in list_capabilities() if item.id == "quantum.device")
     assert policy["fail_closed"] is True
     assert policy["device_tool"] == "quantum_device_run"
@@ -305,7 +330,7 @@ def test_asset_list_only_exposes_bounded_existing_asset_references() -> None:
 
 def test_tool_registration_is_exactly_once_across_company_plugins() -> None:
     capabilities_by_package = {
-        "core": {"company.workflow", "company.knowledge", "company.portal"},
+        "core": {"company.workflow", "company.knowledge", "company.portal", "company.dingtalk"},
         "quantum": {
             "company.algorithm",
             "company.asset",
@@ -319,6 +344,7 @@ def test_tool_registration_is_exactly_once_across_company_plugins() -> None:
         "office": {"company.office"},
         "plan": {"company.plan"},
         "research": {"company.research"},
+        "literature": {"company.literature"},
     }
     registered: list[str] = []
     capabilities = {item.id: item for item in list_capabilities()}

@@ -147,12 +147,12 @@ def test_twin_provenance_is_only_allowed_at_authorized_top_level() -> None:
 
 
 def test_result_policy_bounds_aggregate_bytes_and_dsh_render_limit() -> None:
-    result = {"summary": {f"metric{i}": "x" * 4000 for i in range(32)}}
+    result = {"summary": {f"metric{i}": "x" * 8000 for i in range(20)}}
     assert has_forbidden_output(result)
     with pytest.raises(ValueError, match="maximum encoded size"):
         validate_result_size(result)
     limit = catalog.load_result_policy()["max_result_bytes"]
-    assert limit == 64_000
+    assert limit == 131_072
     source = (ROOT / "packages/company-agent-core/src/runtime.js").read_text()
     assert f"const MAX_TOOL_RESULT_BYTES = {limit:_};" in source
 

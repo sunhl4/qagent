@@ -71,7 +71,8 @@ def validate_output_content(value: Any, *, allow_twin_id: bool = False, referenc
     names = {row["token_env"] for row in load_providers()["providers"]}
     names.update({"DEEPSEEK_API_KEY", "OPENAI_API_KEY", "ANTHROPIC_API_KEY", "UQC_CLOUD_API_KEY",
                   "HPC_TOKEN", "COMPANY_RELAY_API_KEY", "COMPANY_AGENT_LOCAL_MODEL_TOKEN",
-                  "COMPANY_AGENT_GITLAB_TOKEN"})
+                  "COMPANY_AGENT_GITLAB_TOKEN", "COMPANY_DINGTALK_APP_KEY",
+                  "COMPANY_DINGTALK_APP_SECRET", "COMPANY_DINGTALK_ROBOT_CODE"})
     credentials = tuple({os.environ[name].strip() for name in names if os.environ.get(name, "").strip()})
 
     def visit(item: Any, path: tuple[str | int, ...] = ()) -> None:

@@ -12,7 +12,7 @@ if (-not (Test-Path -LiteralPath $Python)) {
 $env:DSH_HOME = $DshHome
 $env:COMPANY_AGENT_DEPLOYMENT_MODE = "development"
 $env:COMPANY_AGENT_PROFILE = "company-agent"
-$env:COMPANY_AGENT_PRESET = "lab"
+$env:COMPANY_AGENT_PRESET = "algo"
 $env:COMPANY_AGENT_PYTHON = $Python
 $Installed = Join-Path $env:LOCALAPPDATA "UnitQC\company-agent\runtime"
 if ((Test-Path -LiteralPath (Join-Path $Installed "src\company_agent\cli.py")) -and (Test-Path -LiteralPath (Join-Path $Installed "contracts\superagent.json"))) {

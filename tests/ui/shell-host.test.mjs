@@ -7,14 +7,17 @@ import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import http from 'node:http';
 import {Writable} from 'node:stream';
-import {apply, projectWorkbenchTasks, restoreWorkbenchTasks, resolveTrustedSubject, scopedFactKey, workbenchEventRank, workbenchTaskFromEvent} from '../../apps/company-workspace/host.mjs';
+import {apply, projectAutomation, projectHpcFiles, projectSacctLine, projectSqueueLine, projectWorkbenchTasks, restoreWorkbenchTasks, resolveTrustedSubject, scopedFactKey, workbenchEventRank, workbenchTaskFromEvent} from '../../apps/company-workspace/host.mjs';
 
-async function host(port){
+async function host(port, options = {}){
  // Explicit per-test port: ambient COMPANY_AGENT_DSH_PORT from developer
  // shells must never decide the trusted origin under test.
  if(port !== undefined) process.env.COMPANY_AGENT_DSH_PORT = port;
  const routes=new Map();let tap;
- const ctx={effect:fn=>fn(),workspaceRegistry:{list:()=>[]},connection:{authorizeIndex:(req,res)=>{if(String(req.headers.cookie||'').split(';').some(part=>part.trim()==='fixture'))return true;res.writeHead(401);res.end();return false;}},webServer:{register:route=>{routes.set(route.path,route.handler);return()=>routes.delete(route.path);},tapIndex:fn=>{tap=fn;return()=>{};}}};
+ const authorizeIndex = options.open
+  ? () => true
+  : (req, res) => {if(String(req.headers.cookie||'').split(';').some(part=>part.trim()==='fixture'))return true;res.writeHead(401);res.end();return false;};
+ const ctx={effect:fn=>fn(),workspaceRegistry:{list:()=>[]},connection:{authorizeIndex},webServer:{register:route=>{routes.set(route.path,route.handler);return()=>routes.delete(route.path);},tapIndex:fn=>{tap=fn;return()=>{};}}};
  await apply(ctx);return{routes,tap};
 }
 function response(){return{status:0,headers:{},body:'',writeHead(status,headers={}){this.status=status;this.headers=headers;},end(body=''){this.body=body;}};}
@@ -40,6 +43,53 @@ test('account route returns only the desktop display name',async()=>{
   if(previous===undefined)delete process.env.COMPANY_AGENT_ACCOUNT_NAME;
   else process.env.COMPANY_AGENT_ACCOUNT_NAME=previous;
  }
+});
+
+test('automation route fails closed without the company python', async () => {
+ const previous = process.env.COMPANY_AGENT_PYTHON;
+ delete process.env.COMPANY_AGENT_PYTHON;
+ try {
+  const {routes} = await host('3081');
+  const res = response();
+  await routes.get('/company-workspace/automation')({method:'GET', headers:{host:'127.0.0.1:3081', cookie:'fixture'}}, res);
+  assert.equal(res.status, 200);
+  assert.deepEqual(JSON.parse(res.body), {available:false, items:[], observed:0, reason:'unconfigured'});
+ } finally {
+  if (previous === undefined) delete process.env.COMPANY_AGENT_PYTHON;
+  else process.env.COMPANY_AGENT_PYTHON = previous;
+ }
+});
+
+test('automation projection keeps short ticket fields', () => {
+ const ticket = 'tic_' + 'ab'.repeat(16);
+ const projected = projectAutomation({
+  available: true,
+  observed: 2,
+  truncated: false,
+  items: [{
+   ticket_id: ticket,
+   title: 'Visible',
+   state: 'open',
+   mandate: 'lab',
+   execution_state: 'running',
+   session_ref: 'dsh:session-1',
+   created_at: '2026-11-09T12:00:00Z',
+   text: 'secret trigger body',
+  }, {ticket_id: 'tic_short', title: 'Hidden', state: 'open', mandate: 'lab'}],
+ });
+ assert.equal(projected.available, true);
+ assert.equal(projected.observed, 2);
+ assert.deepEqual(projected.items, [{
+  ticket_id: ticket,
+  title: 'Visible',
+  state: 'open',
+  mandate: 'lab',
+  execution_state: 'running',
+  session_ref: 'dsh:session-1',
+  created_at: '2026-11-09T12:00:00Z',
+ }]);
+ assert.equal(JSON.stringify(projected).includes('secret'), false);
+ assert.equal(projectAutomation(null).reason, 'unavailable');
 });
 
 test('access seam keeps its documented client-facing envelope',async()=>{
@@ -69,6 +119,10 @@ test('UI assets require native auth and exact trusted origin',async()=>{
  }
  const res=response();routes.get('/company-workspace/content')({method:'GET',headers:{host:'127.0.0.1:3081',cookie:'fixture'}},res);
  assert.equal(res.status,200);assert.doesNotMatch(res.body,/<iframe id="dsh-native-frame"/);assert.match(res.body,/content-embed/);
+ assert.doesNotMatch(res.body,/220\.178\.61\.185/);assert.doesNotMatch(res.body,/192\.168\.110\.37/);assert.doesNotMatch(res.body,/connectionUrls/);
+ assert.match(res.body,/\/company-workspace\/workbench\/tasks/);
+ assert.match(res.body,/空列表不当成没有任务/);
+ assert.match(res.body,/not_projected/);
  assert.match(res.body,/event.origin!==location.origin/);assert.match(res.body,/event.source!==parent/);
 });
 
@@ -201,7 +255,14 @@ test('portal proxy embeds configured pages and isolates portal cookies from Agen
  const upstream=http.createServer((req,res)=>{
   if(req.url==='/'){
    res.setHeader('content-type','text/html');res.setHeader('set-cookie','SESSIONID=portal-secret; Path=/; HttpOnly');
-   res.end('<script src="/app.js"></script><form action="/login" method="post"></form><a href="/next">next</a>');return;
+   res.end('<meta charset="utf-8"/><script src="/app.js"></script><form action="/login" method="post"></form><a href="/next">next</a>');return;
+  }
+  if(req.url==='/app.js'){
+   if(req.headers.cookie!=='SESSIONID=portal-secret'){res.statusCode=404;res.end('missing cookie');return;}
+   res.setHeader('content-type','text/javascript');res.end('window.portalReady=true');return;
+  }
+  if(req.url==='/flags.js'){
+   res.setHeader('content-type','text/javascript');res.end('s.replace(/"/g,"&quot;");var root="/"+file;var logo="/logo.png";');return;
   }
   if(req.url==='/login'&&req.method==='POST'){
    let body='';req.on('data',chunk=>body+=chunk);req.on('end',()=>{res.setHeader('content-type','text/plain');res.end(JSON.stringify({body,cookie:req.headers.cookie||''}));});return;
@@ -213,12 +274,42 @@ test('portal proxy embeds configured pages and isolates portal cookies from Agen
   process.env.COMPANY_AGENT_DSH_PORT='3099';process.env.UQC_WORKSPACE_CONFIG='/tmp/unitqc-proxy-test-missing.json';process.env.HPC_PORTAL=`http://127.0.0.1:${upstream.address().port}`;
   const {routes}=await host('3099');const handler=routes.get('/company-workspace/portal/hpc');assert.ok(handler);
   const page=streamingResponse();await handler({method:'GET',url:'/company-workspace/portal/hpc/',headers:{host:'127.0.0.1:3099',cookie:'fixture'}},page);await new Promise(resolve=>setTimeout(resolve,30));
-  const pageResult=page.result();assert.equal(pageResult.status,200);assert.match(pageResult.body,/\/company-workspace\/portal\/hpc\/app\.js/);assert.match(pageResult.body,/\/company-workspace\/portal\/hpc\/login/);assert.match(pageResult.headers['set-cookie'][0],/^UQC_PORTAL_HPC_SESSIONID=/);
+  const pageResult=page.result();assert.equal(pageResult.status,200);assert.match(pageResult.body,/\/company-workspace\/portal\/hpc\/app\.js/);assert.match(pageResult.body,/\/company-workspace\/portal\/hpc\/login/);assert.match(pageResult.body,/<meta charset="utf-8"\/>/);assert.doesNotMatch(pageResult.body,/utf-8"\/company-workspace/);assert.match(pageResult.headers['set-cookie'][0],/^UQC_PORTAL_HPC_SESSIONID=/);
+  const script=streamingResponse();await handler({method:'GET',url:'/company-workspace/portal/hpc/app.js',headers:{host:'127.0.0.1:3099',cookie:'fixture'}},script);await new Promise(resolve=>setTimeout(resolve,30));
+  const scriptResult=script.result();assert.equal(scriptResult.status,200);assert.equal(scriptResult.body,'window.portalReady=true');
+  const flags=streamingResponse();await handler({method:'GET',url:'/company-workspace/portal/hpc/flags.js',headers:{host:'127.0.0.1:3099',cookie:'fixture'}},flags);await new Promise(resolve=>setTimeout(resolve,30));
+  const flagsResult=flags.result();assert.equal(flagsResult.status,200);assert.match(flagsResult.body,/\/"\/g/);assert.match(flagsResult.body,/\/company-workspace\/portal\/hpc\/"\+file/);assert.match(flagsResult.body,/\/company-workspace\/portal\/hpc\/logo\.png/);
   const post=streamingResponse();const {Readable}=await import('node:stream');const request=Readable.from([Buffer.from('username=a')]);request.method='POST';request.url='/company-workspace/portal/hpc/login';request.headers={host:'127.0.0.1:3099',cookie:'fixture; dsh-auth=agent-secret; UQC_PORTAL_HPC_SESSIONID=portal-secret','content-type':'application/x-www-form-urlencoded','content-length':'10'};await handler(request,post);await new Promise(resolve=>setTimeout(resolve,30));
   const postResult=post.result();assert.equal(postResult.status,200);const seen=JSON.parse(postResult.body);assert.equal(seen.body,'username=a');assert.equal(seen.cookie,'SESSIONID=portal-secret');
  }finally{
   await new Promise(resolve=>upstream.close(resolve));
   for(const [key,value] of Object.entries(previous)){if(value===undefined)delete process.env[key];else process.env[key]=value;}
+ }
+});
+test('portal proxy remembers a session when the desktop cannot store cookies',async()=>{
+ const previous=process.env.HPC_PORTAL;
+ const upstream=http.createServer((req,res)=>{
+  if(req.url==='/'){
+   res.setHeader('content-type','text/html');res.setHeader('set-cookie','SESSIONID=portal-secret; Path=/; HttpOnly');
+   res.end('<script src="/app.js"></script>');return;
+  }
+  if(req.url==='/app.js'){
+   if(req.headers.cookie!=='SESSIONID=portal-secret'){res.statusCode=404;res.end('missing cookie');return;}
+   res.setHeader('content-type','text/javascript');res.end('window.portalReady=true');return;
+  }
+  res.statusCode=404;res.end('missing');
+ });
+ await new Promise(resolve=>upstream.listen(0,'127.0.0.1',resolve));
+ try{
+  process.env.COMPANY_AGENT_DSH_PORT='3102';process.env.HPC_PORTAL=`http://127.0.0.1:${upstream.address().port}`;
+  const {routes}=await host('3102',{open:true});const handler=routes.get('/company-workspace/portal/hpc');
+  const page=streamingResponse();await handler({method:'GET',url:'/company-workspace/portal/hpc/',headers:{host:'127.0.0.1:3102'}},page);await new Promise(resolve=>setTimeout(resolve,30));
+  assert.equal(page.result().status,200);
+  const script=streamingResponse();await handler({method:'GET',url:'/company-workspace/portal/hpc/app.js',headers:{host:'127.0.0.1:3102'}},script);await new Promise(resolve=>setTimeout(resolve,30));
+  assert.equal(script.result().status,200);assert.equal(script.result().body,'window.portalReady=true');
+ }finally{
+  await new Promise(resolve=>upstream.close(resolve));
+  if(previous===undefined)delete process.env.HPC_PORTAL;else process.env.HPC_PORTAL=previous;
  }
 });
 test('grant is token-only and settings never accept credentials',async()=>{
@@ -232,6 +323,9 @@ test('grant is token-only and settings never accept credentials',async()=>{
   process.env.COMPANY_AGENT_DSH_PORT='3098';
   process.env.UQC_WORKSPACE_CONFIG=join(dir,'workspace.json');
   const {routes}=await host('3098');
+  const unset=response();
+  await routes.get('/company-workspace/settings')({method:'GET',headers:{host:'127.0.0.1:3098',cookie:'fixture'}},unset);
+  assert.equal(JSON.parse(unset.body).cloudApi,'');
   const post=(path,payload,headers={})=>{
    const request=Readable.from([Buffer.from(JSON.stringify(payload))]);
    request.method='POST';request.url=path;request.headers={host:'127.0.0.1:3098',cookie:'fixture','content-type':'application/json',...headers};
@@ -261,6 +355,12 @@ test('grant is token-only and settings never accept credentials',async()=>{
   // origin must never appear, under any ambient configuration.
   assert.equal(plainBody.cloudKeySet,true);
   assert.equal(plainBody.cloudApi,'http://127.0.0.1:8003');
+  assert.equal(plainBody.cloudPortal,'');
+  assert.equal(plainBody.hpcPortal,'');
+  const missing=streamingResponse();
+  await routes.get('/company-workspace/portal/cloud')({method:'GET',url:'/company-workspace/portal/cloud/',headers:{host:'127.0.0.1:3098',cookie:'fixture'}},missing);
+  assert.equal(missing.result().status,404);
+  assert.equal(missing.result().body,'portal not configured');
   assert.deepEqual(Object.keys(plainBody).sort(),['cloudApi','cloudKeySet','cloudPortal','hpcHost','hpcPortal','hpcUser','note'].sort());
   // The granted credential itself must never be echoed back in any field.
   assert.ok(!JSON.stringify(plainBody).includes('sk-grant-test'));
@@ -286,4 +386,47 @@ test('presentation overlay cannot activate in production or device profile',()=>
  // to the next boot check instead.
  const allowed=spawnSync(process.execPath,[dshCliPath],{env:{PATH:process.env.PATH,COMPANY_AGENT_DEPLOYMENT_MODE:'development',COMPANY_AGENT_PROFILE:'company-agent',COMPANY_AGENT_PRESET:'lab',COMPANY_AGENT_DEMO_UI:'1'},encoding:'utf8'});
  assert.notEqual(allowed.status,0);assert.doesNotMatch(allowed.stderr,gate);assert.match(allowed.stderr,/COMPANY_AGENT_DSH_ENTRY/);
+});
+test('cloud probe does not bake a developer machine path', async () => {
+ const {readFile} = await import('node:fs/promises');
+ const text = await readFile(new URL('../../apps/company-workspace/host.mjs', import.meta.url), 'utf8');
+ assert.equal(text.includes('/home/sunhl/'), false);
+ assert.match(text, /UQC_CLOUD_PROBE_PYTHON/);
+ assert.match(text, /python3/);
+});
+test('hpc projection keeps the job id and splits files on real lines',()=>{
+ const row=projectSqueueLine('5010|train job|cpu|RUNNING|1:02|2026-11-09|2');
+ assert.equal(row.job,'5010');
+ assert.equal(row.name,'train job');
+ assert.equal(row.nodes,'2');
+ assert.equal(projectSacctLine('5010.batch|train|cpu|COMPLETED|1:00|t0|t1'),null);
+ assert.deepEqual(projectHpcFiles('notes.txt\tf\nruns\td\n'),[{name:'notes.txt',kind:'file'},{name:'runs',kind:'directory'}]);
+});
+test('workspace route lists the registered directory and does not invent an empty root',async()=>{
+ const previous=process.env.COMPANY_AGENT_DSH_PORT;
+ const dir=await mkdtemp(join(tmpdir(),'unitqc-workspace-'));
+ await writeFile(join(dir,'notes.txt'),'ok','utf8');
+ try{
+  process.env.COMPANY_AGENT_DSH_PORT='3098';
+  const routes=new Map();
+  const ctx={effect:fn=>fn(),workspaceRegistry:{list:()=>[{id:'ws-1',title:'项目',path:dir,sessionIds:['s1'],updatedAt:'2026-11-09'}]},connection:{authorizeIndex:(req,res)=>{if(String(req.headers.cookie||'').split(';').some(part=>part.trim()==='fixture'))return true;res.writeHead(401);res.end();return false;}},webServer:{register:route=>{routes.set(route.path,route.handler);return()=>routes.delete(route.path);},tapIndex:()=>{}}};
+  await apply(ctx);
+  const handler=routes.get('/company-workspace/workspace');
+  assert.ok(handler);
+  const unauth=response();
+  await handler({method:'GET',headers:{host:'127.0.0.1:3098'}},unauth);
+  assert.equal(unauth.status,401);
+  const ok=response();
+  await handler({method:'GET',url:'/company-workspace/workspace?path=..',headers:{host:'127.0.0.1:3098',cookie:'fixture'}},ok);
+  assert.equal(ok.status,200);
+  const body=JSON.parse(ok.body);
+  assert.equal(body.ready,true);
+  assert.equal(body.workspaces[0].path,dir);
+  assert.ok(body.entries.some(entry=>entry.name==='notes.txt'&&entry.kind==='file'));
+  assert.equal(body.entries.some(entry=>String(entry.name).includes('..')),false);
+ }finally{
+  await rm(dir,{recursive:true,force:true});
+  if(previous===undefined)delete process.env.COMPANY_AGENT_DSH_PORT;
+  else process.env.COMPANY_AGENT_DSH_PORT=previous;
+ }
 });

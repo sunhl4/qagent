@@ -44,6 +44,9 @@ importers:
       '@unitqc/company-agent-research':
         specifier: file:../../packages/company-agent-research
         version: file:../../packages/company-agent-research
+      '@unitqc/company-agent-literature':
+        specifier: file:../../packages/company-agent-literature
+        version: file:../../packages/company-agent-literature
 
 packages:
 
@@ -358,6 +361,9 @@ packages:
   '@unitqc/company-agent-research@file:../../packages/company-agent-research':
     resolution: {directory: ../../packages/company-agent-research, type: directory}
 
+  '@unitqc/company-agent-literature@file:../../packages/company-agent-literature':
+    resolution: {directory: ../../packages/company-agent-literature, type: directory}
+
   undici@8.10.2:
     resolution: {integrity: sha512-/y4/bH9YNU5hi9NIrpOuvGXFcxrj3CMrV+/AYpowAYTpHn8gX/XPFjNy766FPoYY0miQhdW977JFWKGNhBdwyQ==}
     engines: {node: '>=22.19.0'}
@@ -642,6 +648,10 @@ snapshots:
       '@unitqc/company-agent-core': file:../../packages/company-agent-core
 
   '@unitqc/company-agent-research@file:../../packages/company-agent-research':
+    dependencies:
+      '@unitqc/company-agent-core': file:../../packages/company-agent-core
+
+  '@unitqc/company-agent-literature@file:../../packages/company-agent-literature':
     dependencies:
       '@unitqc/company-agent-core': file:../../packages/company-agent-core
 

@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://company.example/schemas/attachment-ledger.schema.json",
+  "title": "AttachmentLedgerEntry",
+  "description": "One supplement, table, figure, data file, or code listing attached to a pinned paper.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "attachment_id",
+    "paper_id",
+    "source_kind",
+    "version",
+    "kind",
+    "name",
+    "parsed"
+  ],
+  "properties": {
+    "attachment_id": {"type": "string", "minLength": 1, "maxLength": 80},
+    "paper_id": {"type": "string", "minLength": 1, "maxLength": 80},
+    "source_kind": {
+      "type": "string",
+      "enum": ["arxiv_src", "jats", "html", "pdf_text", "figure_asset"]
+    },
+    "version": {"type": "string", "minLength": 1, "maxLength": 80},
+    "kind": {
+      "type": "string",
+      "enum": ["proof", "protocol", "table", "data", "figure", "code_listing"]
+    },
+    "name": {"type": "string", "minLength": 1, "maxLength": 200},
+    "parsed": {"type": "boolean"},
+    "anchor": {"type": ["string", "null"], "maxLength": 200}
+  }
+}

@@ -1,7 +1,6 @@
-# Company Agent composition for the Electron desktop profile.
-# The desktop shell can only boot profiles/desktop. These entries are the
-# managed company-agent patch: company plugins, local model routes, admitted
-# skills, and the system-trust preset root. policy is already a profile bundle.
+# Company plugins, model routes, and admitted skills for the Electron desktop
+# profile. The desktop shell boots profiles/desktop. The session preset is the
+# shipped standard preset. Company policy stays on the lab mandate.
 - insert:
     - id: company-agent-core
       name: "@unitqc/company-agent-core"
@@ -19,24 +18,10 @@
       name: "@unitqc/company-agent-plan"
     - id: company-agent-research
       name: "@unitqc/company-agent-research"
+    - id: company-agent-literature
+      name: "@unitqc/company-agent-literature"
     - id: company-workspace-shell
       name: "@unitqc/company-workspace-ui"
-
-- id: tool-fs
-  disabled: false
-  config:
-    readMaxBytes: 51200
-
-- id: tool-fs-search
-  disabled: false
-  config:
-    sampleOverCapGlobResults: false
-
-- id: tool-web
-  disabled: false
-  config:
-    fetch: false
-    searchTimeoutMs: 60000
 
 - id: llm-pi-ai
   config:
@@ -75,24 +60,24 @@
 - id: skill-filesystem
   disabled: false
   config:
-    includeDefaultRoots: false
     customSkillDirs:
       - !!js process.env.COMPANY_AGENT_SKILL_ROOT
     watch: false
 
-- id: tool-skill
-  disabled: false
-
-- id: tool-todo
-  disabled: false
-  config:
-    allowParallelInProgress: false
-
-# 0.2 registry default. Native presets stay installed; new sessions open on Company Agent.
+# 0.2 registry only accepts default. The desktop seat uses the shipped standard
+# preset. PTC, minimal, creator, and the company-agent preset stay closed.
 - id: agent-preset-registry
   name: "@deepseek-ai/dsh-agent-preset-registry"
   config:
-    default: company-agent
+    default: standard
+- id: preset-ptc
+  disabled: true
+- id: preset-minimal
+  disabled: true
+- id: preset-cordis
+  disabled: true
+- id: preset-company-agent
+  disabled: true
 
 # Codex stays a host provider. The model-visible delegation tool is off.
 - id: subagent-codex

@@ -50,8 +50,10 @@ export type * from "./reclaim.ts";
 export { planLeaseReclaim, planReclaimSweep, resolveReclaimPolicy } from "./reclaim.ts";
 export type * from "./literature.ts";
 export {
+  admitCodeChange,
   buildLiteratureCorpus,
   compileMethodCard,
+  compileReproductionCandidate,
   deduplicatePapers,
 } from "./literature.ts";
 export type * from "./reproduction.ts";

@@ -63,7 +63,7 @@ def _architecture() -> dict:
         or set(clocks) != set(_CLOCKS)
         or clocks["agent"].get("owner") != "control"
         or clocks["agent"].get("fact_store") != "local-control-plane"
-        or control.get("open_sources") != ["company", "workspace", "research"]
+        or control.get("open_sources") != ["company", "workspace", "research", "dingtalk"]
         or control.get("execution_fields") != ["session_ref", "tool_pack"]
         or control.get("recover_fields") != [
             "assignment_id", "ticket_id", "execution_state", "session_ref", "tool_pack", "thread_key",
@@ -83,6 +83,7 @@ def _architecture() -> dict:
         or not isinstance(channels, dict)
         or channels.get("github") is not False
         or channels.get("feishu") is not False
+        or channels.get("dingtalk") is not True
         or channels.get("research") is not True
         or not isinstance(watchdog, dict)
         or watchdog.get("may_open_ticket") is not False
@@ -94,6 +95,7 @@ def _architecture() -> dict:
         or framework.get("runtime") != "deepseek-harness"
         or framework.get("executor") != "existing-dsh-session"
         or "research" not in contract.get("source_kinds", [])
+        or "dingtalk" not in contract.get("source_kinds", [])
     ):
         raise SuperDshError("super-dsh architecture is invalid")
     return architecture

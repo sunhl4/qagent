@@ -64,13 +64,15 @@ REQUIRED = {
         "inheritsParentContext: false",
         "company-local",
         "deepseek-chat",
-        "readMaxBytes: 51200",
+        "readMaxBytes: 131072",
         "fetch: false",
     ),
     "company-agent-minimal": (
         "company-agent-policy",
         "company-agent-core",
-        "company-agent-quantum",
+        "company-agent-latex",
+        "company-agent-office",
+        "company-agent-literature",
     ),
 }
 FORBIDDEN = {
@@ -85,6 +87,10 @@ FORBIDDEN = {
     ),
     "company-agent-minimal": (
         "company-agent-device",
+        "company-agent-quantum",
+        "company-agent-hpc",
+        "company-agent-plan",
+        "company-agent-research",
         "subagent-codex",
         "permissionMode: never",
         "inheritsParentContext: false",
@@ -231,7 +237,7 @@ def profile_home(profile: str, preset: str | None = None) -> tempfile.TemporaryD
     from verify_skills import sync as sync_skills
 
     if sync_skills(root=skills, profile=profile, preset=preset) != 0:
-        shutil.rmtree(temporary, ignore_errors=True)
+        temporary.cleanup()
         raise RuntimeError("skill registry sync failed for the verification runtime")
     # Materialize repository-owned plugins without copying pnpm junctions.
     # This keeps Node resolution deterministic on Windows and avoids copying

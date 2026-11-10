@@ -50,8 +50,8 @@ def _framework() -> dict:
         or framework.get("forbidden_worker_modes") != list(_FORBIDDEN)
         or framework.get("mandate_scopes") != list(_SCOPES)
         or not isinstance(connectors, dict)
-        or set(connectors) != {"github", "feishu"}
-        or connectors != {"github": False, "feishu": False}
+        or set(connectors) != {"github", "feishu", "dingtalk"}
+        or connectors != {"github": False, "feishu": False, "dingtalk": True}
     ):
         raise HarnessCompatError("harness contract is invalid")
     return framework
@@ -161,7 +161,7 @@ def migration_manifest() -> dict:
         if device != expected:
             reasons.append(f"device decision for {preset} drifted")
         has_work_item = "company_work_item" in visible
-        if has_work_item != (preset != "sign"):
+        if not has_work_item:
             reasons.append(f"work-item visibility for {preset} drifted")
         preset_report[preset] = {
             "tool_count": len(visible),

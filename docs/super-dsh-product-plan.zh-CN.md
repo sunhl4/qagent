@@ -1,6 +1,6 @@
 # 公司 Super DSH 产品计划
 
-日期：2026-11-04。全公司只有一个 DSH 运行时。架构说明见 [super-dsh-architecture.zh-CN.md](super-dsh-architecture.zh-CN.md)。2026-11-06 起，技术手册、产品方向和分阶段开发计划见 [super-dsh-handbook-2026-11-06.zh-CN.md](super-dsh-handbook-2026-11-06.zh-CN.md)。Company Agent 的 2000 人天基线仍描述 P 系列产品化，不在本计划里重算。
+日期：2026-11-04。全公司只有一个 DSH 运行时。架构说明见 [super-dsh-architecture.zh-CN.md](super-dsh-architecture.zh-CN.md)。2026-11-06 起，技术手册、产品方向和分阶段开发计划见 [super-dsh-handbook-2026-11-06.zh-CN.md](super-dsh-handbook-2026-11-06.zh-CN.md)。2026-11-10 起，开发桌面的会话预设是上游 `standard`，公司工具和批准留在档案插件，以手册第 3 节为准。Company Agent 的 2000 人天基线仍描述 P 系列产品化，不在本计划里重算。
 
 ## 已证实
 

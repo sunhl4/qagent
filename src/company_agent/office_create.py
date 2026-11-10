@@ -540,6 +540,7 @@ def _sheet_xml(sheet: dict) -> str:
     return (
         '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
         f'<m:worksheet xmlns:m="{_M_NS}">'
+        '<m:sheetFormatPr defaultRowHeight="15"/>'
         f"<m:sheetData>{''.join(row_parts)}</m:sheetData></m:worksheet>"
     )
 

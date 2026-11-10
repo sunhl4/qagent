@@ -56,7 +56,54 @@ def _policy_contract() -> dict[str, Any]:
         or research_ask != ["lab"]
         or research_deny != ["boot", "algo", "sign"]):
         raise RuntimeError("Company Agent research run policy contract is invalid")
+    if (policy.get("knowledge_note_tool") != "company_knowledge_note"
+        or policy.get("knowledge_note_ask_presets") != ["lab"]
+        or policy.get("knowledge_note_deny_presets") != ["boot", "algo", "sign"]
+        or policy.get("sign_receipt_tool") != "company_sign_receipt"
+        or policy.get("sign_receipt_allow_presets") != ["sign"]
+        or policy.get("catalog_replay_tool") != "company_catalog_replay"
+        or policy.get("catalog_replay_allow_presets") != ["algo", "lab"]
+        or policy.get("catalog_replay_deny_presets") != ["boot", "sign"]
+        or policy.get("device_window_tool") != "quantum_device_window"
+        or policy.get("device_window_allow_presets") != ["algo", "lab", "sign"]
+        or policy.get("device_window_deny_presets") != ["boot"]):
+        raise RuntimeError("Company Agent seat policy contract is invalid")
+    if (policy.get("dingtalk_reply_tool") != "company_dingtalk_reply"
+        or policy.get("dingtalk_reply_provider") != "company-dingtalk"
+        or policy.get("dingtalk_reply_ask_presets") != ["lab"]
+        or policy.get("dingtalk_reply_deny_presets") != ["boot", "algo", "sign"]):
+        raise RuntimeError("Company Agent dingtalk reply policy contract is invalid")
+    grant = policy.get("session_grant")
+    if (
+        not isinstance(grant, dict)
+        or set(grant) != {"tool", "max_calls_per_tool", "max_ttl_seconds", "tools"}
+        or grant.get("tool") != "company_grant_open"
+        or grant.get("max_calls_per_tool") != 20
+        or grant.get("max_ttl_seconds") != 14400
+        or grant.get("tools") != list(_grant_tools())
+    ):
+        raise RuntimeError("Company Agent session grant contract is invalid")
     return policy
+
+
+def _grant_tools() -> tuple[str, ...]:
+    from company_agent.grants import GRANT_TOOLS
+    return GRANT_TOOLS
+
+
+def _with_grant(tool: str, preset: str, ask_presets: set[str], args: Mapping[str, Any]) -> Decision:
+    """Ask unless this session's grant still covers the tool. A deny preset stays deny."""
+    if preset not in ask_presets:
+        return "deny"
+    try:
+        from company_agent.grants import grant_covers, handoff_pending
+        if handoff_pending(tool):
+            return "ask"
+        if grant_covers(tool, args):
+            return "allow"
+    except (OSError, RuntimeError, TypeError, ValueError):
+        return "ask"
+    return "ask"
 
 
 def decide(tool: str, preset: str, args: Mapping[str, Any] | None = None) -> Decision:
@@ -68,7 +115,11 @@ def decide(tool: str, preset: str, args: Mapping[str, Any] | None = None) -> Dec
         raise TypeError("arguments must be an object")
     if not isinstance(args, dict):
         raise TypeError("arguments must be a JSON object")
-    del args
+    if preset == "sign" and tool in {"quantum_device_run", "hpc_submit", "quantum_cloud_submit"}:
+        from company_agent.work_items import bound_plan_steps
+        steps = bound_plan_steps()
+        if steps is not None and tool not in steps:
+            return "deny"
     try:
         if tool not in load_tools():
             return "deny"
@@ -155,9 +206,12 @@ def decide(tool: str, preset: str, args: Mapping[str, Any] | None = None) -> Dec
         deny_presets = set(deny_raw)
         if preset in deny_presets:
             return "deny"
-        return "ask" if preset in ask_presets else "deny"
+        return _with_grant(tool, preset, ask_presets, args)
     if tool == policy["cloud_submit_tool"]:
-        return "ask" if preset in policy["cloud_submit_ask_presets"] else "deny"
+        cloud_ask = set(policy["cloud_submit_ask_presets"])
+        if preset in set(policy["cloud_submit_deny_presets"]):
+            return "deny"
+        return _with_grant(tool, preset, cloud_ask, args)
     if tool in set(policy.get("latex_write_tools") or ()):
         ask_presets = policy.get("latex_write_ask_presets") or ()
         deny_presets = policy.get("latex_write_deny_presets") or ()
@@ -169,7 +223,7 @@ def decide(tool: str, preset: str, args: Mapping[str, Any] | None = None) -> Dec
             return "deny"
         if preset in deny_presets:
             return "deny"
-        return "ask" if preset in ask_presets else "deny"
+        return _with_grant(tool, preset, set(ask_presets), args)
     if tool in set(policy.get("plan_write_tools") or ()):
         plan_ask_presets = policy.get("plan_write_ask_presets") or ()
         plan_deny_presets = policy.get("plan_write_deny_presets") or ()
@@ -181,7 +235,7 @@ def decide(tool: str, preset: str, args: Mapping[str, Any] | None = None) -> Dec
             return "deny"
         if preset in plan_deny_presets:
             return "deny"
-        return "ask" if preset in plan_ask_presets else "deny"
+        return _with_grant(tool, preset, set(plan_ask_presets), args)
     if tool == policy.get("research_run_tool"):
         if tool != "company_research_run":
             return "deny"
@@ -197,7 +251,23 @@ def decide(tool: str, preset: str, args: Mapping[str, Any] | None = None) -> Dec
             return "deny"
         if preset in set(research_deny):
             return "deny"
-        return "ask" if preset in set(research_ask) else "deny"
+        return _with_grant(tool, preset, set(research_ask), args)
+    if tool == policy.get("dingtalk_reply_tool"):
+        if tool != "company_dingtalk_reply":
+            return "deny"
+        if policy.get("dingtalk_reply_provider") != "company-dingtalk":
+            return "deny"
+        dingtalk_ask = policy.get("dingtalk_reply_ask_presets") or ()
+        dingtalk_deny = policy.get("dingtalk_reply_deny_presets") or ()
+        if not isinstance(dingtalk_ask, list) or not isinstance(dingtalk_deny, list):
+            return "deny"
+        if any(not isinstance(item, str) for item in (*dingtalk_ask, *dingtalk_deny)):
+            return "deny"
+        if set(dingtalk_ask) != {"lab"} or set(dingtalk_deny) != {"boot", "algo", "sign"}:
+            return "deny"
+        if preset in set(dingtalk_deny):
+            return "deny"
+        return _with_grant(tool, preset, set(dingtalk_ask), args)
     if tool == policy.get("hpc_submit_tool"):
         if tool != "hpc_submit":
             return "deny"
@@ -213,7 +283,7 @@ def decide(tool: str, preset: str, args: Mapping[str, Any] | None = None) -> Dec
         hpc_deny_presets = set(hpc_deny_raw)
         if preset in hpc_deny_presets:
             return "deny"
-        return "ask" if preset in hpc_ask_presets else "deny"
+        return _with_grant(tool, preset, hpc_ask_presets, args)
     if tool == policy.get("hpc_file_write_tool") or tool in {"hpc_dir_create", "hpc_file_remove"}:
         if tool not in {"hpc_stage_file", "hpc_dir_create", "hpc_file_remove"}:
             return "deny"
@@ -229,7 +299,7 @@ def decide(tool: str, preset: str, args: Mapping[str, Any] | None = None) -> Dec
         write_deny_presets = set(write_deny_raw)
         if preset in write_deny_presets:
             return "deny"
-        return "ask" if preset in write_ask_presets else "deny"
+        return _with_grant(tool, preset, write_ask_presets, args)
     if tool == policy.get("hpc_job_cancel_tool"):
         if tool != "hpc_job_cancel":
             return "deny"
@@ -245,5 +315,21 @@ def decide(tool: str, preset: str, args: Mapping[str, Any] | None = None) -> Dec
         cancel_deny_presets = set(cancel_deny_raw)
         if preset in cancel_deny_presets:
             return "deny"
-        return "ask" if preset in cancel_ask_presets else "deny"
+        return _with_grant(tool, preset, cancel_ask_presets, args)
+    if tool == "company_grant_open":
+        return "ask" if preset in {"lab", "sign"} else "deny"
+    if tool == policy.get("knowledge_note_tool"):
+        if preset in set(policy.get("knowledge_note_deny_presets") or ()):
+            return "deny"
+        return "ask" if preset in set(policy.get("knowledge_note_ask_presets") or ()) else "deny"
+    if tool == policy.get("sign_receipt_tool"):
+        return "allow" if preset in set(policy.get("sign_receipt_allow_presets") or ()) else "deny"
+    if tool == policy.get("catalog_replay_tool"):
+        if preset in set(policy.get("catalog_replay_deny_presets") or ()):
+            return "deny"
+        return "allow" if preset in set(policy.get("catalog_replay_allow_presets") or ()) else "deny"
+    if tool == policy.get("device_window_tool"):
+        if preset in set(policy.get("device_window_deny_presets") or ()):
+            return "deny"
+        return "allow" if preset in set(policy.get("device_window_allow_presets") or ()) else "deny"
     return "allow"

@@ -48,7 +48,13 @@ const server = createServer(async (req, res) => {
   for await (const chunk of req) body += chunk;
   const request = JSON.parse(body);
   calls++;
-  if (scenario === "cancel_after") { handle.agent.cancel({kind: "user"}); return; }
+  if (scenario === "cancel_after") {
+    // The dispatch diagnostic is flushed before this request is read. Yield
+    // once so the bridge records it, then cancel. Cancelling inside this
+    // callback races that read and drops the unknown outcome.
+    setTimeout(() => { handle.agent.cancel({kind: "user"}); }, 50);
+    return;
+  }
   if (scenario === "timeout_after") {
     // Trigger the real bridge timeout callback only after the server received the request.
     // A fixed startup delay races WSL file access and can time out authorization instead.
@@ -60,7 +66,8 @@ const server = createServer(async (req, res) => {
     return;
   }
   const result = fixtureCapability === "cloud"
-    ? { provider: "uqc-cloud", cloud_task: "fixture-task", target: "fixture-sim", state: "submitted", shots: 100 }
+    ? { provider: "uqc-cloud", cloud_task: "fixture-task", target: "fixture-sim", state: "submitted", shots: 100,
+        program_sha256: "ab".repeat(32) }
     : fixtureCapability === "hpc"
       ? { provider: "hpc-slurm-ssh", slurm_number: "101", job_name: "fixture", state: "pending" }
       : { twin_id: "twin_fixture", provenance: "qccd-twin", shots_actual: 1,

@@ -23,6 +23,7 @@ def test_topology_is_one_company_runtime() -> None:
     assert shape["platform_entry"] == "research-trigger"
     assert shape["channels"]["github"] is False
     assert shape["channels"]["feishu"] is False
+    assert shape["channels"]["dingtalk"] is True
     assert shape["channels"]["research"] is True
     assert shape["company_fact_store"] is False
     assert shape["execution_fields"] == ["session_ref", "tool_pack"]

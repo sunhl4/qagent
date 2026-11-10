@@ -1,11 +1,12 @@
-import {readFile, writeFile, mkdir, chmod, readdir, lstat} from 'node:fs/promises';
+import {readFile, writeFile, mkdir, chmod, readdir, lstat, unlink} from 'node:fs/promises';
 import {createHash, randomBytes, timingSafeEqual} from 'node:crypto';
 import {execFile} from 'node:child_process';
 import {request as httpRequest} from 'node:http';
 import {request as httpsRequest, Agent as HttpsAgent} from 'node:https';
 import {promisify} from 'node:util';
-import {homedir} from 'node:os';
-import {dirname, join, relative, resolve, sep} from 'node:path';
+import {homedir, tmpdir} from 'node:os';
+import {dirname, isAbsolute, join, relative, resolve, sep} from 'node:path';
+import {fileURLToPath} from 'node:url';
 const run = promisify(execFile);
 
 // Host data routes for the native company resource UI. No tools, model calls,
@@ -107,6 +108,67 @@ export function projectWorkbenchTasks(records, options = {}) {
     .map(({_rank,_record,...task})=>task);
 }
 
+export function projectSqueueLine(line) {
+  const [id, name, part, state, elapsed, start, nodes] = String(line || '').split('|').map(part => part.trim().slice(0, 60));
+  if (!id) return null;
+  return {id, job: id, name: name || '', part: part || '', state: state || '', elapsed: elapsed || '', start: start || '', nodes: nodes || ''};
+}
+
+export function projectSacctLine(line) {
+  const [id, name, part, state, elapsed, start, end] = String(line || '').split('|').map(part => part.trim().slice(0, 60));
+  if (!id || !state || /[.](?:batch|extern|\d+)$/.test(id)) return null;
+  return {id, job: id, name: name || '', part: part || '', state, elapsed: elapsed || '', start: start || '', end: end || ''};
+}
+
+export function projectHpcFiles(stdout) {
+  const rows = [];
+  for (const line of String(stdout || '').split(/\r?\n/)) {
+    if (!line || rows.length >= 64) continue;
+    const [name, kind] = line.split('\t');
+    const clean = String(name || '').trim().slice(0, 160);
+    if (!clean || clean.includes('..') || clean.includes('/') || clean.includes('\\')) continue;
+    rows.push({name: clean, kind: kind === 'd' ? 'directory' : 'file'});
+  }
+  return rows;
+}
+
+const AUTOMATION_TICKET = /^tic_[0-9a-f]{32}$/;
+const AUTOMATION_SESSION = /^dsh:[\x21-\x7e]{1,76}$/;
+const AUTOMATION_TIME = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/;
+const AUTOMATION_MANDATES = new Set(['boot', 'lab', 'algo', 'sign']);
+const AUTOMATION_TICKET_STATES = new Set(['open', 'ended']);
+const AUTOMATION_EXECUTION = new Set(['pending', 'running', 'unknown', 'ended']);
+
+export function projectAutomation(body) {
+  if (!body || typeof body !== 'object' || body.available !== true || !Array.isArray(body.items)) {
+    return {available: false, items: [], observed: 0, reason: 'unavailable'};
+  }
+  const items = [];
+  for (const row of body.items) {
+    if (!row || typeof row !== 'object' || items.length >= 24) continue;
+    const ticketId = String(row.ticket_id || '');
+    const title = String(row.title || '').replace(/\s+/g, ' ').trim().slice(0, 120);
+    const state = String(row.state || '');
+    const mandate = String(row.mandate || '');
+    if (!AUTOMATION_TICKET.test(ticketId) || !title || !AUTOMATION_TICKET_STATES.has(state) || !AUTOMATION_MANDATES.has(mandate)) continue;
+    const execution = String(row.execution_state || '');
+    const sessionRef = String(row.session_ref || '');
+    const createdAt = String(row.created_at || '');
+    items.push({
+      ticket_id: ticketId,
+      title,
+      state,
+      mandate,
+      execution_state: AUTOMATION_EXECUTION.has(execution) ? execution : '',
+      session_ref: AUTOMATION_SESSION.test(sessionRef) ? sessionRef : '',
+      created_at: AUTOMATION_TIME.test(createdAt) ? createdAt : '',
+    });
+  }
+  const observedRaw = Number(body.observed);
+  const observed = Number.isSafeInteger(observedRaw) && observedRaw >= 0 ? Math.min(observedRaw, 10000) : 0;
+  return {available: true, items, observed, truncated: body.truncated === true};
+}
+
 export function restoreWorkbenchTasks(snapshot, records, options = {}) {
   const next = projectWorkbenchTasks(records, options);
   if (!snapshot || typeof snapshot !== 'object' || !Array.isArray(snapshot.tasks)) return next;
@@ -169,7 +231,7 @@ export async function apply(ctx) {
     <\/script></body>`);
 
   // Server-side proxy for cloud/HPC connection data. Tokens never enter model or front-end storage.
-  // Precedence per field: config file (saved from the workspace settings page) > process env > default.
+  // Precedence per field: config file (saved from the workspace settings page) > process env. An unset value stays empty.
   const configPath = process.env.UQC_WORKSPACE_CONFIG || join(homedir(), '.config', 'unitqc', 'workspace.json');
   let savedConfig = {};
   try {
@@ -178,10 +240,10 @@ export async function apply(ctx) {
   } catch {}
   const cleanValue = value => typeof value === 'string' ? value.trim().replace(/\/+$/, '') : '';
   const CONFIG = {
-    cloudApi: cleanValue(savedConfig.cloudApi || process.env.UQC_CLOUD_API_BASE_URL) || 'http://cloud.unitaryqubit.com:8003',
+    cloudApi: cleanValue(savedConfig.cloudApi || process.env.UQC_CLOUD_API_BASE_URL),
     cloudKey: cleanValue(savedConfig.cloudKey || process.env.UQC_CLOUD_API_KEY),
-    cloudPortal: cleanValue(savedConfig.cloudPortal || process.env.UQC_CLOUD_PORTAL) || 'https://220.178.61.185:8443',
-    hpcPortal: cleanValue(savedConfig.hpcPortal || process.env.HPC_PORTAL) || 'http://192.168.110.37',
+    cloudPortal: cleanValue(savedConfig.cloudPortal || process.env.UQC_CLOUD_PORTAL),
+    hpcPortal: cleanValue(savedConfig.hpcPortal || process.env.HPC_PORTAL),
     hpcGateway: cleanValue(savedConfig.hpcGateway || process.env.HPC_GATEWAY),
     hpcJobs: cleanValue(savedConfig.hpcJobsUrl || process.env.HPC_JOBS_URL),
     hpcToken: cleanValue(savedConfig.hpcToken || process.env.HPC_TOKEN),
@@ -325,30 +387,50 @@ export async function apply(ctx) {
   // INVALID_API_KEY. The probe script receives the key via env (never argv) and
   // prints exactly one JSON line; the key never leaves this process.
   const cloudProbeCandidates = () => {
+    const configured = process.env.UQC_CLOUD_PROBE_PYTHON || '';
+    const posix = process.platform === 'win32' && configured.startsWith('/') && !configured.startsWith('//');
+    // A Linux SDK interpreter is the probe. The Windows fallback has no SDK
+    // and would replace a real connection failure with "module not installed".
+    if (posix) return [configured];
     const list = [];
-    // Interpreter choice is env-driven for deployment; the two trailing
-    // entries are fallback conveniences: a known on-host venv that ships
-    // uqc_client, then the system python3. Candidates whose interpreter or
-    // module is missing simply fail through to the next entry, so foreign
-    // hosts degrade to python3 without configuration.
-    if (process.env.UQC_CLOUD_PROBE_PYTHON) list.push(process.env.UQC_CLOUD_PROBE_PYTHON);
-    list.push('/home/sunhl/projects/qchem_qml_md/.venv/bin/python', 'python3');
+    if (configured) list.push(configured);
+    if (process.env.COMPANY_AGENT_PYTHON) list.push(process.env.COMPANY_AGENT_PYTHON);
+    list.push(process.platform === 'win32' ? 'python' : 'python3');
     return list.filter((value, index) => list.indexOf(value) === index);
+  };
+  const cloudProbeScript = fileURLToPath(new URL('uqc-cloud-probe.py', import.meta.url));
+  const runCloudProbe = async (python, env) => {
+    const posix = process.platform === 'win32' && python.startsWith('/') && !python.startsWith('//');
+    if (!posix) return run(python, [cloudProbeScript], {timeout:50000, maxBuffer:256 * 1024, windowsHide:true, env});
+    const root = process.env.SystemRoot || process.env.SYSTEMROOT || 'C:\\Windows';
+    const wsl = `${root}\\System32\\wsl.exe`;
+    const script = await readFile(cloudProbeScript);
+    // stdin to wsl.exe is not delivered reliably, so the script is carried on
+    // the command as base64 and written inside the distro. /u publishes the probe variables.
+    const encoded = script.toString('base64');
+    const code = `import base64,runpy,pathlib; p=pathlib.Path('/tmp/company-agent-ui-cloud-probe.py'); p.write_bytes(base64.b64decode(${JSON.stringify(encoded)})); runpy.run_path(str(p), run_name='__main__')`;
+    const probeEnv = {
+      ...process.env,
+      ...env,
+      WSLENV: 'UQC_CLOUD_API_KEY/u:UQC_CLOUD_HOST/u:UQC_CLOUD_PORT/u:COMPANY_AGENT_SUBJECT/u',
+    };
+    return run(wsl, ['-e', python, '-c', code], {timeout:25000, maxBuffer:256 * 1024, windowsHide:true, env:probeEnv});
   };
   const cloudProbe = (req) => cached('cloud-probe', 15, async () => {
     let lastError = '';
     for (const python of cloudProbeCandidates()) {
       try {
-        const uqcEnv = {...process.env,
-        UQC_CLOUD_API_KEY: CONFIG.cloudKey,
-        UQC_CLOUD_HOST: (() => {try {return new URL(CONFIG.cloudApi).hostname;} catch {return '';}})(),
-        UQC_CLOUD_PORT: (() => {try {return String(new URL(CONFIG.cloudApi).port || '8003');} catch {return '';}})()
-      };
-      for (const key of Object.keys(uqcEnv)) if (uqcEnv[key] === undefined) delete uqcEnv[key];
-      const {stdout} = await run(python,
-        [new URL('uqc-cloud-probe.py', import.meta.url).pathname],
-        {timeout:50000, maxBuffer:256 * 1024, windowsHide:true, env:{...uqcEnv, COMPANY_AGENT_SUBJECT:trustedSubject(req)}});
-      const line = String(stdout).trim().split('\n').filter(Boolean).pop() || '';
+        const uqcEnv = {
+          UQC_CLOUD_API_KEY: CONFIG.cloudKey,
+          UQC_CLOUD_HOST: (() => {try {return new URL(CONFIG.cloudApi).hostname;} catch {return '';}})(),
+          UQC_CLOUD_PORT: (() => {try {return new URL(CONFIG.cloudApi).port;} catch {return '';}})(),
+          COMPANY_AGENT_SUBJECT: trustedSubject(req),
+          SystemRoot: process.env.SystemRoot || '',
+          PATH: process.env.PATH || '',
+        };
+        for (const key of Object.keys(uqcEnv)) if (uqcEnv[key] === undefined || uqcEnv[key] === '') delete uqcEnv[key];
+        const {stdout} = await runCloudProbe(python, uqcEnv);
+        const line = String(stdout).trim().split('\n').filter(Boolean).pop() || '';
         return JSON.parse(line);
       } catch (exc) {
         lastError = String(exc && (exc.message || exc)).slice(0,120);
@@ -371,7 +453,7 @@ export async function apply(ctx) {
     if (!probe.connected) return {reason:probe.reason || 'unreachable', devices:null, jobs:[], detail:String(probe.detail || '').slice(0,160)};
   return {
     reason:'ok',
-    devices: Array.isArray(probe.chips) ? probe.chips : null,
+    devices: Array.isArray(probe.chips) ? probe.chips.map(chip => ({...chip, kind: chip.kind || chip.chip_type || '', state: chip.state || chip.status || ''})) : null,
     jobs: [],
     files: [],
     filesNote: '云平台 SDK 当前没有远端文件夹浏览接口；云端文件通过提交工具上传、结果工具回收。'
@@ -389,7 +471,7 @@ export async function apply(ctx) {
     const policy = /sameorigin/i.test(headers['x-frame-options'] || '') ? 'self' :
       /deny/i.test(headers['x-frame-options'] || '') ? 'deny' :
       /frame-ancestors/i.test(headers['content-security-policy'] || '') && !/\(https?:/.test(headers['content-security-policy'] || '') ? 'csp' : 'allowed';
-    if (!sshTarget()) return {connected:false, sshOk:false, reason:'unconfigured', gateway:CONFIG.hpcGateway,
+    if (!sshTarget()) return {connected:false, sshOk:false, reason:'portal_ok_without_ssh', gateway:CONFIG.hpcGateway,
       portal:CONFIG.hpcPortal, embeddable:true, framePolicy:'proxied'};
     let sshOk = false, sshDetail = '';
     try {await sshRun('true');sshOk = true;} catch (exc) {sshDetail = String(exc && exc.message || exc).slice(0,120);}
@@ -399,26 +481,17 @@ export async function apply(ctx) {
   const hpcOverview = (req) => cached('hpc-overview', 15, async () => {
     if (!sshTarget()) return {reason:'unconfigured', running:null, history:null};
     try {
-      const {stdout} = await sshRun(`squeue -u $USER -h -o '%.18i %.30j %.9P %.12T %.10M %.12S' ; echo '##' ; sacct -u $USER -S $(date -d '-7 days' +%Y-%m-%d) --noheader -P -o 'JobID,JobName%30,Partition,State,Elapsed,Start,End' | grep -v '\\.batch\\|\\.extern\\|\\.0' | tail -25`);
-      const [live, hist] = stdout.split('##');
-      const liveRows = live.trim().split('\n').filter(Boolean).map(line => {
-        const [id, job, part, state, elapsed, start] = line.trim().split(/\s+/).map(c => c.trim().slice(0,60));
-        return {id, job, part, state, elapsed, start};
-      });
-      const histRows = hist.trim().split('\n').filter(Boolean).map(line => {
-        const [id, job, part, state, elapsed, start, end] = line.trim().split('|').map(c => c.trim().slice(0,60));
-        return {id, job, part, state, elapsed, start, end};
-      }).filter(j => j.id && j.state);
+      const {stdout} = await sshRun("squeue -u \"$USER\" -h -o '%i|%j|%P|%T|%M|%S|%D' ; echo '##' ; sacct -u \"$USER\" -S $(date -d '-7 days' +%Y-%m-%d) --noheader -P -o 'JobID,JobName%30,Partition,State,Elapsed,Start,End'");
+      const [live, hist] = String(stdout || '').split('##');
+      const running = live.split(/\r?\n/).map(projectSqueueLine).filter(Boolean).slice(0, 15);
+      const history = hist.split(/\r?\n/).map(projectSacctLine).filter(Boolean).slice(-15).reverse();
       let files = [];
       try {
         const fileResult = await sshRun("find \"$HOME\" -maxdepth 1 -mindepth 1 -printf '%f\\t%y\\n' | head -64");
-        if (fileResult.stdout) files = fileResult.stdout.split('\\n').filter(Boolean).slice(0,64).map(line => {
-          const [name, kind] = line.split('\\t');
-          return {name: String(name || '').slice(0,160), kind: kind === 'd' ? 'directory' : 'file'};
-        });
+        files = projectHpcFiles(fileResult.stdout);
       } catch {}
-      return {reason:'ok', running:liveRows.slice(0, 15), history:histRows.slice(-15).reverse(),
-        files, filesNote: 'HPC 远端目录通过 SSH 读取；文件上传、下载、创建和删除仍由对话工具执行并逐次审批。'};
+      return {reason:'ok', running, history, files,
+        filesNote: 'HPC 远端目录通过 SSH 读取；文件上传、下载、创建和删除仍由对话工具执行并逐次审批。'};
     } catch (exc) {
       return {reason:'unreachable', detail:String(exc && exc.message || exc).slice(0,140), running:null, history:null};
     }
@@ -438,7 +511,51 @@ export async function apply(ctx) {
     res.writeHead(200, {'content-type':'application/json; charset=utf-8','cache-control':'no-store','referrer-policy':'no-referrer','x-content-type-options':'nosniff'});
     res.end(JSON.stringify(await handler(req)));
   }}), tag);
-  const portalRoute = (kind) => ctx.effect(() => ctx.webServer.register({kind:'prefix', path:`/company-workspace/portal/${kind}`, handler:async (req, res) => {
+  const portalRoute = (kind) => ctx.effect(() => {
+    // dsh-app:// does not keep Set-Cookie, and this portal serves its login
+    // scripts only when the session from the first page is sent back. Remember
+    // that session for the same Agent login; a cookie the browser does echo wins.
+    const portalJars = new Map();
+    const portalCookiePrefix = `UQC_PORTAL_${kind.toUpperCase()}_`;
+    const portalJarFor = (req) => {
+      const identity = String(req.headers.cookie || '').split(';').map(part => part.trim()).filter(part => part && !part.startsWith('UQC_PORTAL_')).sort().join(';');
+      // The desktop page is dsh-app:// and does not send cookies back. The
+      // local seat still has one portal session; a real Agent cookie keeps its own.
+      const key = createHash('sha256').update(identity || 'local-desktop').digest('hex');
+      let jar = portalJars.get(key);
+      if (!jar) { jar = new Map(); portalJars.set(key, jar); }
+      return jar;
+    };
+    const browserPortalCookies = (req) => {
+      const found = new Map();
+      for (const part of String(req.headers.cookie || '').split(';')) {
+        const trimmed = part.trim();
+        if (!trimmed.startsWith(portalCookiePrefix)) continue;
+        const pair = trimmed.slice(portalCookiePrefix.length);
+        const eq = pair.indexOf('=');
+        if (eq <= 0) continue;
+        found.set(pair.slice(0, eq), pair.slice(eq + 1));
+      }
+      return found;
+    };
+    const rememberPortalCookies = (req, cookies) => {
+      const jar = portalJarFor(req);
+      if (!jar) return;
+      for (const cookie of cookies) {
+        const raw = String(cookie);
+        const pair = raw.split(';')[0].trim();
+        const eq = pair.indexOf('=');
+        if (eq <= 0) continue;
+        const name = pair.slice(0, eq).trim();
+        if (!/^[!#$%&'*+\-.^_`|~0-9A-Za-z]+$/.test(name)) continue;
+        if (/(?:^|;)\s*max-age\s*=\s*0(?:\s|;|$)/i.test(raw)) { jar.delete(name); continue; }
+        const value = pair.slice(eq + 1).trim();
+        if (value.length > 4096) continue;
+        if (!jar.has(name) && jar.size >= 16) continue;
+        jar.set(name, value);
+      }
+    };
+    return ctx.webServer.register({kind:'prefix', path:`/company-workspace/portal/${kind}`, handler:async (req, res) => {
     if (!sessionGate(req, res)) return;
     if (!['GET','HEAD','POST','PUT','PATCH','DELETE','OPTIONS'].includes(req.method)) {res.writeHead(405);res.end();return;}
     const base = kind === 'cloud' ? CONFIG.cloudPortal : CONFIG.hpcPortal;
@@ -450,10 +567,12 @@ export async function apply(ctx) {
     try {target = new URL(base + suffix + (new URL(req.url || '/', 'http://workspace.local').search));}
     catch {res.writeHead(502);res.end();return;}
     const request = target.protocol === 'https:' ? httpsRequest : httpRequest;
-    const portalCookiePrefix = `UQC_PORTAL_${kind.toUpperCase()}_`;
-    const portalCookieHeader = String(req.headers.cookie || '').split(';').map(part => part.trim()).filter(part => part.startsWith(portalCookiePrefix)).map(part => part.slice(portalCookiePrefix.length)).join('; ');
-    const headers = {accept:req.headers.accept || '*/*', 'user-agent':'UNITQC Agent workspace portal'};
-    if (portalCookieHeader) headers.cookie = portalCookieHeader;
+    const mergedCookies = new Map();
+    const jar = portalJarFor(req);
+    if (jar) for (const [name, value] of jar) mergedCookies.set(name, value);
+    for (const [name, value] of browserPortalCookies(req)) mergedCookies.set(name, value);
+    const headers = {accept:req.headers.accept || '*/*', 'user-agent': req.headers['user-agent'] || 'Mozilla/5.0', referer: `${target.origin}/`};
+    if (mergedCookies.size) headers.cookie = [...mergedCookies].map(([name, value]) => `${name}=${value}`).join('; ');
     for (const key of ['content-type','content-length','x-requested-with','accept-language']) if (req.headers[key]) headers[key] = req.headers[key];
     const options = {method:req.method,headers,agent:target.protocol === 'https:' ? new HttpsAgent({rejectUnauthorized:false}) : undefined};
     const rewriteLocation = value => {
@@ -465,9 +584,12 @@ export async function apply(ctx) {
       } catch {return value;}
     };
     const escapedPrefix = prefix.slice(1).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    // A quote and a slash start a path. Leave "/>", a one-character "/", and
+    // a regex such as /"/g alone; those are not portal URLs.
     const rewriteText = text => text
-      .replace(new RegExp(`(['"])\\/(?![\\/]|${escapedPrefix}\\/)`, 'g'), `$1${prefix}/`)
-      .replace(new RegExp(`(url\\(\\s*)\\/(?!\\/|${escapedPrefix}\\/)`, 'gi'), `$1${prefix}/`);
+      .replace(new RegExp(`(['"])\\/(?![\\/>]|${escapedPrefix}\\/)(?=[A-Za-z0-9._~@%])(?![gimsuy]{1,6}[,;)\\]'\"\\s])`, 'g'), `$1${prefix}/`)
+      .replace(new RegExp(`(['"])\\/(?=\\1\\s*\\+)`, 'g'), `$1${prefix}/`)
+      .replace(new RegExp(`(url\\(\\s*)\\/(?![\\/)]|${escapedPrefix}\\/)`, 'gi'), `$1${prefix}/`);
     const forwardBody = ['GET','HEAD','OPTIONS'].includes(req.method) ? Promise.resolve(null) : new Promise(resolveBody => {
       const chunks = [];
       let bytes = 0;
@@ -483,6 +605,7 @@ export async function apply(ctx) {
       }
       if (remote.headers['set-cookie']) {
         const cookies = Array.isArray(remote.headers['set-cookie']) ? remote.headers['set-cookie'] : [remote.headers['set-cookie']];
+        rememberPortalCookies(req, cookies);
         headers['set-cookie'] = cookies.map(cookie => `${portalCookiePrefix}${String(cookie).replace(/;\s*(?:domain|path|secure|httponly|samesite)[^;]*/ig, '').replace(/=.*/, match => match)}; Path=/`);
       }
       if (remote.headers.location) headers.location = rewriteLocation(String(remote.headers.location));
@@ -508,7 +631,8 @@ export async function apply(ctx) {
     upstream.once('timeout',()=>upstream.destroy(new Error('timeout')));
     upstream.once('error',error=>{if (!res.headersSent) {res.writeHead(502, {'content-type':'text/plain; charset=utf-8'});res.end('portal unavailable');} else res.destroy(error);});
     forwardBody.then(body => {if (body === null && !['GET','HEAD','OPTIONS'].includes(req.method)) {upstream.destroy();return;}if (body) upstream.write(body);upstream.end();});
-  }}), `company-workspace: ${kind} portal proxy`);
+  }});
+  }, `company-workspace: ${kind} portal proxy`);
   portalRoute('cloud');
   portalRoute('hpc');
   const workspaceRegistry = ctx.workspaceRegistry;
@@ -535,8 +659,8 @@ export async function apply(ctx) {
     const row = (workspaceRegistry?.list?.() || []).find(item => String(item.id) === workspaceId);
     if (!row || typeof row.path !== 'string') return {error:'workspace unavailable'};
     const root = resolve(row.path);
-    const clean = String(relativePath || '').replace(/\\\\/g, '/');
-    if (clean.split('/').some(part => !part || part === '.' || part === '..')) return {error:'invalid path'};
+    const clean = String(relativePath || '').replace(/\\\\/g, '/').replace(/^\/+|\/+$/g, '');
+    if (clean.split('/').filter(Boolean).some(part => part === '.' || part === '..')) return {error:'invalid path'};
     const target = resolve(root, clean || '.');
     if (target !== root && !target.startsWith(root + sep)) return {error:'path outside workspace'};
     let info;
@@ -588,7 +712,31 @@ export async function apply(ctx) {
     const records = Array.isArray(result.recent) ? result.recent : [];
     return {available:true, tasks:projectWorkbenchTasks(records, {subject:trustedSubject(req)})};
   };
+  const automationCatalog = async (req) => {
+    const python = process.env.COMPANY_AGENT_PYTHON;
+    if (!python || !python.trim()) return {available:false, items:[], observed:0, reason:'unconfigured'};
+    const tenant = String(process.env.COMPANY_AGENT_TENANT || 'local').trim();
+    if (!/^[A-Za-z0-9][A-Za-z0-9._-]{0,79}$/.test(tenant)) {
+      return {available:false, items:[], observed:0, reason:'unconfigured'};
+    }
+    const result = await run(python, ['-P', '-m', 'company_agent.cli', 'automation', '--tenant', tenant],
+      {timeout:12000, maxBuffer:256 * 1024, windowsHide:true, env:subprocessEnvFor(req)}).then(
+      value => { try { return JSON.parse(String(value.stdout || '')); } catch { return null; } },
+      () => null);
+    return projectAutomation(result);
+  };
+  const workspaceView = async () => {
+    const state = workspaceState();
+    const first = state.workspaces[0];
+    if (!first || !first.workspaceId) return {...state, entries: []};
+    const files = await localFiles(first.workspaceId, '');
+    if (!files || files.error) return {...state, entries: [], filesError: files && files.error || 'workspace unavailable'};
+    const entries = Array.isArray(files.entries) ? files.entries.slice(0, 64).map(entry => ({name: entry.name, kind: entry.kind})) : [];
+    return {...state, entries};
+  };
+  jsonRoute('/company-workspace/workspace', workspaceView, 'company-workspace: workspace');
   jsonRoute('/company-workspace/workbench/tasks', workbenchTasks, 'company-workspace: workbench tasks');
+  jsonRoute('/company-workspace/automation', automationCatalog, 'company-workspace: automation');
   jsonRoute('/company-workspace/agent/state', agentState, 'company-workspace: agent state');
   jsonRoute('/company-workspace/account', () => {
     const name = String(process.env.COMPANY_AGENT_ACCOUNT_NAME || '').trim();
@@ -722,6 +870,82 @@ export async function apply(ctx) {
       return {ok:true, granted:{kind, open:planOpen(kind), requestsUpdated:updated}};
     });
   }}), 'company-workspace: access grant');
+
+  const officeWorkspace = rawPath => {
+    const text = String(rawPath || '').trim();
+    if (!text || text.includes('\0')) return null;
+    for (const row of workspaceRegistry.list?.() || []) {
+      if (!row || typeof row.path !== 'string' || !row.path) continue;
+      const root = resolve(row.path);
+      const slash = text.replace(/\\/g, '/');
+      const absolute = /^[A-Za-z]:[\\/]/.test(text) || slash.startsWith('/') ? resolve(slash) : resolve(root, slash);
+      if (absolute === root) continue;
+      const rel = relative(root, absolute);
+      if (!rel || isAbsolute(rel) || rel.split(/[\\/]/).some(part => part === '..' || part === '.')) continue;
+      return {root, relative: rel.replace(/\\/g, '/')};
+    }
+    return null;
+  };
+  const officeRevise = async (kind, payload) => {
+    const python = process.env.COMPANY_AGENT_PYTHON;
+    if (!python || !python.trim()) return {error:'未配置公司 Python'};
+    const located = officeWorkspace(payload.path);
+    if (!located) return {error:'文件不在当前工作区'};
+    const body = {kind, path: located.relative, purpose: String(payload.purpose || '在窗口中修改办公文件').slice(0, 80)};
+    if (kind === 'sheet') body.sheets = payload.sheets;
+    if (kind === 'docx') {
+      body.find = payload.find;
+      body.replace = payload.replace;
+      if (payload.occurrences !== undefined) body.occurrences = payload.occurrences;
+    }
+    if (kind === 'docx-write') body.blocks = payload.blocks;
+    const file = join(tmpdir(), `unitqc-office-${randomBytes(8).toString('hex')}.json`);
+    const code = `import json,sys; from company_agent.office_revise import revise; sys.stdout.write(revise(json.load(open(${JSON.stringify(file)}, encoding="utf-8"))))`;
+    try {
+      await writeFile(file, JSON.stringify(body), 'utf8');
+      const result = await run(python, ['-P', '-c', code], {
+        timeout: 20000, maxBuffer: 1024 * 1024, windowsHide: true,
+        env: {...process.env, COMPANY_AGENT_TOOL_WORKSPACE: located.root, PYTHONUTF8: '1'},
+      });
+      const parsed = JSON.parse(String(result.stdout || '').trim() || '{}');
+      return parsed && typeof parsed === 'object' ? parsed : {error:'写入结果无法读取'};
+    } catch (exc) {
+      const detail = String(exc && exc.stderr || '').split(/\r?\n/).map(line => line.trim()).filter(Boolean).pop() || '';
+      return {error: detail && !/[A-Za-z]:\\/.test(detail) ? detail.slice(0, 160) : '写入失败'};
+    } finally {
+      await unlink(file).catch(() => {});
+    }
+  };
+  const officePost = (path, kind) => ctx.effect(() => ctx.webServer.register({kind:'exact', path, handler: async (req, res) => {
+    if (!sessionGate(req, res)) return;
+    if (req.method !== 'POST') {res.writeHead(405, {'content-type':'application/json'});res.end('{"error":"method"}');return;}
+    const chunks = [];
+    let size = 0;
+    let tooBig = false;
+    req.on('data', chunk => {
+      size += chunk.length;
+      if (size > 2 * 1024 * 1024) {tooBig = true; req.destroy(); return;}
+      chunks.push(chunk);
+    });
+    req.on('end', async () => {
+      if (tooBig || res.writableEnded) return;
+      let payload = null;
+      try { payload = JSON.parse(Buffer.concat(chunks).toString('utf8') || 'null'); } catch {}
+      if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
+        res.writeHead(400, {'content-type':'application/json; charset=utf-8'});
+        res.end('{"error":"invalid_payload"}');
+        return;
+      }
+      const result = await officeRevise(kind, payload);
+      const headers = {'content-type':'application/json; charset=utf-8','cache-control':'no-store','referrer-policy':'no-referrer','x-content-type-options':'nosniff'};
+      res.writeHead(result.error ? 400 : 200, headers);
+      res.end(JSON.stringify(result));
+    });
+  }}), `company-workspace: office ${kind}`);
+  officePost('/company-workspace/office/sheet', 'sheet');
+  officePost('/company-workspace/office/docx', 'docx');
+  officePost('/company-workspace/office/docx-view', 'docx-view');
+  officePost('/company-workspace/office/docx-write', 'docx-write');
 
   const files = new Map([
     ['/company-workspace/workspace.css', [css, 'text/css; charset=utf-8']],

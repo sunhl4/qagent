@@ -73,10 +73,13 @@ export interface MethodCardEvidence {
     | "equation"
     | "code_line"
     | "issue"
-    | "abstract";
+    | "abstract"
+    | "supplement"
+    | "data_file";
   location: string;
   quote?: string | null;
   ref?: string | null;
+  ledger_id?: string | null;
 }
 
 export interface MethodCard {
@@ -439,4 +442,220 @@ export function compileMethodCard(card: MethodCard): {
   }
 
   return { ok: errors.length === 0, errors, warnings };
+}
+
+const PLATFORM_METRIC_UNITS = new Set(["hartree", "eV", "second", "count", "dimensionless"]);
+const CODE_COMMIT = /^[0-9a-f]{7,64}$/;
+const CHANGED_PATH = /^[A-Za-z0-9_./-]{1,120}$/;
+
+export interface ReproductionCandidateMetric {
+  name: string;
+  unit: string;
+  platform_metric_eligible: boolean;
+  tolerance: number;
+}
+
+export interface ReproductionCandidateAttachment {
+  attachment_id: string;
+  parsed: boolean;
+  claim_ids: string[];
+}
+
+export interface ReproductionCandidateInput {
+  method_card: MethodCard;
+  metrics: ReproductionCandidateMetric[];
+  train_test_split?: string | null;
+  code_availability: "official" | "third_party" | "none";
+  code_commit?: string | null;
+  attachments?: ReproductionCandidateAttachment[];
+}
+
+export interface ReproductionCandidateResult {
+  ok: boolean;
+  errors: Finding[];
+  warnings: Finding[];
+  platform_metric_eligible: boolean;
+  clock_admitted: false;
+}
+
+/**
+ * 复现候选编译。宽松方法卡仍走 compileMethodCard()。
+ * 只有准备进入复现的候选走这里，并且 clock_admitted 恒为 false。
+ */
+export function compileReproductionCandidate(
+  input: ReproductionCandidateInput,
+): ReproductionCandidateResult {
+  const card = input.method_card;
+  const loose = compileMethodCard(card);
+  const errors = [...loose.errors];
+  const warnings = [...loose.warnings];
+  const evidence = card?.evidence_locations ?? [];
+  const anchored = evidence.filter((item) => item.type === "equation" || item.type === "table");
+  if (anchored.length === 0) {
+    errors.push(
+      finding(
+        "error",
+        "E_CANDIDATE_ANCHOR",
+        "复现候选至少需要一条公式或表格证据",
+        "evidence_locations",
+      ),
+    );
+  }
+  for (const item of evidence) {
+    if (item.type === "equation" && !item.ledger_id?.trim()) {
+      errors.push(
+        finding(
+          "error",
+          "E_CANDIDATE_LEDGER",
+          "公式证据必须指向公式账编号",
+          "evidence_locations.ledger_id",
+        ),
+      );
+    }
+  }
+
+  const metrics = input.metrics ?? [];
+  if (metrics.length === 0) {
+    errors.push(finding("error", "E_CANDIDATE_UNIT", "复现指标缺少单位", "metrics"));
+  }
+  for (const metric of metrics) {
+    if (!metric.name?.trim() || !metric.unit?.trim()) {
+      errors.push(finding("error", "E_CANDIDATE_UNIT", "复现指标必须有名称和单位", "metrics"));
+    }
+    if (typeof metric.platform_metric_eligible !== "boolean") {
+      errors.push(
+        finding(
+          "error",
+          "E_CANDIDATE_PLATFORM_FLAG",
+          "必须标明指标能否进入平台短指标",
+          "metrics.platform_metric_eligible",
+        ),
+      );
+    } else if (
+      metric.platform_metric_eligible &&
+      !PLATFORM_METRIC_UNITS.has(metric.unit)
+    ) {
+      errors.push(
+        finding(
+          "error",
+          "E_CANDIDATE_UNIT",
+          "进入平台短指标的单位只能是 hartree、eV、second、count 或 dimensionless",
+          "metrics.unit",
+        ),
+      );
+    }
+    if (typeof metric.tolerance !== "number" || !Number.isFinite(metric.tolerance)) {
+      errors.push(finding("error", "E_CANDIDATE_TOLERANCE", "复现指标必须有容差", "metrics.tolerance"));
+    }
+  }
+
+  const split = input.train_test_split ?? card?.train_test_split;
+  if (!split?.trim()) {
+    errors.push(finding("error", "E_CANDIDATE_SPLIT", "缺少数据划分", "train_test_split"));
+  }
+
+  const availability = input.code_availability;
+  if (availability !== "official" && availability !== "third_party" && availability !== "none") {
+    errors.push(finding("error", "E_CANDIDATE_CODE", "代码档只能是 official、third_party 或 none", "code_availability"));
+  } else if (availability === "none") {
+    if (!card?.missing_information?.some((item) => item.trim())) {
+      errors.push(
+        finding(
+          "error",
+          "E_CANDIDATE_MISSING_CODE",
+          "没有代码时必须写明缺失信息",
+          "missing_information",
+        ),
+      );
+    }
+  } else if (!input.code_commit?.trim()) {
+    errors.push(finding("error", "E_CANDIDATE_COMMIT", "官方或第三方代码必须钉住 commit", "code_commit"));
+  }
+
+  for (const attachment of input.attachments ?? []) {
+    if (attachment.parsed === false && (attachment.claim_ids?.length ?? 0) > 0) {
+      errors.push(
+        finding(
+          "error",
+          "E_CANDIDATE_ATTACHMENT",
+          "主张依赖的附件尚未解析",
+          "attachments",
+        ),
+      );
+    }
+  }
+
+  const eligible =
+    metrics.length > 0 &&
+    metrics.every(
+      (metric) => metric.platform_metric_eligible === true && PLATFORM_METRIC_UNITS.has(metric.unit),
+    );
+  return {
+    ok: errors.length === 0,
+    errors,
+    warnings,
+    platform_metric_eligible: errors.length === 0 && eligible,
+    clock_admitted: false,
+  };
+}
+
+export interface CodeChangeAdmission {
+  candidate: ReproductionCandidateResult;
+  code_commit: string;
+  changed_path: string;
+  author_id: string;
+  reviewer_id: string;
+}
+
+export interface CodeChangeRecord {
+  ok: boolean;
+  errors: Finding[];
+  changed_path: string;
+  code_commit: string;
+  candidate_ok: boolean;
+}
+
+/**
+ * 代码工单准入。只检查候选、commit、路径和评审身份。
+ * 合并仍交给 evaluateSoftwareMerge()，这里不放宽任何门禁。
+ */
+export function admitCodeChange(input: CodeChangeAdmission): CodeChangeRecord {
+  const errors: Finding[] = [];
+  const candidate = input?.candidate;
+  if (candidate?.ok !== true) {
+    errors.push(finding("error", "E_CODE_CANDIDATE", "代码工单只接收已通过严格编译的复现候选", "candidate"));
+  }
+  if (candidate?.clock_admitted !== false) {
+    errors.push(finding("error", "E_CODE_CLOCK", "复现候选不能进入研究时钟", "candidate.clock_admitted"));
+  }
+  const commit = (input?.code_commit ?? "").trim().toLowerCase();
+  if (!CODE_COMMIT.test(commit)) {
+    errors.push(finding("error", "E_CODE_COMMIT", "代码片段必须钉住十六进制 commit", "code_commit"));
+  }
+  const changedPath = input?.changed_path?.trim() ?? "";
+  if (!safeChangedPath(changedPath)) {
+    errors.push(finding("error", "E_CODE_PATH", "changed_path 必须是工作区内的相对路径", "changed_path"));
+  }
+  const author = input?.author_id?.trim() ?? "";
+  const reviewer = input?.reviewer_id?.trim() ?? "";
+  if (!author) {
+    errors.push(finding("error", "E_CODE_AUTHOR", "作者不能为空", "author_id"));
+  }
+  if (!reviewer) {
+    errors.push(finding("error", "E_CODE_REVIEWER", "缺少独立评审", "reviewer_id"));
+  } else if (reviewer.toLowerCase() === author.toLowerCase()) {
+    errors.push(finding("error", "E_CODE_SELF_REVIEW", "作者不能审查自己的变更", "reviewer_id"));
+  }
+  const ok = errors.length === 0;
+  return {
+    ok,
+    errors,
+    changed_path: ok ? changedPath : "",
+    code_commit: ok ? commit : "",
+    candidate_ok: candidate?.ok === true,
+  };
+}
+
+function safeChangedPath(value: string): boolean {
+  return CHANGED_PATH.test(value) && !value.includes("..") && !value.startsWith("/");
 }

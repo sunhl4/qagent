@@ -9,7 +9,12 @@ from dataclasses import asdict
 from typing import Any
 
 from company_agent.capabilities import list_capabilities
-from company_agent.catalog import load_managed_builtins, load_tools, load_tools_for_preset
+from company_agent.catalog import (
+    load_managed_builtins,
+    load_tools,
+    load_tools_for_preset,
+    load_visible_tools_for_preset,
+)
 from company_agent.invoke import invoke, validate_invocation
 from company_agent.jsonutil import loads as strict_json_loads
 from company_agent.policy import decide
@@ -136,10 +141,21 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("architecture")
     tools_cmd = sub.add_parser("tools")
     tools_cmd.add_argument("--preset")
+    tools_cmd.add_argument("--visible", action="store_true")
     sub.add_parser("doctor")
     reconcile_cmd = sub.add_parser("reconcile")
     reconcile_cmd.add_argument("--request-id", default="")
     reconcile_cmd.add_argument("--limit", type=int, default=24)
+    automation_cmd = sub.add_parser("automation")
+    automation_cmd.add_argument("--tenant", default="local")
+    dingtalk_cmd = sub.add_parser("dingtalk")
+    dingtalk_sub = dingtalk_cmd.add_subparsers(dest="dingtalk_command", required=True)
+    dingtalk_ingest = dingtalk_sub.add_parser("ingest")
+    dingtalk_ingest.add_argument("--tenant", default="local")
+    dingtalk_listen = dingtalk_sub.add_parser("listen")
+    dingtalk_listen.add_argument("--tenant", default="local")
+    dingtalk_listen.add_argument("--host", default="127.0.0.1")
+    dingtalk_listen.add_argument("--port", type=int, default=8787)
     decide_cmd = sub.add_parser("decide")
     authorize_cmd = sub.add_parser("authorize")
     validate_cmd = sub.add_parser("validate")
@@ -209,9 +225,25 @@ def main(argv: list[str] | None = None) -> int:
             }
         print(_dump(payload))
         return 0 if payload["available"] else 1
+    if ns.command == "automation":
+        from company_agent.work_items import WorkItemError, WorkItemStore
+
+        try:
+            with WorkItemStore() as store:
+                listed = store.catalog(ns.tenant)
+        except WorkItemError:
+            print(_dump({"available": False, "items": [], "observed": 0}))
+            return 1
+        print(_dump({"available": True, **listed}))
+        return 0
     if ns.command == "tools":
         try:
-            tools = load_tools_for_preset(ns.preset) if ns.preset else load_tools()
+            if ns.preset and ns.visible:
+                tools = load_visible_tools_for_preset(ns.preset)
+            elif ns.preset:
+                tools = load_tools_for_preset(ns.preset)
+            else:
+                tools = load_tools()
         except (KeyError, RuntimeError) as exc:
             parser.error(_safe_contract_error(exc, "tool contract is invalid"))
         print(_dump(list(tools.values())))
@@ -252,6 +284,9 @@ def main(argv: list[str] | None = None) -> int:
         payload["skills_governance"] = _skills_governance()
         payload["tenants_governance"] = _tenants_governance()
         payload["receipts"] = _receipt_summary()
+        from company_agent.dingtalk import configuration as dingtalk_configuration
+
+        payload["dingtalk"] = dingtalk_configuration()
         from company_agent.harness_compat import HarnessCompatError, harness_summary
 
         try:
@@ -261,6 +296,32 @@ def main(argv: list[str] | None = None) -> int:
             return 1
         print(_dump(payload))
         return 0 if payload["harness"]["compatible"] else 1
+    if ns.command == "dingtalk":
+        from company_agent.dingtalk import DingtalkError, ingest_envelope, serve
+
+        if ns.dingtalk_command == "listen":
+            try:
+                serve(ns.host, ns.port, ns.tenant)
+            except DingtalkError as exc:
+                print(_dump({"error": str(exc)}))
+                return 1
+            return 0
+        raw = sys.stdin.buffer.read(65537)
+        if len(raw) > 65536:
+            print(_dump({"error": "dingtalk message is invalid"}))
+            return 1
+        try:
+            envelope = strict_json_loads(raw.decode("utf-8"))
+            if not isinstance(envelope, dict):
+                raise DingtalkError("dingtalk message is invalid")
+            print(_dump(ingest_envelope(envelope, tenant_id=ns.tenant)))
+        except (UnicodeError, ValueError, TypeError) as exc:
+            message = str(exc).strip() or "dingtalk message is invalid"
+            if len(message) > 200 or "http://" in message.casefold() or "https://" in message.casefold():
+                message = "dingtalk message is invalid"
+            print(_dump({"error": message}))
+            return 1
+        return 0
     try:
         raw_arguments = _argument_text(ns.args)
         arguments = strict_json_loads(raw_arguments)
@@ -281,7 +342,14 @@ def main(argv: list[str] | None = None) -> int:
         except (KeyError, TypeError, ValueError, RuntimeError):
             decision = "deny"
             error = "invalid policy contract"
-        print(_dump({"decision": decision, "error": error}))
+        handoff = False
+        if error is None and decision == "ask":
+            try:
+                from company_agent.grants import handoff_pending
+                handoff = handoff_pending(ns.tool)
+            except (OSError, RuntimeError, TypeError, ValueError):
+                handoff = False
+        print(_dump({"decision": decision, "error": error, "handoff": handoff}))
         return 0
     if ns.command == "decide":
         try:

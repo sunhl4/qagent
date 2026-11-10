@@ -63,7 +63,7 @@ test("合并门禁：证据齐全时允许合并，并符合 schema", async () =
 
 test("合并门禁：作者不能评审自己，跳过门禁一律拒绝", () => {
   const selfReview = evaluateSoftwareMerge(input({
-    review: { reviewer_id: "author-1", blockers: 0 },
+    review: { reviewer_id: "Author-1", blockers: 0 },
   }));
   assert.equal(selfReview.record?.decision, "deny");
   assert.match(selfReview.record?.reason ?? "", /作者不能审查/);

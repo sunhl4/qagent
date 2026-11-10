@@ -37,6 +37,36 @@ def _new_id(prefix: str) -> str:
     return f"{prefix}_{uuid.uuid4().hex}"
 
 
+def _catalog_title(value: object) -> str:
+    if not isinstance(value, str):
+        return ""
+    return " ".join(value.split())[:120]
+
+
+def _catalog_time(value: object) -> str:
+    if not isinstance(value, str) or len(value) != 20 or not value.endswith("Z"):
+        return ""
+    if value[4] != "-" or value[7] != "-" or value[10] != "T" or value[13] != ":" or value[16] != ":":
+        return ""
+    digits = value[:4] + value[5:7] + value[8:10] + value[11:13] + value[14:16] + value[17:19]
+    return value if digits.isdigit() else ""
+
+
+def _public_session(value: object) -> str:
+    if not isinstance(value, str):
+        return ""
+    raw = value.strip()
+    limit = int(_contract()["limits"]["session_ref_bytes"])
+    if (
+        not raw.startswith("dsh:")
+        or len(raw) <= 4
+        or len(raw.encode("utf-8")) > limit
+        or any(character.isspace() for character in raw[4:])
+    ):
+        return ""
+    return raw
+
+
 def _now() -> str:
     return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
 
@@ -106,6 +136,15 @@ class WorkItemStore:
             CREATE TABLE IF NOT EXISTS subscriptions(
                 ticket_id TEXT NOT NULL, thread_key TEXT NOT NULL, context_only INTEGER NOT NULL,
                 created_at TEXT NOT NULL, PRIMARY KEY(ticket_id, thread_key)
+            );
+            CREATE TABLE IF NOT EXISTS plans(
+                session_ref TEXT PRIMARY KEY, tenant_id TEXT NOT NULL, plan_hash TEXT NOT NULL,
+                steps TEXT NOT NULL, created_at TEXT NOT NULL
+            );
+            CREATE TABLE IF NOT EXISTS escalations(
+                id INTEGER PRIMARY KEY AUTOINCREMENT, tenant_id TEXT NOT NULL,
+                from_preset TEXT NOT NULL, to_preset TEXT NOT NULL, reason TEXT NOT NULL,
+                created_at TEXT NOT NULL
             );
             """
         )
@@ -444,6 +483,84 @@ class WorkItemStore:
         self._recover_truncated = len(rows) > limit
         return [{name: row[name] for name in fields} for row in rows[:limit]]
 
+    def catalog(self, tenant_id: object) -> dict:
+        """Return short ticket rows for the automation page. Trigger text stays in the ledger."""
+        tenant = self._tenant(tenant_id)
+        from company_agent.harness_compat import HarnessCompatError, mandate_scopes
+
+        try:
+            mandates = set(mandate_scopes())
+        except (HarnessCompatError, RuntimeError, OSError, ValueError, TypeError) as exc:
+            raise WorkItemError("mandate scopes are unavailable") from exc
+        states = set(_contract()["states"]["ticket"])
+        executions = set(_contract()["states"]["assignment"]) | {"unknown"}
+        limit = min(24, int(_contract()["limits"]["max_query_items"]))
+        rows = self.db.execute(
+            """
+            SELECT tickets.ticket_id AS ticket_id,
+                   tickets.title AS title,
+                   tickets.state AS state,
+                   mandates.scope AS mandate,
+                   tickets.created_at AS created_at
+            FROM tickets
+            JOIN mandates ON mandates.mandate_id = tickets.mandate_id
+            JOIN triggers ON triggers.trigger_id = tickets.origin_trigger_id
+            WHERE triggers.tenant_id=?
+            ORDER BY tickets.created_at DESC, tickets.ticket_id
+            LIMIT ?
+            """,
+            (tenant, limit + 1),
+        ).fetchall()
+        items = []
+        for row in rows[:limit]:
+            title = _catalog_title(row["title"])
+            mandate = row["mandate"] if row["mandate"] in mandates else ""
+            state = row["state"] if row["state"] in states else ""
+            created_at = _catalog_time(row["created_at"])
+            if not title or not mandate or not state or not created_at:
+                continue
+            assignment = self.db.execute(
+                """
+                SELECT execution_state, COALESCE(session_ref, '') AS session_ref
+                FROM assignments
+                WHERE ticket_id=?
+                ORDER BY updated_at DESC, assignment_id
+                LIMIT 1
+                """,
+                (row["ticket_id"],),
+            ).fetchone()
+            execution = ""
+            session_ref = ""
+            if assignment is not None:
+                if assignment["execution_state"] in executions:
+                    execution = assignment["execution_state"]
+                session_ref = _public_session(assignment["session_ref"])
+            items.append({
+                "ticket_id": row["ticket_id"],
+                "title": title,
+                "state": state,
+                "mandate": mandate,
+                "execution_state": execution,
+                "session_ref": session_ref,
+                "created_at": created_at,
+            })
+        observed_row = self.db.execute(
+            """
+            SELECT COUNT(*) AS n FROM triggers
+            WHERE tenant_id=?
+              AND NOT EXISTS (
+                SELECT 1 FROM tickets WHERE tickets.origin_trigger_id = triggers.trigger_id
+              )
+            """,
+            (tenant,),
+        ).fetchone()
+        observed = int(observed_row["n"] if observed_row is not None else 0)
+        return {
+            "items": items,
+            "observed": min(observed, 10000),
+            "truncated": len(rows) > limit,
+        }
+
     def note_execution(self, assignment_id: object, state: object, *, tenant_id: object = None) -> dict:
         assignment_id = _text(assignment_id, "assignment_id")
         if not isinstance(state, str) or state not in {"pending", "running", "unknown", "ended"}:
@@ -616,6 +733,154 @@ class WorkItemStore:
             }
         return closed
 
+    def attach_plan(self, tenant_id: object, steps: object) -> dict[str, str]:
+        tenant = self._tenant(tenant_id)
+        session = _host_session_ref()
+        if session is None:
+            raise WorkItemError("session reference is required")
+        if not isinstance(steps, list) or not steps or len(steps) > 16:
+            raise WorkItemError("plan steps are invalid")
+        from company_agent.catalog import load_tools
+        known = set(load_tools())
+        if any(not isinstance(step, str) or step not in known for step in steps):
+            raise WorkItemError("plan steps are invalid")
+        joined = ",".join(steps)
+        digest = hashlib.sha256(joined.encode("utf-8")).hexdigest()
+        now = _now()
+        with self._transaction():
+            self.db.execute(
+                """
+                INSERT INTO plans(session_ref, tenant_id, plan_hash, steps, created_at)
+                VALUES(?, ?, ?, ?, ?)
+                ON CONFLICT(session_ref) DO UPDATE SET
+                    tenant_id=excluded.tenant_id, plan_hash=excluded.plan_hash,
+                    steps=excluded.steps, created_at=excluded.created_at
+                """,
+                (session, tenant, digest, joined, now),
+            )
+        return {"plan_hash": digest, "session_ref": session}
+
+    def escalate(self, tenant_id: object, from_preset: object, to_preset: object, reason: object) -> dict[str, str]:
+        tenant = self._tenant(tenant_id)
+        presets = {"boot", "lab", "algo", "sign"}
+        if from_preset not in presets or to_preset not in presets or from_preset == to_preset:
+            raise WorkItemError("escalation preset is invalid")
+        text = _text(reason, "reason")
+        if len(text) > 160:
+            raise WorkItemError("reason is invalid")
+        now = _now()
+        with self._transaction():
+            self.db.execute(
+                """
+                INSERT INTO escalations(tenant_id, from_preset, to_preset, reason, created_at)
+                VALUES(?, ?, ?, ?, ?)
+                """,
+                (tenant, from_preset, to_preset, text, now),
+            )
+        return {"from_preset": str(from_preset), "to_preset": str(to_preset)}
+
+    def plan_for_session(self) -> tuple[str, list[str]] | None:
+        session = _host_session_ref()
+        if session is None:
+            return None
+        row = self.db.execute(
+            "SELECT plan_hash, steps FROM plans WHERE session_ref=?",
+            (session,),
+        ).fetchone()
+        if row is None:
+            return None
+        return str(row["plan_hash"]), [step for step in str(row["steps"]).split(",") if step]
+
+    def list_source_triggers(
+        self,
+        source: str,
+        tenant_id: object,
+        *,
+        thread_id: str | None = None,
+        limit: int = 20,
+    ) -> list[dict]:
+        if source != "dingtalk":
+            raise WorkItemError("source is invalid")
+        tenant = self._tenant(tenant_id)
+        if isinstance(limit, bool) or not isinstance(limit, int) or not 1 <= limit <= 20:
+            raise WorkItemError("limit is invalid")
+        params: list[object] = [tenant, source]
+        clause = ""
+        if thread_id is not None:
+            thread = _bounded(thread_id, "thread_id", _contract()["limits"]["thread_id_bytes"])
+            clause = " AND thread_key=?"
+            params.append(f"dingtalk:{thread}")
+        params.append(limit)
+        rows = self.db.execute(
+            f"""
+            SELECT trigger_id, thread_key, actor_id, addressed, text, created_at
+            FROM triggers
+            WHERE tenant_id=? AND source=?{clause}
+            ORDER BY created_at DESC, trigger_id DESC
+            LIMIT ?
+            """,
+            params,
+        ).fetchall()
+        return [_trigger_row(row) for row in rows]
+
+    def source_trigger(self, source: str, tenant_id: object, trigger_id: str) -> dict | None:
+        """Return one DingTalk source event for this tenant, or None when it is absent."""
+        if source != "dingtalk":
+            raise WorkItemError("source is invalid")
+        if (
+            not isinstance(trigger_id, str)
+            or len(trigger_id) != 36
+            or not trigger_id.startswith("trg_")
+            or any(char not in "0123456789abcdef" for char in trigger_id[4:])
+        ):
+            raise WorkItemError("trigger is invalid")
+        tenant = self._tenant(tenant_id)
+        row = self.db.execute(
+            """
+            SELECT trigger_id, thread_key, actor_id, addressed, text, created_at
+            FROM triggers
+            WHERE tenant_id=? AND source=? AND trigger_id=?
+            """,
+            (tenant, source, trigger_id),
+        ).fetchone()
+        if row is None:
+            return None
+        return _trigger_row(row)
+
+
+def _trigger_row(row: sqlite3.Row) -> dict:
+    return {
+        "trigger_id": row["trigger_id"],
+        "thread_key": row["thread_key"],
+        "actor_id": row["actor_id"],
+        "addressed": row["addressed"] or "",
+        "text": row["text"],
+        "created_at": row["created_at"],
+    }
+
+
+def bound_plan_steps() -> list[str] | None:
+    """Steps of the plan bound to this session, or None when no plan is bound."""
+    try:
+        with WorkItemStore() as store:
+            found = store.plan_for_session()
+    except (WorkItemError, OSError, sqlite3.Error):
+        return None
+    if found is None:
+        return None
+    return found[1]
+
+
+def bound_plan_hash() -> str:
+    try:
+        with WorkItemStore() as store:
+            found = store.plan_for_session()
+    except (WorkItemError, OSError, sqlite3.Error):
+        return ""
+    if found is None:
+        return ""
+    return found[0]
+
 
 def _host_session_ref() -> str | None:
     """Return the DSH session that is executing this call. The model cannot supply it."""
@@ -636,6 +901,8 @@ def work_item(args: Mapping[str, object]) -> dict:
     action = _text(args.get("action"), "action")
     with WorkItemStore() as store:
         if action == "receive":
+            if args.get("source") == "dingtalk":
+                raise WorkItemError("dingtalk source is connector-only")
             row = store.receive(
                 args.get("source", _contract()["default_source"]), args.get("thread_id"),
                 args.get("actor_id"), args.get("text"), human=args.get("human", True),
@@ -737,5 +1004,25 @@ def work_item(args: Mapping[str, object]) -> dict:
                 "thread_key": signal["thread_key"], "decision_id": "", "mandate_id": "",
                 "ticket_id": "", "assignment_id": "", "source": signal["source"],
                 "kind": "candidate", "count": 0, "available": True,
+            }
+        if action == "attach_plan":
+            attached = store.attach_plan(args.get("tenant_id"), args.get("plan_steps"))
+            return {
+                "action": action, "status": "ok", "authority": "none", "items": [],
+                "work_item_id": "", "trigger_id": "", "thread_key": "", "decision_id": "",
+                "mandate_id": "", "ticket_id": "", "assignment_id": "", "source": "",
+                "kind": "plan", "count": 0, "available": True,
+                "plan_hash": attached["plan_hash"],
+            }
+        if action == "escalate":
+            moved = store.escalate(
+                args.get("tenant_id"), args.get("from_preset"), args.get("to_preset"), args.get("reason"),
+            )
+            return {
+                "action": action, "status": "ok", "authority": "none", "items": [],
+                "work_item_id": "", "trigger_id": "", "thread_key": "", "decision_id": "",
+                "mandate_id": "", "ticket_id": "", "assignment_id": "", "source": "",
+                "kind": "escalation", "count": 0, "available": True,
+                "from_preset": moved["from_preset"], "to_preset": moved["to_preset"],
             }
     raise WorkItemError("unknown work item action")

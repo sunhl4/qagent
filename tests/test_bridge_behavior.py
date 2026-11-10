@@ -138,14 +138,15 @@ def test_diagnostic_parser_rejects_extra_duplicate_and_wrong_typed_metadata():
              "contract_digest": "sha256:" + "b" * 64, "elapsed_ms": 0, "status": "started",
              "error_category": "none", "execution_state": "dispatched"}
     good = "company-agent-diagnostic:" + json.dumps(event, separators=(",", ":"))
+    good_cr = good + "\r"
     bad = [good.replace('"elapsed_ms":0', '"elapsed_ms":true'),
            good.replace('"version":"1.0"', '"version":"0","version":"1.0"'),
            good[:-1] + ',"extra":"private"}', "arbitrary stderr", good.replace('"device.run"', '[]')]
     result = run(f"import {{ parseDiagnostic }} from {json.dumps(RUNTIME)}; "
-                 f"console.log(JSON.stringify({json.dumps([good, *bad])}.map(parseDiagnostic)));")
+                 f"console.log(JSON.stringify({json.dumps([good, good_cr, *bad])}.map(parseDiagnostic)));")
     assert result.returncode == 0, result.stderr
     rows = json.loads(result.stdout)
-    assert rows == [event, *[None for _ in bad]]
+    assert rows == [event, event, *[None for _ in bad]]
 
 
 def test_unknown_tool_diagnostic_uses_only_fixed_redacted_labels():

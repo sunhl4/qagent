@@ -93,7 +93,9 @@ def _validate_contract_graph() -> None:
                           "company.latex": "company-latex", "company.plan": "company-plan",
                           "company.office": "company-office",
                           "company.portal": "company-portal",
-                          "company.research": "company-research"}
+                          "company.research": "company-research",
+                          "company.literature": "company-literature",
+                          "company.dingtalk": "company-dingtalk"}
     referenced = set()
     operations_by_provider: dict[str, set[str]] = {name: set() for name in providers}
     for capability in capabilities.values():
@@ -115,10 +117,20 @@ def _validate_contract_graph() -> None:
         raise RuntimeError("incomplete provider operation contract")
     if referenced != set(tools):
         raise RuntimeError("incomplete capability contract")
+    office_writes = {
+        "company_office_create", "company_office_edit", "company_office_validate",
+        "company_office_chart", "company_office_matter", "company_office_audit",
+        "company_office_pptx", "company_office_convert", "company_office_compute",
+        "company_office_deliver", "company_office_review_table", "company_office_fix",
+        "company_office_surface",
+    }
     for preset, row in load_presets()["presets"].items():
         visible = row["visible_tools"]
+        model = row["model_tools"]
         if (not isinstance(visible, list) or any(not isinstance(name, str) for name in visible)
             or len(visible) != len(set(visible)) or not set(visible) <= set(tools)
+            or not isinstance(model, list) or any(not isinstance(name, str) for name in model)
+            or len(model) != len(set(model)) or not set(model) <= set(visible)
             or ("quantum_device_run" in visible) != (preset in {"lab", "sign"})
             or ("quantum_cloud_submit" in visible) != (preset in {"lab", "sign"})
             or ("hpc_submit" in visible) != (preset in {"lab", "sign"})
@@ -129,7 +141,27 @@ def _validate_contract_graph() -> None:
             or ("company_research_compile" in visible) != (preset in {"lab", "algo"})
             or ("company_research_status" in visible) != (preset in {"lab", "algo"})
             or ("company_research_digest" in visible) != (preset in {"lab", "algo"})
-            or ("company_research_run" in visible) != (preset == "lab")):
+            or ("company_research_run" in visible) != (preset == "lab")
+            or ("company_literature_search" in visible) != (preset in {"lab", "algo"})
+            or ("company_literature_index" in visible) != (preset in {"lab", "algo"})
+            or ("company_literature_fetch" in visible) != (preset == "lab")
+            or ("company_literature_draft_card" in visible) != (preset in {"lab", "algo"})
+            or ("company_run_dossier" in visible) != (preset in {"lab", "algo"})
+            or ("company_catalog_replay" in visible) != (preset in {"lab", "algo"})
+            or ("quantum_device_window" in visible) != (preset in {"algo", "lab", "sign"})
+            or ("company_knowledge_note" in visible) != (preset == "lab")
+            or ("company_sign_receipt" in visible) != (preset == "sign")
+            or ("company_dingtalk_inbox" in visible) != (preset in {"boot", "lab", "algo"})
+            or ("company_dingtalk_inbox" in model) != (preset in {"boot", "lab", "algo"})
+            or ("company_dingtalk_reply" in visible) != (preset == "lab")
+            or ("company_dingtalk_reply" in model) != (preset == "lab")
+            or "company_work_item" not in visible
+            or ("company_grant_open" in visible) != (preset in {"lab", "sign"})
+            or ("company_grant_open" in model) != (preset in {"lab", "sign"})
+            or "company_session_status" not in visible
+            or "company_session_status" not in model
+            or (preset == "algo" and office_writes & set(visible))
+            or ("quantum_cloud_result_page" in visible) != ("quantum_cloud_result" in visible)):
             raise RuntimeError("invalid preset visibility contract")
     builtins = load_managed_builtins()
     if any(name in tools for name in builtins):
@@ -317,6 +349,8 @@ def load_tools() -> dict[str, dict[str, Any]]:
     expected_names = {
         "company_work_item",
         "company_capabilities",
+        "company_grant_open",
+        "company_session_status",
         "company_knowledge_search",
         "company_fetch", "company_table_profile",
         "company_workspace_reference", "company_analysis_render",
@@ -352,6 +386,7 @@ def load_tools() -> dict[str, dict[str, Any]]:
         "quantum_cloud_submit",
         "quantum_cloud_status",
         "quantum_cloud_result",
+        "quantum_cloud_result_page",
         "hpc_queue",
         "hpc_job_status",
         "hpc_script_check",
@@ -392,6 +427,17 @@ def load_tools() -> dict[str, dict[str, Any]]:
         "company_research_run",
         "company_research_status",
         "company_research_digest",
+        "company_literature_search",
+        "company_literature_fetch",
+        "company_literature_index",
+        "company_literature_draft_card",
+        "company_run_dossier",
+        "company_sign_receipt",
+        "company_knowledge_note",
+        "company_catalog_replay",
+        "quantum_device_window",
+        "company_dingtalk_inbox",
+        "company_dingtalk_reply",
     }
     if set(names) != expected_names:
         raise RuntimeError("invalid Company Agent contract: tools.json")
@@ -400,7 +446,26 @@ def load_tools() -> dict[str, dict[str, Any]]:
     return {name: dict(row) for name, row in zip(names, rows, strict=True)}
 
 
-def load_tools_for_preset(preset: str) -> dict[str, dict[str, Any]]:
+def _account_narrowed(selected: dict[str, dict[str, Any]]) -> dict[str, dict[str, Any]]:
+    """Keep preset tools the account registry also enables. An unset registry stays whole."""
+
+    try:
+        from company_agent.receipts import subject, subject_source
+        from company_agent.tenants import account_allows, projection
+
+        facts = projection(subject(), subject_source())
+    except (OSError, RuntimeError, TypeError, ValueError):
+        return {}
+    if facts.get("regime") == "legacy-single-user":
+        return selected
+    return {
+        name: row
+        for name, row in selected.items()
+        if isinstance(row.get("capability"), str) and account_allows(row["capability"])
+    }
+
+
+def _tools_for_preset(preset: str, field: str) -> dict[str, dict[str, Any]]:
     if not isinstance(preset, str) or not preset or len(preset) > 32:
         raise KeyError("invalid preset")
     tools = load_tools()
@@ -408,12 +473,22 @@ def load_tools_for_preset(preset: str) -> dict[str, dict[str, Any]]:
     row = presets.get(preset)
     if not isinstance(row, dict):
         raise KeyError(f"unknown preset {preset!r}")
-    names = row.get("visible_tools") or []
+    names = row.get(field) or []
     if not isinstance(names, list) or any(not isinstance(name, str) for name in names):
         raise KeyError(f"preset {preset!r} has an invalid tool list")
     if len(names) != len(set(names)) or any(name not in tools for name in names):
         raise KeyError(f"preset {preset!r} has an invalid tool list")
-    return {name: tools[name] for name in names}
+    return _account_narrowed({name: tools[name] for name in names})
+
+
+def load_tools_for_preset(preset: str) -> dict[str, dict[str, Any]]:
+    """Tools the model may see for this preset."""
+    return _tools_for_preset(preset, "model_tools")
+
+
+def load_visible_tools_for_preset(preset: str) -> dict[str, dict[str, Any]]:
+    """Tools policy and invoke may run for this preset, including host-only tools."""
+    return _tools_for_preset(preset, "visible_tools")
 
 
 def load_budgets() -> dict[str, Any]:
@@ -599,6 +674,22 @@ def load_policy() -> dict[str, Any]:
         "research_run_provider",
         "research_run_ask_presets",
         "research_run_deny_presets",
+        "session_grant",
+        "knowledge_note_tool",
+        "knowledge_note_ask_presets",
+        "knowledge_note_deny_presets",
+        "sign_receipt_tool",
+        "sign_receipt_allow_presets",
+        "catalog_replay_tool",
+        "catalog_replay_allow_presets",
+        "catalog_replay_deny_presets",
+        "device_window_tool",
+        "device_window_allow_presets",
+        "device_window_deny_presets",
+        "dingtalk_reply_tool",
+        "dingtalk_reply_provider",
+        "dingtalk_reply_ask_presets",
+        "dingtalk_reply_deny_presets",
     }
     if set(payload) != expected or payload.get("version") != "1.0.0":
         raise RuntimeError("invalid Company Agent contract: policy.json")
@@ -616,7 +707,7 @@ def load_presets() -> dict[str, Any]:
     ):
         raise RuntimeError("invalid Company Agent contract: presets.json")
     for row in presets.values():
-        if not isinstance(row, dict) or set(row) != {"visible_tools"}:
+        if not isinstance(row, dict) or set(row) != {"visible_tools", "model_tools"}:
             raise RuntimeError("invalid Company Agent contract: presets.json")
     return payload
 
@@ -725,16 +816,16 @@ def load_result_policy() -> dict[str, Any]:
         "max_record_bytes": 1600,
         "max_file_bytes": 262144,
         "max_files": 14,
-        "evidence_max_age_seconds": 3600,
+        "evidence_max_age_seconds": 604800,
         "subject_max_bytes": 253,
         "trusted_subject_env": "COMPANY_AGENT_SUBJECT",
     }:
         raise RuntimeError("invalid Company Agent receipt contract")
     maximum = payload.get("max_result_bytes")
-    if type(maximum) is not int or not 1 <= maximum <= 64_000:
+    if type(maximum) is not int or not 1 <= maximum <= 131_072:
         raise RuntimeError("invalid Company Agent contract: results.json")
     provider = payload.get("provider_result")
-    limits = {"max_depth": 8, "max_mapping_items": 64, "max_list_items": 32, "max_string_bytes": 4000}
+    limits = {"max_depth": 8, "max_mapping_items": 64, "max_list_items": 64, "max_string_bytes": 16000}
     if not isinstance(provider, dict) or set(provider) != {*limits, "forbidden_keys"}:
         raise RuntimeError("invalid Company Agent contract: results.json")
     for key, ceiling in limits.items():
@@ -880,7 +971,7 @@ def load_tenants() -> dict[str, Any]:
         if not isinstance(payload, dict) or payload.get("version") != "1.0.0":
             raise RuntimeError("invalid Company Agent tenant contract")
         if set(payload) != {
-            "version", "registry_env", "regimes", "states", "services",
+            "version", "registry_env", "regimes", "states", "classes", "services",
             "line_fields", "reasons", "subject_max_bytes",
             "approved_by_max_bytes", "max_lines", "max_registry_bytes",
         }:
@@ -891,13 +982,24 @@ def load_tenants() -> dict[str, Any]:
             raise RuntimeError("invalid Company Agent tenant contract")
         if payload["states"] != ["approved", "pending", "revoked"]:
             raise RuntimeError("invalid Company Agent tenant contract")
+        if payload["classes"] != ["internal", "external"]:
+            raise RuntimeError("invalid Company Agent tenant contract")
         services = payload["services"]
         if (
-            services != ["company.algorithm", "company.asset", "compute.cloud", "compute.hpc"]
+            services != [
+                "company.algorithm", "company.asset",
+                "quantum.simulation", "quantum.compilation", "quantum.device",
+                "compute.cloud", "compute.hpc",
+                "company.knowledge", "company.workflow", "company.latex",
+                "company.office", "company.plan", "company.portal",
+                "company.research", "company.literature", "company.dingtalk",
+            ]
             or len(services) != len(set(services))
         ):
             raise RuntimeError("invalid Company Agent tenant contract")
-        if payload["line_fields"] != ["subject", "service", "state", "expires_epoch", "approved_by"]:
+        if payload["line_fields"] != [
+            "subject", "class", "service", "state", "expires_epoch", "approved_by",
+        ]:
             raise RuntimeError("invalid Company Agent tenant contract")
         if payload["reasons"] != [
             "legacy", "approved", "pending", "revoked", "expired", "subject_absent",
@@ -918,7 +1020,8 @@ def load_tenants() -> dict[str, Any]:
             if not isinstance(value, int) or isinstance(value, bool) or not 1 <= value <= ceiling:
                 raise RuntimeError("invalid Company Agent tenant contract")
         if set(limits) != set(payload) - {
-            "version", "registry_env", "regimes", "states", "services", "line_fields", "reasons",
+            "version", "registry_env", "regimes", "states", "classes", "services",
+            "line_fields", "reasons",
         }:
             raise RuntimeError("invalid Company Agent tenant contract")
     except RuntimeError as exc:

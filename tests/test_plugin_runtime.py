@@ -10,7 +10,7 @@ from pathlib import Path
 
 import pytest
 
-from company_agent.catalog import load_tools
+from company_agent.catalog import load_presets, load_tools
 
 ROOT = Path(__file__).resolve().parents[1]
 PROFILES = ("company-agent", "company-agent-minimal")
@@ -25,13 +25,22 @@ def _os_env() -> dict[str, str]:
     """
 
     env = {"PATH": os.environ.get("PATH", "")}
-    for name in ("SystemRoot", "windir", "SYSTEMDRIVE", "COMPUTERNAME"):
+    for name in (
+        "SystemRoot", "windir", "SYSTEMDRIVE", "COMPUTERNAME",
+        "USERPROFILE", "HOME", "HOMEDRIVE", "HOMEPATH",
+    ):
         if name in os.environ:
             env[name] = os.environ[name]
     return env
 
 
-def _run_node(profile: str, program: str, *, preset: str | None = None) -> subprocess.CompletedProcess[str]:
+def _run_node(
+    profile: str,
+    program: str,
+    *,
+    preset: str | None = None,
+    extra_env: dict[str, str] | None = None,
+) -> subprocess.CompletedProcess[str]:
     env = _os_env() | {
         "COMPANY_AGENT_PYTHON": sys.executable,
         "COMPANY_AGENT_PYTHONPATH": str(ROOT / "src"),
@@ -42,6 +51,8 @@ def _run_node(profile: str, program: str, *, preset: str | None = None) -> subpr
         "COMPANY_AGENT_RECEIPT_DIR": tempfile.mkdtemp(prefix="company-agent-probe-"),
         "COMPANY_AGENT_TURN_ID": f"probe-{uuid.uuid4().hex[:16]}",
     }
+    if extra_env:
+        env.update(extra_env)
     if preset is not None:
         env["COMPANY_AGENT_PRESET"] = preset
     return subprocess.run(
@@ -68,11 +79,7 @@ import('@unitqc/company-agent-hpc').then(async (plugin) => {
 });
 """
     for profile, preset, expected in (
-        ("company-agent", "lab", [
-            "hpc_queue", "hpc_submit", "hpc_job_status", "hpc_script_check",
-            "hpc_resources", "hpc_file_list", "hpc_file_fetch", "hpc_stage_file",
-            "hpc_job_cancel", "hpc_dir_create", "hpc_file_remove",
-        ]),
+        ("company-agent", "lab", ["hpc_submit", "hpc_job_status"]),
         ("company-agent", "algo", [
             "hpc_queue", "hpc_job_status", "hpc_resources", "hpc_file_list", "hpc_file_fetch",
         ]),
@@ -83,20 +90,15 @@ import('@unitqc/company-agent-hpc').then(async (plugin) => {
         result = _run_node(profile, register_program, preset=preset)
         assert result.returncode == 0, result.stderr
         assert json.loads(result.stdout) == expected
-    # The plugin mounts in the minimal profile, where its presets only reach the
-    # read-only probes.
-    for preset, expected_names in (("boot", []), ("algo", [
-            "hpc_queue", "hpc_job_status", "hpc_resources", "hpc_file_list", "hpc_file_fetch",
-    ])):
-        result = _run_node("company-agent-minimal", register_program, preset=preset)
-        assert result.returncode == 0, result.stderr
-        assert json.loads(result.stdout) == expected_names
+    minimal_text = (ROOT / "profiles/company-agent-minimal/cordis.patch.yml").read_text(encoding="utf-8")
+    minimal_manifest = (ROOT / "profiles/company-agent-minimal/package.json").read_text(encoding="utf-8")
+    for name in ("company-agent-quantum", "company-agent-hpc", "company-agent-plan", "company-agent-research"):
+        assert name not in minimal_text
+        assert name not in minimal_manifest
 
 
 def test_latex_plugin_registers_preset_visible_company_latex_tools_only() -> None:
-    # The preset catalog filter also decides company.latex visibility: the full
-    # roster in lab, the read-only probes in algo, none in boot/sign. The minimal
-    # profile reaches the same read-only probes through its algo preset.
+    # model_tools hides LaTeX from the model. Host invoke still sees the visible set.
     register_program = """
 import('@unitqc/company-agent-latex').then(async (plugin) => {
   const names = [];
@@ -104,20 +106,12 @@ import('@unitqc/company-agent-latex').then(async (plugin) => {
   console.log(JSON.stringify(names));
 });
 """
-    read_only = ["company_latex_structure", "company_latex_read", "company_latex_check"]
     for profile, preset, expected in (
-        ("company-agent", "lab", [
-            "company_latex_structure", "company_latex_read", "company_latex_edit",
-            "company_latex_batch_edit", "company_latex_check", "company_latex_compile",
-            "company_latex_diff", "company_latex_checkpoint", "company_latex_revert",
-            "company_latex_pull", "company_latex_push",
-            "company_latex_overleaf_pull", "company_latex_overleaf_push",
-            "company_latex_overleaf_status", "company_latex_issue_note",
-        ]),
-        ("company-agent", "algo", read_only),
+        ("company-agent", "lab", []),
+        ("company-agent", "algo", []),
         ("company-agent", "sign", []),
         ("company-agent", "boot", []),
-        ("company-agent-minimal", "algo", read_only),
+        ("company-agent-minimal", "algo", []),
         ("company-agent-minimal", "boot", []),
     ):
         result = _run_node(profile, register_program, preset=preset)
@@ -125,10 +119,133 @@ import('@unitqc/company-agent-latex').then(async (plugin) => {
         assert json.loads(result.stdout) == expected
 
 
+def test_literature_plugin_registers_preset_visible_tools_only() -> None:
+    register_program = """
+import('@unitqc/company-agent-literature').then(async (plugin) => {
+  const names = [];
+  plugin.apply({ tools: { register: (row) => names.push(row.name) } });
+  console.log(JSON.stringify(names));
+});
+"""
+    lab = [
+        "company_literature_search", "company_literature_fetch",
+        "company_literature_index", "company_literature_draft_card",
+    ]
+    algo = ["company_literature_search", "company_literature_index", "company_literature_draft_card"]
+    for profile, preset, expected in (
+        ("company-agent", "lab", lab),
+        ("company-agent", "algo", algo),
+        ("company-agent", "boot", []),
+        ("company-agent", "sign", []),
+        ("company-agent-minimal", "algo", algo),
+        ("company-agent-minimal", "boot", []),
+    ):
+        result = _run_node(profile, register_program, preset=preset)
+        assert result.returncode == 0, result.stderr
+        assert json.loads(result.stdout) == expected
+
+
+def test_seat_plugin_runs_literature_and_scale_handoff(tmp_path: Path) -> None:
+    """The DSH tool handler is what the seat calls. Literature uses the session directory."""
+    import shutil
+
+    from company_agent.literature_card import draft_scale_card
+
+    workspace = tmp_path / "seat"
+    workspace.mkdir()
+    shutil.copytree(ROOT / "tests" / "fixtures" / "literature", workspace / "paper")
+    (workspace / "search.json").write_text(
+        json.dumps({"records": [{"paper_id": "demo1", "source": "arxiv", "year": 2024}]}),
+        encoding="utf-8",
+    )
+    local = {
+        "tenant_id": "team-a",
+        "experiment_id": "exp-local",
+        "task_id": "task-local",
+        "project_id": "proj-1",
+        "hypothesis": "warmup lowers validation loss",
+        "falsifier": "the metric does not improve",
+        "baseline_name": "recorded",
+        "baseline_source": "internal",
+        "baseline_metric": 1.0,
+        "baseline_reproduced": True,
+        "baseline_train_time_seconds": 3600,
+        "changed_path": "src/train/scheduler.py",
+        "primary_metric": "val_loss",
+        "direction": "minimize",
+        "resource_type": "cpu",
+        "max_cost": 1,
+        "max_attempts": 1,
+        "idempotency_key": "local-1",
+    }
+    draft = draft_scale_card(
+        local,
+        experiment_id="exp-scale",
+        idempotency_key="scale-1",
+        hypothesis="more nodes keep the same validation loss",
+        falsifier="the metric moves outside tolerance",
+    )
+    human = {**draft, "baseline_reproduced": True}
+    program = """
+import { markApprovalCard, registerCapabilityTools } from '@unitqc/company-agent-core/runtime';
+const tools = new Map();
+registerCapabilityTools({ tools: { register: (row) => tools.set(row.name, row) } },
+  ['company.literature', 'company.research']);
+const workspace = process.env.PROBE_WORKSPACE;
+const seated = { agent: { id: 'seat-probe', session: { header: { id: 'seat-probe', cwd: workspace } } } };
+let missing = '';
+try {
+  await tools.get('company_literature_search').execute(
+    { query: 'synthetic source', fixture: 'search.json' }, {});
+} catch (error) {
+  missing = String(error.message || error);
+}
+const search = await tools.get('company_literature_search').execute(
+  { query: 'synthetic source', fixture: 'search.json' }, seated);
+const fetched = await tools.get('company_literature_fetch').execute(
+  { paper_id: 'demo1', fixture: 'paper' }, seated);
+const indexed = await tools.get('company_literature_index').execute(
+  { paper_id: 'demo1' }, seated);
+const compiled = await tools.get('company_research_compile').execute(
+  JSON.parse(process.env.PROBE_COMPILE), seated);
+markApprovalCard(seated);
+const ran = await tools.get('company_research_run').execute(
+  JSON.parse(process.env.PROBE_RUN), seated);
+console.log(JSON.stringify({ missing, search, fetched, indexed, compiled, ran }));
+"""
+    result = _run_node(
+        "company-agent",
+        program,
+        preset="lab",
+        extra_env={
+            "PROBE_WORKSPACE": str(workspace),
+            "PROBE_COMPILE": json.dumps(
+                {key: value for key, value in human.items() if key != "idempotency_key"},
+            ),
+            "PROBE_RUN": json.dumps(human),
+            "COMPANY_AGENT_RESEARCH_STATE": str(tmp_path / "clock"),
+            "COMPANY_AGENT_WORK_ITEM_DB": str(tmp_path / "work.sqlite3"),
+        },
+    )
+    assert result.returncode == 0, result.stderr
+    payload = json.loads(result.stdout)
+    assert "company_literature_search" in payload["missing"]
+    assert payload["search"]["exhaustive"] is False
+    assert payload["search"]["paper_ids"] == ["demo1"]
+    assert payload["fetched"]["paper_id"] == "demo1"
+    assert payload["indexed"]["clock_admitted"] is False
+    assert payload["indexed"]["platform_metric_eligible"] is False
+    assert "\\approx" not in json.dumps(payload["indexed"])
+    assert payload["compiled"]["approval_required"] is True
+    assert payload["ran"]["next_tool"] == "hpc_submit"
+    assert payload["ran"]["approval_still_required"] is True
+    assert "baseline_train_time_seconds" not in draft
+
+
 def test_plugins_import_from_clean_profile_dependency_graph() -> None:
     expected = {
-        "company-agent": ("policy", "core", "quantum", "hpc", "device", "latex", "office", "plan", "research"),
-        "company-agent-minimal": ("policy", "core", "quantum", "hpc", "latex", "office", "research"),
+        "company-agent": ("policy", "core", "quantum", "hpc", "device", "latex", "office", "plan", "research", "literature"),
+        "company-agent-minimal": ("policy", "core", "latex", "office", "literature"),
     }
     for profile, packages in expected.items():
         for package in packages:
@@ -153,11 +270,12 @@ def test_core_runtime_reads_python_contract_catalog() -> None:
     )
     assert result.returncode == 0, result.stderr
     tools = json.loads(result.stdout)
-    assert len(tools) == 79
+    assert len(tools) == 25
+    assert "company_shell" not in {row["name"] for row in tools}
     assert "quantum_algorithm_catalog" in {row["name"] for row in tools}
-    assert tools[0]["name"] == "company_capabilities"
-    # The lab-filtered catalog follows the preset's visible_tools order.
-    assert tools[-1]["name"] == "company_research_digest"
+    assert tools[0]["name"] == "company_session_status"
+    # The lab catalog follows the preset model_tools order.
+    assert tools[-1]["name"] == "company_dingtalk_reply"
     assert all(row["output"]["additionalProperties"] is False for row in tools)
     runtime = (ROOT / "packages/company-agent-core/src/runtime.js").read_text()
     assert "CLI_TIMEOUT_MS" in runtime
@@ -173,7 +291,8 @@ def test_core_runtime_reads_python_contract_catalog() -> None:
     assert "export async function authorize" in runtime
     # The bridge passes the turn identity to the adapter after the budget batch;
     # the pin follows the call prefix so neither shape drifts silently.
-    assert 'await invoke(name, args, decision === "ask", exec?.signal' in runtime
+    assert 'await invoke(name, args, approved, exec?.signal' in runtime
+    assert 'decision === "ask" && approvalCardShown(exec)' in runtime
     assert "schema: dshSchema(outputSchema)" in runtime
     assert "additionalProperties: true" not in runtime
     assert 'signal?.addEventListener("abort", onAbort' in runtime
@@ -209,7 +328,7 @@ console.log(JSON.stringify(results));
     result = _run_node(profile, program, preset=preset)
     assert result.returncode == 0, result.stderr
     payload = json.loads(result.stdout)
-    assert len(payload["capabilities"]["capabilities"]) == 14
+    assert len(payload["capabilities"]["capabilities"]) == 16
     if preset != "sign":
         assert payload["knowledge"]["query"] == "设备执行"
         assert payload["knowledge"]["hits"]
@@ -224,14 +343,17 @@ registerCapabilityTools({ tools: { register: (row) => rows.push({
   name: row.name, parameters: row.parameters, output: row.output.schema
 }) } }, ['company.workflow', 'company.knowledge', 'company.algorithm', 'company.asset',
   'quantum.simulation', 'quantum.compilation', 'quantum.device', 'compute.cloud', 'compute.hpc',
-  'company.latex', 'company.office', 'company.plan', 'company.portal', 'company.research']);
+  'company.latex', 'company.office', 'company.plan', 'company.portal', 'company.research',
+  'company.literature', 'company.dingtalk']);
 console.log(JSON.stringify(rows));
 """
     result = _run_node("company-agent", program, preset="lab")
     assert result.returncode == 0, result.stderr
     registered = {row["name"]: row for row in json.loads(result.stdout)}
     contracts = load_tools()
-    assert set(registered) == set(contracts)
+    assert "company_shell" not in contracts
+    assert "company_shell" not in registered
+    assert set(registered) == set(load_presets()["presets"]["lab"]["model_tools"])
     stripped = {
         "minLength",
         "maxLength",
@@ -258,9 +380,10 @@ console.log(JSON.stringify(rows));
                 projected[key] = value
         return projected
 
-    for name, contract in contracts.items():
-        assert registered[name]["parameters"] == projection(contract["parameters"])
-        assert registered[name]["output"] == projection(contract["output"])
+    for name, row in registered.items():
+        contract = contracts[name]
+        assert row["parameters"] == projection(contract["parameters"])
+        assert row["output"] == projection(contract["output"])
 
 
 @pytest.mark.parametrize("profile", PROFILES)
@@ -309,15 +432,17 @@ def test_device_bridge_waits_for_dsh_approval() -> None:
     result = _run_node(
         "company-agent",
         """
-import { authorize, invoke, registerCapabilityTools } from '@unitqc/company-agent-core/runtime';
+import { authorize, invoke, markApprovalCard, registerCapabilityTools } from '@unitqc/company-agent-core/runtime';
 const args = { circuit_id: 'circ_ui_test', shots: 8 };
 const preflight = await authorize('quantum_device_run', args);
 const beforeApproval = await invoke('quantum_device_run', args);
 const tools = [];
 registerCapabilityTools({ tools: { register: (row) => tools.push(row) } }, ['quantum.device']);
 // This invokes the handler at the DSH post-approval boundary, with no provider configured.
+const approved = {};
+markApprovalCard(approved);
 let afterApproval;
-try { await tools.find((row) => row.name === 'quantum_device_run').execute(args, {}); }
+try { await tools.find((row) => row.name === 'quantum_device_run').execute(args, approved); }
 catch (error) { afterApproval = error.message; }
 console.log(JSON.stringify({ preflight, beforeApproval, afterApproval }));
 """,
@@ -395,6 +520,7 @@ def test_core_runtime_filters_registered_catalog_by_preset() -> None:
     assert json.loads(boot.stdout) == [
         "company_capabilities",
         "company_work_item",
+        "company_session_status",
         "company_knowledge_search",
         "company_fetch",
         "company_table_profile",
@@ -419,11 +545,14 @@ def test_core_runtime_filters_registered_catalog_by_preset() -> None:
         "company_office_fix",
         "company_office_surface",
         "company_portal_open",
+        "company_dingtalk_inbox",
     ]
     sign = _run_node("company-agent", program, preset="sign")
     assert sign.returncode == 0, sign.stderr
     assert json.loads(sign.stdout) == [
         "company_capabilities",
+        "company_session_status",
+        "company_grant_open",
         "company_analysis_render",
         "quantum_asset_get",
         "quantum_asset_metrics",
@@ -431,6 +560,7 @@ def test_core_runtime_filters_registered_catalog_by_preset() -> None:
         "quantum_cloud_submit",
         "quantum_cloud_status",
         "quantum_cloud_result",
+        "quantum_cloud_result_page",
         "hpc_submit",
         "hpc_script_check",
         "hpc_stage_file",
@@ -439,6 +569,9 @@ def test_core_runtime_filters_registered_catalog_by_preset() -> None:
         "hpc_file_remove",
         "quantum_device_identity",
         "quantum_device_run",
+        "company_work_item",
+        "company_sign_receipt",
+        "quantum_device_window",
     ]
 
 
@@ -592,7 +725,7 @@ def test_registered_output_render_enforces_short_result_budget() -> None:
 import { registerCapabilityTools } from '@unitqc/company-agent-core/runtime';
 const rows = [];
 registerCapabilityTools({ tools: { register: row => rows.push(row) } }, ['company.workflow']);
-rows[0].output.render({}, { text: 'x'.repeat(64001) });
+rows[0].output.render({}, { text: 'x'.repeat(140000) });
 """,
         preset="boot",
     )

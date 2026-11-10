@@ -1,0 +1,59 @@
+{
+  "method_card": {
+    "method_card_id": "MC-VAL-1",
+    "paper": {
+      "paper_id": "internal-baseline",
+      "title": "Internal val_loss baseline",
+      "authors": ["Company"],
+      "year": 2026,
+      "doi": null,
+      "arxiv_id": null,
+      "venue": null,
+      "source": "workspace",
+      "code_url": "https://github.com/example/demo"
+    },
+    "problem": "把内部验证损失接到现有实验卡",
+    "method_summary": "训练日志里的 val_loss 作为唯一可进入时钟的指标",
+    "claims": ["同一划分上 val_loss 落在容差内"],
+    "datasets": ["internal-split"],
+    "hyperparameters": [{ "name": "seed", "value": 1 }],
+    "baselines": ["recorded val_loss"],
+    "metrics": [{ "name": "val_loss", "direction": "minimize" }],
+    "train_test_split": "fixed validation split",
+    "missing_information": [],
+    "reproduction_status": "not_attempted",
+    "evidence_locations": [
+      {
+        "type": "code_line",
+        "location": "train.log:1 val_loss=<number>",
+        "quote": "val_loss=1.0",
+        "ledger_id": null
+      },
+      {
+        "type": "equation",
+        "location": "eq:energy",
+        "quote": "E \\approx E_0",
+        "ledger_id": "F-energy"
+      }
+    ],
+    "created_at": "2026-11-10T00:00:00.000Z"
+  },
+  "metrics": [
+    {
+      "name": "val_loss",
+      "unit": "dimensionless",
+      "platform_metric_eligible": true,
+      "tolerance": 0.01
+    }
+  ],
+  "train_test_split": "fixed validation split",
+  "code_availability": "official",
+  "code_commit": "0123456789abcdef",
+  "attachments": [
+    {
+      "attachment_id": "A-log",
+      "parsed": true,
+      "claim_ids": ["C1"]
+    }
+  ]
+}

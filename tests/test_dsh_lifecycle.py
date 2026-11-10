@@ -61,7 +61,8 @@ def test_real_dsh_approval_lifecycle(scenario, calls, asks, outcomes):
     assert len({row["data"]["id"] for row in asked}) == len(asked)
     expected_reason = (
         "Company Agent device execution approval: provider=ionstack-twinrun; "
-        "circuit_id=circ_fixture; shots=1"
+        "circuit_id=circ_fixture; shots=1; "
+        "subject=circuit:circ_fixture; limit=shots:1; handoff=no"
     )
     if asks:
         assert report["approvalRequests"] == [

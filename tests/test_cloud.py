@@ -90,7 +90,10 @@ def test_submit_reads_artifact_without_returning_body(monkeypatch, tmp_path):
     payload = {"program_path": "a.qasm", "target": "sim-fixture", "shots": 100}
     workspace = base64.urlsafe_b64encode(str(tmp_path).encode()).decode()
     _, raw = cloud.handle_request(request("cloud.submit", payload), "Bearer cloud-fixture", workspace)
-    assert json.loads(raw)["ok"] is True
+    submitted = json.loads(raw)
+    assert submitted["ok"] is True
+    assert submitted["result"]["program_sha256"]
+    assert "program" not in submitted["result"]
     assert "OPENQASM" not in raw.decode() and "program_path" not in calls[0][1]
     assert calls[0][1]["program"].startswith("OPENQASM")
     payload["shots"] = 101
@@ -319,7 +322,7 @@ def test_real_dsh_submission_approval_lifecycle(capability, scenario, calls, ask
                        for line in completed.stderr.splitlines()
                        if line.startswith("company-agent-diagnostic:")]
         assert any(row["execution_state"] == "unknown" and row["request_id"].startswith("req_")
-                   for row in diagnostics)
+                   for row in diagnostics), diagnostics or completed.stderr[-2000:]
 
 
 @pytest.mark.parametrize("operation", ["cloud.submit", "cloud.status"])
@@ -397,4 +400,43 @@ def test_windows_posix_probe_interpreter_runs_through_wsl(monkeypatch):
     assert command[1:6] == ["-d", "Ubuntu", "--", "/opt/cloud/bin/python", "-I"]
     assert command[6] == "/tmp/company-agent-cloud-worker.py"
     assert env["WSLENV"] == "UQC_CLOUD_API_KEY:UQC_CLOUD_HOST:UQC_CLOUD_PORT"
+
+
+def test_cloud_probe_stays_closed_without_a_configured_endpoint():
+    script = Path(__file__).resolve().parents[1] / "apps" / "company-workspace" / "uqc-cloud-probe.py"
+    env = os.environ.copy()
+    env.pop("UQC_CLOUD_HOST", None)
+    env.pop("UQC_CLOUD_PORT", None)
+    env["UQC_CLOUD_API_KEY"] = "sk-test"
+    env["PYTHONIOENCODING"] = "utf-8"
+    completed = subprocess.run(
+        [sys.executable, str(script)],
+        capture_output=True,
+        env=env,
+        timeout=20,
+        check=False,
+    )
+    payload = json.loads(completed.stdout.decode("utf-8"))
+    assert payload["connected"] is False
+    assert payload["reason"] == "missing_endpoint"
+    source = script.read_text(encoding="utf-8")
+    assert "cloud.unitaryqubit.com" not in source
+    assert 'getattr(signal, "SIGALRM", None)' in source
+
+
+def test_probe_chip_rows_fill_the_resource_columns():
+    import importlib.util
+    script = Path(__file__).resolve().parents[1] / "apps" / "company-workspace" / "uqc-cloud-probe.py"
+    spec = importlib.util.spec_from_file_location("uqc_cloud_probe_columns", script)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    rows = module._normalize_chips({
+        "qpu-1": {"chip_type": "hardware", "status": "online",
+                  "device_info": {"qubit_count": 8, "max_shots": 1000}},
+    })
+    assert rows[0]["kind"] == "hardware"
+    assert rows[0]["state"] == "online"
+    assert rows[0]["status"] == "online"
+    assert rows[0]["qubits"] == 8
+    assert rows[0]["max_shots"] == 1000
 

@@ -65,7 +65,7 @@ def test_f5_untrusted_content_is_data_not_authority() -> None:
 def test_f10_result_budget_covers_managed_builtins() -> None:
     policy = load_result_policy()
     assert policy["output_content"]["scope"] == "all_tools"
-    assert 1 <= policy["max_result_bytes"] <= 64_000
+    assert 1 <= policy["max_result_bytes"] <= 131_072
     # The fs read cap stays under the single-result budget so oversized reads
     # fail closed instead of spilling tool payloads into the conversation.
     patch = (ROOT / "profiles/company-agent/cordis.patch.yml").read_text(encoding="utf-8")

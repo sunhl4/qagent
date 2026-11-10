@@ -47,6 +47,26 @@ def test_budgets_contract_fails_closed_on_mutation(mutate, tmp_path, monkeypatch
         load_budgets()
 
 
+def test_missing_turn_is_isolated_by_process(monkeypatch) -> None:
+    monkeypatch.delenv("COMPANY_AGENT_TURN_ID", raising=False)
+    monkeypatch.setattr(budget.os, "getpid", lambda: 4242)
+    try:
+        budget.charge("company_capabilities", elapsed_ms=4)
+        assert budget.counts()["invocations"] == 1
+        ledger = budget.ledger_path()
+        assert ledger is not None
+        body = ledger.read_text(encoding="utf-8")
+        assert "4242" not in str(ledger)
+        assert "4242" not in body
+        monkeypatch.setattr(budget.os, "getpid", lambda: 4343)
+        assert budget.counts()["invocations"] == 0
+    finally:
+        monkeypatch.setattr(budget.os, "getpid", lambda: 4242)
+        budget.reset()
+        monkeypatch.setattr(budget.os, "getpid", lambda: 4343)
+        budget.reset()
+
+
 def test_ledger_is_per_turn_and_never_plaintext(monkeypatch) -> None:
     import os
 

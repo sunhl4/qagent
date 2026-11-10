@@ -467,6 +467,7 @@ def test_capability_layers_stay_apart(store) -> None:
         "subject": subject(), "subject_source": receipts_subject_source(), "profile": "company-agent",
     }
     assert payload["approvals"] == [
+        "company_dingtalk_reply", "company_grant_open", "company_knowledge_note",
         "company_latex_batch_edit", "company_latex_edit", "company_latex_issue_note",
         "company_latex_overleaf_push", "company_latex_push", "company_latex_revert",
         "company_plan_issue_create", "company_plan_issue_write",
@@ -523,12 +524,12 @@ def test_success_receipt_builds_current_evidence(store, provider_url, device_cal
 
 
 def test_digest_or_age_expiry_grows_stale(store) -> None:
-    # Age expiry: newest record made with the current digest 7200 seconds ago.
+    # Age expiry: newest record made with the current digest eight days ago.
     record_outcome(_event(
-        status="ok", execution_state="completed", timestamp=int(time.time()) - 7200,
+        status="ok", execution_state="completed", timestamp=int(time.time()) - 700_000,
     ))
     aged = evidence(("quantum_device_run",))
-    assert aged["state"] == "stale" and aged["age_seconds"] >= 3600
+    assert aged["state"] == "stale" and aged["age_seconds"] >= 604_800
     assert aged["digest_match"] == "current"
     # Digest expiry: a newer record made under a different contract digest.
     record_outcome(_event(status="ok", execution_state="completed", digest="sha256:" + "0" * 64))

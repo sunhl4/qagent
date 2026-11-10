@@ -47,6 +47,9 @@ def test_profile_contract_requires_physical_minimal_omissions() -> None:
     assert "presets/standard" in VERIFY.FORBIDDEN["company-agent"]
     assert "company-agent-device" not in minimal
     assert "company-agent-device" in forbidden
+    for name in ("company-agent-quantum", "company-agent-hpc", "company-agent-plan", "company-agent-research"):
+        assert name not in minimal
+        assert name in forbidden
     assert "subagent-codex" in forbidden
 
 
@@ -180,7 +183,15 @@ def test_tool_report_rejects_invalid_shape(tmp_path: Path) -> None:
 
 
 def test_verifier_builds_exact_tool_probe_per_profile() -> None:
-    for profile, expected_count in (("company-agent", 85), ("company-agent-minimal", 27)):
+    import sys
+    sys.path.insert(0, str(ROOT / "src"))
+    from company_agent.catalog import builtin_tools_for_preset, load_tools_for_preset
+
+    counts = {}
+    for profile, preset in (("company-agent", "lab"), ("company-agent-minimal", "boot")):
+        builtins = tuple(builtin_tools_for_preset(preset)) if profile == "company-agent" else ()
+        counts[profile] = len(load_tools_for_preset(preset)) + len(builtins) + 1
+    for profile, expected_count in counts.items():
         with VERIFY.profile_home(profile) as temporary:
             home = Path(temporary)
             VERIFY.write_session_probe(home, profile)
@@ -337,7 +348,8 @@ def test_verifier_uses_isolated_profile_copy() -> None:
             "company-software-development",
         }
         assert copied.resolve() != (ROOT / "profiles/company-agent-minimal").resolve()
+        manifest = (copied / "package.json").read_text(encoding="utf-8")
         assert (copied / "package.json").is_file()
-        assert (copied / "node_modules/@unitqc/company-agent-quantum").exists()
-        assert not (copied / "node_modules/@unitqc/company-agent-device").exists()
+        for name in ("company-agent-quantum", "company-agent-hpc", "company-agent-plan", "company-agent-research", "company-agent-device"):
+            assert name not in manifest
         assert os.path.commonpath([str(home), str(copied)]) == str(home)

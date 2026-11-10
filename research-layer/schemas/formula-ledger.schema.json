@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://company.example/schemas/formula-ledger.schema.json",
+  "title": "FormulaLedgerEntry",
+  "description": "One labeled formula extracted from a pinned paper version.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "ledger_id",
+    "paper_id",
+    "source_kind",
+    "version",
+    "anchor",
+    "tex",
+    "role",
+    "fidelity"
+  ],
+  "properties": {
+    "ledger_id": {"type": "string", "minLength": 1, "maxLength": 80},
+    "paper_id": {"type": "string", "minLength": 1, "maxLength": 80},
+    "source_kind": {
+      "type": "string",
+      "enum": ["arxiv_src", "jats", "html", "pdf_text", "figure_asset"]
+    },
+    "version": {"type": "string", "minLength": 1, "maxLength": 80},
+    "anchor": {"type": "string", "minLength": 1, "maxLength": 120},
+    "tex": {"type": "string", "minLength": 1, "maxLength": 4000},
+    "role": {
+      "type": "string",
+      "enum": ["definition", "objective", "update", "constraint", "complexity", "reported_result"]
+    },
+    "fidelity": {
+      "type": "string",
+      "enum": ["copied", "macro_expanded", "macro_unexpanded", "transcribed"]
+    }
+  }
+}

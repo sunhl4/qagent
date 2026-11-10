@@ -77,7 +77,8 @@ def test_policy_plugin_scopes_company_contract_without_blocking_dsh_tools() -> N
         "kind": "ask",
         "reason": (
             "Company Agent device execution approval: provider=ionstack-twinrun; "
-            "circuit_id=circ_x; shots=8"
+            "circuit_id=circ_x; shots=8; "
+            "subject=circuit:circ_x; limit=shots:8; handoff=no"
         ),
     }
     assert payload["stage"] == {
@@ -105,7 +106,8 @@ def test_policy_plugin_scopes_company_contract_without_blocking_dsh_tools() -> N
         "kind": "ask",
         "reason": (
             "Company Agent cloud simulator submission approval: provider=uqc-cloud; "
-            "program_path=a.qasm3; target=qiskit-sim; shots=100"
+            "program_path=a.qasm3; target=qiskit-sim; shots=100; "
+            "subject=unset; limit=shots:100; handoff=no"
         ),
     }
     assert payload["latexEdit"] == {

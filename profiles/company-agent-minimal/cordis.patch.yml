@@ -3,18 +3,12 @@
       name: "@unitqc/company-agent-policy"
     - id: company-agent-core
       name: "@unitqc/company-agent-core"
-    - id: company-agent-quantum
-      name: "@unitqc/company-agent-quantum"
-    - id: company-agent-hpc
-      name: "@unitqc/company-agent-hpc"
     - id: company-agent-latex
       name: "@unitqc/company-agent-latex"
     - id: company-agent-office
       name: "@unitqc/company-agent-office"
-    - id: company-agent-plan
-      name: "@unitqc/company-agent-plan"
-    - id: company-agent-research
-      name: "@unitqc/company-agent-research"
+    - id: company-agent-literature
+      name: "@unitqc/company-agent-literature"
 
 - id: tool-web
   name: "@deepseek-ai/dsh-tool-web"

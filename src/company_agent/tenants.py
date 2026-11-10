@@ -1,14 +1,14 @@
 """Tenant/service enablement facts: the registry is operator-managed data, never model input.
 
 Survey source: docs/oss-survey/04-工程衔接建议.zh-CN.md 「P1」 and the delivery-plan P1
-phase. The registry is a JSONL ledger of ``{subject, service, state,
-expires_epoch, approved_by}`` lines kept outside ``contracts/``; ``approved``
-means the operator bound that subject to that service, with optional expiry.
-Like the knowledge registry, an invalid registry fails closed: facts become
-``unavailable`` and no subject gains an enablement it did not have before.
-This module projects facts only — authorization still comes from
-``contracts/policy.json`` and the platform providers; enablement never widens
-tool visibility on its own.
+phase. The registry is a JSONL ledger of ``{subject, class, service, state,
+expires_epoch, approved_by}`` lines kept outside ``contracts/``. ``class`` is
+``internal`` or ``external`` and must agree for every line of one subject.
+``approved`` means the operator bound that subject to that capability, with
+optional expiry. An invalid registry, a missing class, or two classes for one
+subject fails closed. An unset registry stays the single-user seat and does
+not consult this ledger. A configured registry can narrow a preset; it never
+widens one. The model cannot supply the class or the allow-list.
 """
 
 from __future__ import annotations
@@ -47,16 +47,24 @@ def _disabled(service: str, reason: str) -> dict[str, Any]:
     return item
 
 
-def _empty_legacy(subject: str) -> dict[str, Any]:
-    return {"regime": "legacy-single-user", "subject": subject, "services": {}}
+def _empty_legacy(subject_value: str) -> dict[str, Any]:
+    return {"regime": "legacy-single-user", "subject": subject_value, "class": "", "services": {}}
 
 
-def _unavailable(subject: str) -> dict[str, Any]:
+def _unavailable(subject_value: str) -> dict[str, Any]:
     return {
         "regime": "unavailable",
-        "subject": subject,
+        "subject": subject_value,
+        "class": "",
         "services": {service: _disabled(service, "registry_unavailable") for service in _services()},
     }
+
+
+def _account_class(entries: list[dict[str, Any]], subject_value: str) -> str:
+    found = {str(row["class"]) for row in entries if row["subject"] == subject_value}
+    if len(found) != 1:
+        return ""
+    return next(iter(found))
 
 
 def _registry_path() -> Path | None:
@@ -83,6 +91,7 @@ def _parse_entries(path: Path) -> list[dict[str, Any]]:
     model = _model()
     fields = set(str(item) for item in model["line_fields"])
     services = set(_services())
+    classes = set(str(item) for item in model["classes"])
     states = set(str(item) for item in model["states"])
     approved_limit = int(model["approved_by_max_bytes"])
     subject_limit = int(model["subject_max_bytes"])
@@ -100,6 +109,7 @@ def _parse_entries(path: Path) -> list[dict[str, Any]]:
         if not isinstance(row, dict) or set(row) != fields:
             raise TenantRegistryError("tenant registry line is invalid")
         subject = row["subject"]
+        account_class = row["class"]
         service = row["service"]
         state = row["state"]
         expires = row["expires_epoch"]
@@ -108,6 +118,8 @@ def _parse_entries(path: Path) -> list[dict[str, Any]]:
             not isinstance(subject, str)
             or len(subject.encode("utf-8")) > subject_limit
             or not _SUBJECT_PATTERN.fullmatch(subject)
+            or not isinstance(account_class, str)
+            or account_class not in classes
             or not isinstance(service, str)
             or service not in services
             or not isinstance(state, str)
@@ -123,8 +135,16 @@ def _parse_entries(path: Path) -> list[dict[str, Any]]:
             or not 0 <= expires <= 9007199254740991
         ):
             raise TenantRegistryError("tenant registry line is invalid")
-        entries.append({"subject": subject, "service": service, "state": state,
-                        "expires_epoch": expires, "approved_by": approved_by})
+        entries.append({
+            "subject": subject, "class": account_class, "service": service, "state": state,
+            "expires_epoch": expires, "approved_by": approved_by,
+        })
+    seen_class: dict[str, str] = {}
+    for entry in entries:
+        prior = seen_class.get(entry["subject"])
+        if prior is not None and prior != entry["class"]:
+            raise TenantRegistryError("tenant registry line is invalid")
+        seen_class[entry["subject"]] = entry["class"]
     return entries
 
 
@@ -167,8 +187,10 @@ def projection(subject_value: str, source: str) -> dict[str, Any]:
     if source == "untrusted":
         # Fail closed for an unusable identity: registered lines must never be
         # matched by whatever a misconfigured host's derived identity appears to be.
-        return {"regime": "registry", "subject": subject_value,
-                "services": {service: _disabled(service, reason) for service in _services()}}
+        return {
+            "regime": "registry", "subject": subject_value, "class": "",
+            "services": {service: _disabled(service, reason) for service in _services()},
+        }
     try:
         entries = _parse_entries(_registry_path())
     except (TenantRegistryError, OSError, ValueError, TypeError):
@@ -205,7 +227,35 @@ def projection(subject_value: str, source: str) -> dict[str, Any]:
         elif latest["state"] == "pending":
             decision["reason"] = "pending"
         services[service] = decision
-    return {"regime": "registry", "subject": subject_value, "services": services}
+    return {
+        "regime": "registry",
+        "subject": subject_value,
+        "class": _account_class(entries, subject_value),
+        "services": services,
+    }
+
+
+def account_allows(capability: str) -> bool:
+    """True when this seat may use the capability.
+
+    An unset registry is the single-user seat, so the preset remains the only
+    gate. A configured registry allows the capability only when the subject has
+    one class and an approved, unexpired line. A session grant cannot call this
+    true, and a preset denial is applied by the caller before this result.
+    """
+
+    if not isinstance(capability, str) or not capability:
+        return False
+    facts = projection(subject(), subject_source())
+    if facts.get("regime") == "legacy-single-user":
+        return True
+    if facts.get("regime") != "registry" or facts.get("class") not in {"internal", "external"}:
+        return False
+    services = facts.get("services")
+    if not isinstance(services, dict):
+        return False
+    row = services.get(capability)
+    return isinstance(row, dict) and row.get("enabled") is True
 
 
 def re_all_subjects_valid(subjects: set[str]) -> bool:

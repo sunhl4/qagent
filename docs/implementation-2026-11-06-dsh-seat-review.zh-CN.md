@@ -2,6 +2,8 @@
 
 本篇记录 2026-11-06 在公司开发桌面上的真实会话验收，以及据此对「DSH 是唯一 Agent Runtime、插件只注册工具」这条策略的复查。不引入第二个模型循环、会话循环或工具循环。汇总后的技术手册和产品开发报告见 [super-dsh-handbook-2026-11-06.zh-CN.md](super-dsh-handbook-2026-11-06.zh-CN.md)。
 
+2026-11-10 起，开发桌面的会话预设改为上游 `standard`，公司工具和批准留在档案插件。下面的云模拟器和超算作业仍是当天的会话记录。授权卡、可见名单和桌面菜单以现行手册第 3 节为准。
+
 ## 验收事实
 
 会话在 lab 预设里完成。云平台模拟器 `qiskit-sim` 提交后状态为 `SUCCESS`，结果为 `completed`。超算作业 `67378` 与 `67379` 均为 `COMPLETED`；`67379` 的日志已取回，内容含 `python_ok 3.12.3` 与 `smoke-done`。队列在干跑期间保持为空，干跑使用 `sbatch --test-only`，没有另交作业。
@@ -23,7 +25,7 @@
 
 研究迭代的一次批准在 `company_research_run` 内部。批准这一次之后，有界的修改再跑不再逐次弹卡片。该工具不提交超算、不提交云任务、不调用真机。工单只在 `company_work_item` 的 `evaluate` 同时满足 `mode=auto` 与 `strength=explicit` 时打开，并绑定当前 DSH 会话。
 
-计算资源的提交、改脚本、再跑可以留在同一轮对话里连续做。审批卡片只有「允许一次」。`hpc_submit`、`hpc_stage_file`、`hpc_dir_create`、`hpc_file_remove`、`hpc_job_cancel`、`quantum_cloud_submit` 和 `quantum_device_run` 每次调用单独批准。一次批准不覆盖下一次提交。
+计算资源的提交、改脚本、再跑可以留在同一轮对话里连续做。当天的审批卡片是「允许一次」。现行策略改为：`company_grant_open` 在 `lab` / `sign` 询问，一张卡盖住点名工具的后续调用，每个工具最多 20 次或 14400 秒。没有余量时，`hpc_submit`、`hpc_stage_file`、`hpc_dir_create`、`hpc_file_remove`、`hpc_job_cancel`、`quantum_cloud_submit` 和 `quantum_device_run` 仍各自询问。`boot` / `algo` 即使持有授权也拒绝真机、超算提交和云提交。
 
 办公文件和思维导图留在 `company.office`。`.xmind` / `.mm` 由 `company_office_create` 写出，事项导图由 `company_office_matter` 的 `kind=mindmap` 写出，打开用 `company_office_open`。
 
@@ -33,7 +35,7 @@ GitLab 计划工具提交议题、评论和里程碑，写操作要批准。它�
 
 策略成立，保持不变。
 
-DSH 是唯一 Agent Runtime。公司包只注册合同里的工具，执行转给 `company-agent invoke`。合同决定工具、可见性和询问或拒绝；Python 适配器做南向调用；预设决定模型能看见什么。生产组合关闭 DSH 自带预设和用户可写预设根，只留 system-trust 的公司组合。未知工具、坏信封、缺失 provider 失败闭合。句柄只有 `asset_id`、`circuit_id`、`twin_id`，且 `twin_id` 只从 `quantum_device_run` 配 `ionstack-twinrun` 返回。
+DSH 是唯一 Agent Runtime。公司包只注册合同里的工具，执行转给 `company-agent invoke`。合同决定工具、可见性和询问或拒绝；Python 适配器做南向调用；策略预设决定公司工具能看见什么。命令行全量档案关闭 DSH 内置 preset 和用户可写 preset 根，只留 system-trust 的 `company-agent` 组合。开发桌面的会话预设是上游 `standard`。未知工具、坏信封、缺失 provider 失败闭合。句柄只有 `asset_id`、`circuit_id`、`twin_id`，且 `twin_id` 只从 `quantum_device_run` 配 `ionstack-twinrun` 返回。
 
 今天的真实提交说明这条缝是通的。云模拟器和 Slurm 都从原生工具审批走到公司网关，再回到短回执。故障在路径展开、换行和编译，修在适配器里，没有加第二套运行时，也没有在客户端上盖一层界面。
 
@@ -60,8 +62,7 @@ DSH 是唯一 Agent Runtime。公司包只注册合同里的工具，执行转�
 - `research-layer` 里的 workspace、pipeline、domain。它们是时钟后面的库，由 `company_research_run` 调用。
 - 每个办公格式一个插件，或每个 HPC 子命令一个插件。预设和策略已经能隐藏单次提交。
 - 普通 Git 推送插件。当前没有允许名单内的代码远程，硬做一个会变成带 shell 的旁路。
-- 文献插件。没有真实检索源之前不登记 `company.literature`。
-- 第二套 DSH 图表、会话循环或编码预设。生产 profile 要继续关掉这些入口。
+- 第二套 DSH 图表或会话循环。文献插件已经登记为 `company.literature`，回执只有计数和编号，不调用研究运行、超算、云或真机。命令行全量档案继续只挂 `company-agent` 组合。开发桌面使用上游标准预设的 shell，不在公司仓库里再写一套。
 
 minimal 组合已经不装 device，这一点是对的。它仍装了 quantum、hpc、research 和 plan。名字上的 minimal 并不等于工具面最小；真正的可见性仍由预设和策略决定。若 minimal 的目标是造包和知识检索，下一步应从这个组合里拿掉 HPC、云和计划写工具，而不是把它们并进 core。
 

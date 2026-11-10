@@ -275,7 +275,7 @@ class ProviderClient:
                     label = "device execution" if operation == "device.run" else operation
                     raise ProviderError(
                         f"{label} outcome unknown; do not retry automatically; "
-                        f"request_id={event['request_id']}"
+                        f"request_id={event['request_id']}; query status and do not resubmit"
                     ) from exc
             raise
         finally:
@@ -355,7 +355,7 @@ class ProviderClient:
             raise ProviderError(f"{self.token_env} is too long")
         if token:
             headers["Authorization"] = f"Bearer {token}"
-        if operation in {"cloud.submit", "hpc.stage-file", "hpc.file-fetch"}:
+        if operation in {"cloud.submit", "cloud.result", "hpc.stage-file", "hpc.file-fetch"}:
             import base64
 
             workspace = os.environ.get("COMPANY_AGENT_TOOL_WORKSPACE", "")

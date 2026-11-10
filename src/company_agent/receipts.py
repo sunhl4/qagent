@@ -564,3 +564,37 @@ def reconcile(*, limit: int = 24, subject_value: str | None = None) -> dict[str,
             "original business context; never resubmit automatically"
         ),
     }
+
+
+def unknown_submissions() -> list[dict[str, str]]:
+    """Short unknown cloud, HPC, and device outcomes. Empty when the store cannot be read."""
+    try:
+        records = load_records(limit=200)
+    except (OSError, ReceiptError, RuntimeError, ValueError, TypeError):
+        return []
+    found: list[dict[str, str]] = []
+    for record in records:
+        if record.get("record") != "outcome" or record.get("execution_state") != "unknown":
+            continue
+        if record.get("operation") not in {"cloud.submit", "hpc.submit", "device.run"}:
+            continue
+        found.append({"tool": str(record["tool"]), "business_ref": str(record.get("business_ref") or "")})
+        if len(found) == 8:
+            break
+    return found
+
+
+def identity_age_seconds() -> int | None:
+    """Age of the newest successful device identity receipt, or None when absent."""
+    try:
+        records = load_records(limit=200)
+    except (OSError, ReceiptError, RuntimeError, ValueError, TypeError):
+        return None
+    now = int(time.time())
+    for record in records:
+        if record.get("tool") != "quantum_device_identity" or record.get("status") != "ok":
+            continue
+        stamp = record.get("timestamp")
+        if isinstance(stamp, int) and not isinstance(stamp, bool):
+            return max(0, now - stamp)
+    return None

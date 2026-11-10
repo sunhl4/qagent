@@ -28,7 +28,8 @@ def test_summary_contracts_are_closed_and_versioned() -> None:
         if "metrics" in schema["properties"]:
             metrics = schema["properties"]["metrics"]
             assert metrics["additionalProperties"] is False
-            assert metrics["properties"]["items"]["maxItems"] == 8
+            expected_items = 64 if "omitted_states" in schema["properties"] else 8
+            assert metrics["properties"]["items"]["maxItems"] == expected_items
         assert schema["properties"]["duration_ms"]["minimum"] == 0
     versions = {row["id"]: row["contract_version"] for row in catalog.load_capabilities()["capabilities"]}
     assert versions["company.algorithm"] == "company.algorithm/2.0"
@@ -114,11 +115,11 @@ def test_snapshot_reads_each_file_once_per_local_invocation(monkeypatch) -> None
     monkeypatch.setattr(catalog, "read_json", read)
     assert invoke("company_capabilities", "lab", {}).status == "ok"
     # tools, results, providers, capabilities, policy, presets, templates,
-    # skills, tenants, budgets (ten contract files, once per invocation after
-    # the first snapshot build).
-    assert len(reads) == len(set(reads)) == 10
+    # skills, tenants, budgets, superagent (once per invocation after the
+    # first snapshot build).
+    assert len(reads) == len(set(reads)) == 11
     assert invoke("company_capabilities", "lab", {}).status == "ok"
-    assert len(reads) == 20
+    assert len(reads) == 22
 
 
 def diagnostic_event():
@@ -246,8 +247,10 @@ def test_loopback_device_bad_response_is_unknown_once(monkeypatch, capsys, fault
             server.shutdown()
             thread.join(timeout=3)
     assert result.status == "error" and len(calls) == 1
-    assert "outcome unknown; do not retry automatically; request_id=" + calls[0] == result.error.removeprefix(
-        "device execution "
+    assert result.error.removeprefix("device execution ") == (
+        "outcome unknown; do not retry automatically; request_id="
+        + calls[0]
+        + "; query status and do not resubmit"
     )
     events = [
         json.loads(line.removeprefix(diagnostics.PREFIX)) for line in capsys.readouterr().err.splitlines()

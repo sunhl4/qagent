@@ -20,7 +20,7 @@ $env:Path = "C:\Program Files\nodejs;C:\Program Files\Git\cmd;C:\Windows\System3
 $env:ELECTRON_MIRROR = "https://cdn.npmmirror.com/binaries/electron/"
 $env:COMPANY_AGENT_DEPLOYMENT_MODE = "development"
 $env:COMPANY_AGENT_PROFILE = "company-agent"
-$env:COMPANY_AGENT_PRESET = "lab"
+$env:COMPANY_AGENT_PRESET = "algo"
 $env:COMPANY_AGENT_PYTHON = $Python
 $env:COMPANY_AGENT_PYTHONPATH = Join-Path $Root "src"
 $env:COMPANY_AGENT_CONTRACTS_DIR = Join-Path $Root "contracts"
@@ -54,14 +54,16 @@ $PrivateKeys = @(
   "COMPANY_AGENT_OPEN_WPS"
 )
 if (Test-Path -LiteralPath $PrivateEnv) {
-  foreach ($Line in Get-Content -LiteralPath $PrivateEnv) {
+  foreach ($Line in Get-Content -LiteralPath $PrivateEnv -Encoding utf8) {
     $Line = $Line.TrimEnd("`r")
     if ($Line -eq "" -or $Line.StartsWith("#")) { continue }
     $Eq = $Line.IndexOf("=")
     if ($Eq -lt 1) { continue }
     $Key = $Line.Substring(0, $Eq)
     if ($PrivateKeys -notcontains $Key) { continue }
-    if (Test-Path "Env:$Key") { continue }
+    # An empty inherited value is not a choice. The private file still fills it.
+    $Current = [Environment]::GetEnvironmentVariable($Key, 'Process')
+    if (-not [string]::IsNullOrWhiteSpace($Current)) { continue }
     $Value = $Line.Substring($Eq + 1)
     # A loopback invoke URL belongs to a process on the machine that wrote the
     # file. This desktop has no such listener, so keep the tool fail-closed.
@@ -94,6 +96,7 @@ function Ensure-DevCompanyProfile {
     "@unitqc/company-agent-office": "file:$core/packages/company-agent-office",
     "@unitqc/company-agent-plan": "file:$core/packages/company-agent-plan",
     "@unitqc/company-agent-research": "file:$core/packages/company-agent-research",
+    "@unitqc/company-agent-literature": "file:$core/packages/company-agent-literature",
     "@unitqc/company-agent-policy": "file:$core/packages/company-agent-policy",
     "@unitqc/company-agent-preset": "file:$core/desktop/company-agent-preset",
     "@unitqc/company-agent-quantum": "file:$core/packages/company-agent-quantum",
@@ -120,6 +123,12 @@ function Ensure-DevCompanyProfile {
     $updated = $raw -replace '("\@unitqc/company-agent-plan": "file:[^"]+",)', "`$1`n    `"@unitqc/company-agent-research`": `"file:$core/packages/company-agent-research`","
     if ($updated -eq $raw) { throw "could not add company-agent-research to the development profile" }
     [System.IO.File]::WriteAllText($manifestPath, $updated, $utf8)
+    $raw = $updated
+  }
+  if ($raw -notmatch 'company-agent-literature') {
+    $updated = $raw -replace '("\@unitqc/company-agent-research": "file:[^"]+",)', "`$1`n    `"@unitqc/company-agent-literature`": `"file:$core/packages/company-agent-literature`","
+    if ($updated -eq $raw) { throw "could not add company-agent-literature to the development profile" }
+    [System.IO.File]::WriteAllText($manifestPath, $updated, $utf8)
   }
   $patchPath = Join-Path $profileDir "cordis.patch.yml"
   $patchSource = Join-Path $Root "desktop\profile\cordis.patch.yml"
@@ -137,6 +146,7 @@ function Ensure-DevCompanyProfile {
     "company-agent-office" = Join-Path $Root "packages\company-agent-office"
     "company-agent-plan" = Join-Path $Root "packages\company-agent-plan"
     "company-agent-research" = Join-Path $Root "packages\company-agent-research"
+    "company-agent-literature" = Join-Path $Root "packages\company-agent-literature"
     "company-agent-policy" = Join-Path $Root "packages\company-agent-policy"
     "company-agent-preset" = Join-Path $Root "desktop\company-agent-preset"
     "company-agent-quantum" = Join-Path $Root "packages\company-agent-quantum"

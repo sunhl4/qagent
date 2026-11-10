@@ -1,6 +1,6 @@
 # Super DeepSeek Harness 技术手册与产品开发报告
 
-日期：2026-11-06。读者：平台、研究、办公和资源的开发与产品负责人。
+日期：2026-11-06，座席说明于 2026-11-10 按现行桌面组合修订。读者：平台、研究、办公和资源的开发与产品负责人。
 
 本文是公司采用 Super DeepSeek Harness（下称 DSH）之后的现行手册。它合并三件事：工程现在有什么、2026 年公开方法里哪些能用、接下来按什么顺序做。2000 人天基线不在这里重算。研究层阶段勾选仍以 `research-layer/docs/08_实施路线图与验收指标.md` 为准。11 月 4 日的架构和产品计划仍有效，开发座席上已经跑通的云模拟器与超算烟测以本文第 4 节为准。
 
@@ -16,7 +16,7 @@
 
 公司 Agent 运行时只有 DSH。公司包是 DSH 插件：登记合同里的工具，执行转给 `company-agent invoke`。插件里不写模型循环、会话循环或工具循环。
 
-上游 `dsh-superagent-prototype` 在合同里的状态是 `official_status: unreleased`。公司采用它的对象和失败闭合：Source、Trigger、Eval、Mandate、Ticket、Assignment、Subscription。公司不复制它的内部表、提示词、Router、Worker 或 Watchdog。执行面是已经存在的一个 DSH 会话加上公司工具包。`forbidden_worker_modes` 包含 `danger-full-access`、`shell`、`second-loop`。
+上游 `dsh-superagent-prototype` 在合同里的状态是 `official_status: unreleased`。公司采用它的对象和失败闭合：Source、Trigger、Eval、Mandate、Ticket、Assignment、Subscription。公司不复制它的内部表、提示词、Router、Worker 或 Watchdog。执行面是已经存在的一个 DSH 会话加上公司工具包。`forbidden_worker_modes` 包含 `danger-full-access`、`shell`、`second-loop`，这三项限制的是 Super-agent worker。开发桌面的会话预设是上游 `standard`，自带 shell、后台任务、压缩、子代理和计划模式；公司科学工具和批准留在档案插件里。
 
 Mandate 只有四个：`boot`、`lab`、`algo`、`sign`。兼容的 DSH 版本记录为 `0.1.5-rc.2` 与 `0.2.1-rc.5`。开发桌面用仓库里的 `scripts/dev_desktop.ps1` 启动当前改过的客户端。
 
@@ -61,7 +61,7 @@ Router 和订阅是基座的必要部分。后续 Company Agent 要同时处理�
 | 面 | 拥有 | 不拥有 |
 | --- | --- | --- |
 | 控制面 | 本地工单账本；受理模式 `off` / `observe` / `auto` | 模型循环、科学结果、资源调度、全公司事实源 |
-| 执行面 | 当前 DSH 会话、公司工具包、策略插件 | 第二个 Agent、带 shell 的编码预设、未发布的官方 Super-agent 包 |
+| 执行面 | 当前 DSH 会话、上游标准预设的 shell 与文件工具、公司工具包、策略插件 | 第二个 Agent、公司仓库里的第二套 shell 或会话循环、未发布的官方 Super-agent 包 |
 | 平台时钟 | `research-layer/` 的实验规格、循环、租约、成本和证据 | 根目录工具合同、工单终态、设备批准、超算提交 |
 
 控制面合同要点：
@@ -86,13 +86,16 @@ Router 和订阅是基座的必要部分。后续 Company Agent 要同时处理�
 | --- | --- |
 | `contracts/` | 工具、能力、provider、策略、预设、Super DSH 合同 |
 | `src/company_agent/` | 合同内核和南向适配器 |
-| `packages/` | 九个 DSH 插件，只注册工具并转调 |
-| `profiles/` | `company-agent` 与 `company-agent-minimal` 两个组合 |
-| `desktop/company-agent-preset` | 开发座席的预设与人格说明 |
+| `packages/` | 十个 DSH 插件，只注册工具并转调 |
+| `profiles/` | 命令行组合：`company-agent` 与 `company-agent-minimal` |
+| `desktop/profile` | 开发桌面档案。会话默认预设是上游 `standard`，公司插件和 `algo` 策略叠在这一层 |
+| `desktop/company-agent-preset` | 菜单里关闭的 Company Agent 会话预设 |
 | `research-layer/` | 平台时钟的库、schema 和桩适配器。默认装配是 `adapters/stub/` |
 | `tests/` | 目标架构门禁 |
 
-生产组合关闭 DSH 自带预设和用户可写预设根，只留 system-trust 的公司组合。
+开发桌面 `desktop/profile/cordis.patch.yml` 的会话默认预设是上游 `standard`。PTC、极简、创造和 Company Agent 会话预设在菜单里关闭。公司插件、技能根和公司中转模型仍在这份档案上。桌面启动时的公司策略预设是 `algo`。升到 `lab` 或 `sign` 由人改环境并重启。`company_shell` 已从合同删除。
+
+命令行全量档案 `profiles/company-agent` 与 `profiles/company-agent-minimal` 关闭 DSH 内置 preset 和用户可写 preset 根，只留 system-trust 的 `company-agent` 组合。这两份档案不挂宿主 shell。
 
 ### 3.2 插件
 
@@ -109,21 +112,22 @@ Router 和订阅是基座的必要部分。后续 Company Agent 要同时处理�
 | `company-agent-office` | `company.office` | 无 | 文档、表格、幻灯片、图表、思维导图是文件种类 |
 | `company-agent-plan` | `company.plan` | 写操作要人批 | GitLab 令牌不能进常驻核心包 |
 | `company-agent-research` | `company.research` | `company_research_run` 在 lab 询问 | 时钟和提交插件拆开，避免实现把提交带进循环 |
+| `company-agent-literature` | `company.literature` | 无。一次调用只做一次检索或一篇论文 | 回执只有计数和编号。不调用研究运行、超算、云或真机 |
 
-能力共 14 个，工具名以 `company_`、`quantum_` 或 `hpc_` 开头。句柄只有 `asset_id`、`circuit_id`、`twin_id`。`twin_id` 只从 `quantum_device_run` 且 provider 为 `ionstack-twinrun` 时返回。
+能力共 16 个，工具名以 `company_`、`quantum_` 或 `hpc_` 开头。句柄只有 `asset_id`、`circuit_id`、`twin_id`。`twin_id` 只从 `quantum_device_run` 且 provider 为 `ionstack-twinrun` 时返回。
 
-四个预设的可见性：
+四个预设各有两份名单。`visible_tools` 是策略和 `company-agent invoke` 的边界。`model_tools` 是模型在 DSH 里看得到的子集。
 
-- `boot`：办公、工作流、知识、门户。没有计算提交，没有研究运行。
-- `lab`：完整工具面，含超算提交、云提交、真机、研究运行、计划写、LaTeX 写。提交类每次询问。
-- `algo`：算法、只读超算和云、研究编译与状态。没有提交，没有真机，没有 `company_research_run`。
-- `sign`：提交和真机。没有办公，没有研究运行。
+- `boot`：办公、工作流、知识、门户。两份名单相同。没有计算提交，没有研究运行。
+- `lab`：宿主可见名单保留提交、文件、办公、LaTeX 和计划。模型侧收成会话、工单、授权、知识检索、工作流校验、算法目录和运行、卷宗、云提交和状态、真机、超算提交和状态、研究四件、文献四件，以及 `company_office_deliver`。
+- `algo`：宿主可见名单去掉办公写工具，只留分析、比较、打开和文件列表。模型侧再去掉 LaTeX 和计划。没有提交，没有真机，没有 `company_research_run`，没有文献取回。
+- `sign`：提交、真机、工单、签署回执和设备窗口。没有办公，没有研究运行。
 
-`quantum_device_run` 在 `lab` / `sign` 询问，在 `boot` / `algo` 拒绝。审批卡片只有「允许一次」。一次批准不覆盖下一次 `hpc_submit`、`hpc_stage_file`、`hpc_dir_create`、`hpc_file_remove`、`hpc_job_cancel`、`quantum_cloud_submit` 或 `quantum_device_run`。
+`quantum_device_run` 在 `lab` / `sign` 询问，在 `boot` / `algo` 拒绝。`company_grant_open` 在 `lab` / `sign` 询问。一张卡盖住同一会话里点名工具的后续调用，每个工具最多 20 次或 14400 秒，用尽后重新询问。点名真机、超算提交或云提交时要写明主体和限额。研究交接之后的下一次提交重新询问，不扣旧卡。点名范围还包括超算文件写、LaTeX 写、计划写和研究运行。`boot` / `algo` 即使持有授权也拒绝真机、超算提交和云提交。没有授权卡时，每一次询问单独批准。
 
 `company_research_run` 的一次批准盖住这一次调用内部的有界修改再跑，最多 5 次。这次调用不提交超算、不提交云、不调用真机。`resource_type=qpu` 只记下 lab 真机交接。
 
-minimal 组合不装 device。它仍装了 quantum、hpc、latex、office、plan、research。名字上的精简不等于工具面最小。若它的产品目标改成只做造包和知识检索，再从该组合拿掉超算、云和计划写工具。在那之前保持现状。
+minimal 组合留下 policy、core、office、latex、literature。它不装 quantum、hpc、plan、research 和 device。`lab` / `sign` 仍然启动失败。
 
 ### 3.3 南向已经接通的路径
 
@@ -162,7 +166,7 @@ minimal 组合不装 device。它仍装了 quantum、hpc、latex、office、plan
 
 研究时钟的真实一轮尚未在这台桌面会话里跑过。编译和运行的桩路径有测试。桌面人格说明已经要求先收齐实验卡。
 
-研究层里已经有、但还没有接到这次桌面运行上的平台时钟能力：有界循环、失败分类、失败库、日报和周报、worktree、租约状态机、成本账本、检查点、单轮回收扫描、策略决定留痕、假设质量门、方法卡结构校验。默认执行器仍是 stub。这些库由 `company_research_run` 调用，不单独做成插件。
+`company_research_run` 调用研究层的有界循环和 worktree。崩溃、超时和脏工作树把 `classifyFailure` 的结果写成短记录，字段是类别、错误码、阶段和是否可重试。未知执行不可重试。这条记录不进入工具回执。失败库检索、日报、周报、租约状态机、成本账本、检查点、单轮回收扫描、策略决定留痕、假设质量门和方法卡结构校验仍留在研究层，不单独做成插件。默认没有研究根目录时，执行器仍是 stub。
 
 ### 3.5 办公、计划和代码提交
 
@@ -177,7 +181,7 @@ GitLab 计划工具提交议题、评论和里程碑。它们不推送普通代�
 - GitLab 地址和令牌未写入私有环境。
 - 量子平台地址未换成可用地址。
 - 研究时钟尚未在这台桌面跑过一轮。
-- 云门户嵌入脚本此前返回 404。嵌入页和 iframe 沙箱都还没改。
+- 云门户嵌入脚本由同源代理取回，测试确认静态脚本返回 200。嵌入页和 iframe 沙箱不放宽。
 - 公司本地模型路由指向本机 `8000`，该端口未作为座席的现行模型。现行对话走公司中转。
 - 本地工单账本还不是全公司事实源。企业身份、账单、模型版本标识仍等 Owner。对应执行计划 E5、E7、E8。
 
@@ -191,7 +195,7 @@ GitLab 计划工具提交议题、评论和里程碑。它们不推送普通代�
 | Spec Kit 1.2.1 | 2026-10-16 | 章程写一次；每张卡先规格再执行；人看过产物再继续；收敛只追加未完成项，对齐就停 | 不安装 `specify-cli`，不把 implement 循环嵌进插件 |
 | 《Super-agent 设计探索》与原型 `docs/000-philosophy.md` | 2026-10-31 | 先有书面规则再行动；主动行为先只记录；一次只问一个具体问题；工单要有终态、预算和截止 | Router、Watchdog、端侧 daemon。原型写明文章设计并未全部实现 |
 | autoresearch `program.md` | 文件页 2026-03-09 | 人改说明，代理只改允许的文件；指标短提取；账本只留提交、指标、状态、一句话 | `LOOP FOREVER`。次数仍以卡上的 `max_attempts` 为顶 |
-| Robin, Nature，DOI `10.1038/s41586-026-10652-y` | 2026-05-19 | 代理提出假设和方案，人做实验，数据回来后再开下一轮 | Crow、Falcon、Finch。没有文献源之前不登记文献插件 |
+| Robin, Nature，DOI `10.1038/s41586-026-10652-y` | 2026-05-19 | 代理提出假设和方案，人做实验，数据回来后再开下一轮 | Crow、Falcon、Finch。文献检索、取回和索引已登记，回执只有计数和编号 |
 | Copilot coding agent 近况 | 2026-02-26 | 一张写好的任务交给一个限制了工具的代理，做完就交回 | 代理审查自己的改动；云端会话交接 |
 | The AI Scientist-v2，arXiv:2504.08066 | 2025-04 | 分阶段停止；预算用尽就停；只把当前最好的一个节点带进下一阶段 | 代理树搜索、自动写论文、去掉人写模板 |
 | Google AI co-scientist | 2025-02-19 | 人先给目标，再产生可检验的假设和方案 | 六个专职代理和 Elo 自评 |
@@ -200,15 +204,15 @@ GitLab 计划工具提交议题、评论和里程碑。它们不推送普通代�
 
 1. 实验卡是规格，也是书面规则。没有卡，研究运行不开始。
 2. `company_research_compile` 是放行门。`company_research_run` 是那一个作业。
-3. 超算、云和真机是作业外面的写操作。每次提交单独批准。研究卡上的 `hpc` 或 `qpu` 只记录类别。
+3. 超算、云和真机是作业外面的写操作。授权卡可以盖住后续点名调用；没有余量时每次提交单独批准。研究卡上的 `hpc` 或 `qpu` 只记录类别。
 4. 工单记录这一轮。`observe` 只记决策。`auto` 加 `explicit` 才打开，并绑定当前会话。
 5. 下一轮来自新卡，或人把实验结果交回来。不来自常驻循环。
 6. 作者与评审分开。代理不审查自己打开的变更。
-7. 文献、树搜索和论文生成留到有证据定位和真实执行器之后。
+7. 文献检索、取回和索引已经登记。树搜索和论文生成留到有证据定位和真实执行器之后。
 
 ## 5. 产品方向
 
-产品是公司座席上的一个 DSH，不是另一套科学家软件。员工在原生界面里选公司预设，用公司工具完成办公、计划、电路、云模拟器、超算和研究迭代。需要人看的结果用 WPS 交付。会话里只留短回执。
+产品是公司座席上的一个 DSH。开发桌面的会话预设是上游 `standard`，公司插件叠在档案层。员工用标准预设的 shell 和文件工具做普通修改，用公司工具完成办公、计划、电路、云模拟器、超算和研究迭代。策略预设仍是 `boot`、`lab`、`algo`、`sign`，开发桌面启动时为 `lab`。需要人看的结果用 WPS 交付。会话里只留短回执。
 
 四个使用场面：
 
@@ -217,7 +221,7 @@ GitLab 计划工具提交议题、评论和里程碑。它们不推送普通代�
 | 办公和知识 | `boot` | 说明要哪一份文件 | 写出文件并交给 WPS。不申请计算 |
 | 算法和只读排查 | `algo` | 给出要查的队列、设备或实验标识 | 返回短状态。不提交，不跑研究循环 |
 | 实验迭代 | `lab` | 填实验卡并批准这一次运行 | 有界修改再跑。资源类别为超算或真机时只交接，不提交 |
-| 签署计算 | `lab` 或 `sign` | 对每一次提交点允许一次 | 一次调用对应一次提交或一次取消。未知状态只查询 |
+| 签署计算 | `lab` 或 `sign` | 打开授权卡，或在余量用尽后批准这一次提交 | 授权覆盖点名工具，直到次数或有效期用尽。未知状态只查询。`boot` 和 `algo` 拒绝真机、超算提交和云提交 |
 
 人的角色按 Super-agent 文章里的方向走：从逐步下命令，变成填写规格、批准边界、验收结果。这个转变只发生在书面规则和审批已经存在的地方。没有规则的主动行为保持 `observe`。
 
@@ -301,7 +305,7 @@ GitLab 计划工具提交议题、评论和里程碑。它们不推送普通代�
 
 交付：
 
-- 研究章程继续是全平台的一份边界：一个问题、一个基线、一个指标、一份预算。改章程是边界变更，要留记录。
+- 研究章程继续是全平台的一份边界：一个问题、一个基线、一个指标、一份预算。第一次成功运行记下新立。以后的成功运行只记录变了的槽位名：`hypothesis`、`baseline`、`metric`、`budget`。回执和状态不写槽位正文。
 - 每张卡对应一个 `experiment_id`。编译结果、运行回执和候选触发用这个标识串起来。
 - 停止原因为保留时，下一张卡必须写明新的假设或新的否证。沿用旧卡的幂等键会被拒绝。`next_fields` 只返回字段名。
 - 停止原因为预算用尽时，只产生 `budget.exhausted.v1` 候选。开工单仍要人做 `evaluate`。
@@ -319,24 +323,34 @@ Spec Kit 的 `converge` 在这里的对应物是：对照章程和这张卡，�
 
 ### 6.5 阶段 S4：文献到可执行复现
 
-目标：有真实检索源之后，把文献变成带证据定位的方法卡，再变成一张实验卡。
+目标：把文献变成带证据定位的方法卡，再变成一张实验卡。
 
-前置：检索源、全文获取方式和证据定位规则由 Owner 指定。没有这三项，本阶段不开始，也不登记 `company.literature`。
+前置已经指定，登记 `company.literature` 以这三项为准：
+
+- 检索源：arXiv、OpenAlex、Semantic Scholar、Crossref，Europe PMC 可以打开。关键词每个源只取第一页，引用只做 OpenAlex 一跳。`exhaustive=false`。检索返回、去重、纳入、全文和引用分开计数。
+- 全文顺序：arXiv 源码，PMC JATS，HTML，PDF 文本层，最后才是单张图的视觉读数。版本钉在 arXiv 的 vN 或 DOI。
+- 证据定位：`source_kind + version + anchor`。复现候选里的公式证据必须指向公式账编号。补充材料和数据文件是独立证据类型。
 
 交付：
 
-- 研究层已有的去重、方法卡编译和复现报告继续做结构校验。缺证据定位是硬错误。
-- 新插件只在检索源稳定后增加，并且与研究时钟分开。插件返回短引用，不返回全文。
-- 方法卡通过之后，才能生成实验卡草稿。草稿仍要人改基线是否复现、预算和允许修改的路径。
-- 至少一个内部基线走完「方法卡、复现报告、实验卡、S1 的本地运行」。
+- 研究层已有的去重、方法卡编译和复现报告继续做结构校验。缺证据定位是硬错误。背景论文仍走宽松的 `compileMethodCard()`。只有复现候选走 `compileReproductionCandidate()`。
+- `company.literature` 与研究时钟分开。一次调用只做一次有界检索，或取回并索引一篇论文。回执只有计数和编号，不返回全文或 TeX。
+- 方法卡通过之后，才能生成实验卡草稿。草稿仍要人改基线是否复现、预算和允许修改的路径。文献工具不勾 `baseline_reproduced`。
+- 内部 `val_loss` 基线走完方法卡、复现报告和现有实验卡。化学误差或其他五种平台单位以外的指标留在公式账里，不进入研究时钟。
+
+写代码和超算不在文献插件里：
+
+- 写代码的工单只接收已经通过严格编译的复现候选、钉住的 commit，以及实验卡上的 `changed_path`。`admitCodeChange()` 已落地：候选必须编译通过且不能进入研究时钟；commit 是 7 到 64 位十六进制对象号；路径与实验卡相同，最长 120，只留在工作区内，拒绝 `..`、绝对路径和反斜杠。大小写不同仍算作者自审。合并仍走现有软件门禁。算法标识只来自平台目录的返回，文献插件不新建 `component_id`。
+- 超算是复现通过之后的另一张实验卡。假设换成缩放或节点时间，幂等键新开，`resource_type=hpc`，仍由现有交接调用 `hpc_submit`，提交单独批准。草稿只从已经复现的 cpu 或 gpu `val_loss` 卡生成，不勾 `baseline_reproduced`，也不写入 `baseline_train_time_seconds`。编译前去掉幂等键。
 
 退出标准：
 
-- 没有证据定位的方法卡不能编译。
+- 没有证据定位的方法卡不能编译。复现候选缺少公式或表格锚点、单位、容差、数据划分，或代码未钉扎时不能编译。
 - 文献插件不能调用 `company_research_run`、`hpc_submit` 或 `quantum_device_run`。
 - 复现失败的报告含差异归因，执行未知只能标成未尝试。
+- 机器验收锚点、版本、截断和编译。科学章由另一个会话或人签署。
 
-Robin 的实验室闭环放在这一段之后才有意义：文献代理提出候选，人做实验，数据再进入下一张卡。在检索源落地之前，实验卡继续由人填写。
+Robin 的实验室闭环放在这一段之后才有意义：文献工具提出候选，人做实验，数据再进入下一张卡。实验卡继续由人填写基线是否已经复现。
 
 ### 6.6 阶段 S5：把替身账本换成上游流程
 
@@ -411,7 +425,7 @@ S4 不能插到 S1 前面。没有本地指标的实验卡，方法卡无法验�
 - 为了少点一次批准，把资源提交改成默认允许。
 - 安装 Temporal、gh-aw、Spec Kit CLI、AI Scientist、Robin 的文献代理，或再部署 OpenHands、SWE-agent、Aider。
 - 按每个工具、每个办公格式或每个按钮拆插件。
-- 在没有检索源时登记 `company.literature`。
+- 在没有检索源、全文获取方式和证据定位规则时登记 `company.literature`。
 - 做普通 Git 推送插件，或做第二套图表渲染器。
 - 把算法名单写死在 Agent 或知识库里。算法目录只来自量子平台的 `component_id`。
 - 把本地 SQLite 账本升成全公司事实源。
@@ -429,7 +443,7 @@ S4 不能插到 S1 前面。没有本地指标的实验卡，方法卡无法验�
 | 开发烟测被当成生产 | 云模拟器和两份超算作业已经在开发座席完成 | 写入第 3.3 节。E6 仍等 Owner 的状态语义和真机窗口 |
 | 时钟实现把提交带进去 | 研究插件与超算、真机插件已经分开 | S2 用测试锁住「研究运行不产生作业号」 |
 | 人忘记填卡就要求自动跑 | 人格说明和编译门已经要求字段齐全 | S0 把拒绝未复现基线列为退出标准 |
-| 文献能力被提前做成插件 | 研究层只有结构校验 | S4 的前置不满足就不开始 |
+| 文献插件带回全文或代交作业 | 三项规则已写入第 6.5 节。工具回执只有计数和编号 | 文献插件不调用研究运行、超算和真机。不合格指标不进入时钟 |
 | 持久工作流过早引入 | 租约和回收已是单轮扫描 | S6 才评估 Temporal。未知执行继续不重试 |
 | 密钥进入仓库或工具结果 | 私有环境与凭据文件分开；工具结果有长度和内容禁令 | 新阶段不得放宽。计划令牌只进私有环境 |
 | minimal 组合名实不符 | 它不装真机，但仍装超算、云、研究和计划 | 产品目标未改成纯造包之前不拆 |
@@ -440,6 +454,6 @@ S4 不能插到 S1 前面。没有本地指标的实验卡，方法卡无法验�
 
 座席上的新证据写进 `docs/implementation-YYYY-MM-DD-<slice>.zh-CN.md`，并在本文第 3 节加一条日期和范围。阶段退出标准被勾掉时，在研究层路线图或执行计划里同步，不在本文把未跑的桌面步骤标成完成。
 
-2026-11-06 的代码进度见 `docs/implementation-2026-11-06-s1-s3.zh-CN.md`。S0 的桩路径、S1 的本地 `val_loss` 日志和干净 worktree 撤销、S2 的超算与云交接、S3 的换卡规则和租户次数汇总已经有测试。公司执行计划里的 E0 到 E4 也已经落地。S4、S5、S6 以及 E5 到 E8 仍等检索源、可锁定的上游版本、模型协议、平台状态语义、身份和账单 Owner。桌面上一轮人工批准的研究运行还要人点「允许一次」。
+离可发布还差的桌面一轮、Owner 输入和生产签认见 `docs/release-completion.zh-CN.md`。2026-11-06 的代码进度见 `docs/implementation-2026-11-06-s1-s3.zh-CN.md`。S0 的桩路径、S1 的本地 `val_loss` 日志和干净 worktree 撤销、S2 的超算与云交接、S3 的换卡规则和租户次数汇总已经有测试。公司执行计划里的 E0 到 E4 也已经落地。S4 的检索源、全文顺序和证据定位已写入第 6.5 节。S5、S6 以及 E5 到 E8 仍等可锁定的上游版本、模型协议、平台状态语义、身份和账单 Owner。桌面上的研究运行仍要人批准。`company_grant_open` 可以盖住同一会话里后续的点名调用，直到每个工具 20 次或 14400 秒用尽。
 
 现行说明以这份手册、架构说明和 11 月 4 日产品计划为准。实验卡、11 月实施记录、执行计划、2000 人天基线、v0.8 框架引用、P0 冻结记录、部署与合同迁移、研究层 `docs/00` 到 `docs/19`、开源复核、专利交底和许可证登记仍留在仓库。更早的逐日文稿和 v0.3 到 v0.7 草稿已删除。人天数字不因删文稿而重算。

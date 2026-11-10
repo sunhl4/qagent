@@ -88,7 +88,8 @@
         "quantum_cloud_devices",
         "quantum_cloud_submit",
         "quantum_cloud_status",
-        "quantum_cloud_result"
+        "quantum_cloud_result",
+        "quantum_cloud_result_page"
       ],
       "handles": [],
       "approval": "human",
@@ -123,7 +124,8 @@
       "contract_version": "company.knowledge/2.0",
       "tools": [
         "company_knowledge_search",
-        "company_fetch"
+        "company_fetch",
+        "company_knowledge_note"
       ],
       "handles": [],
       "approval": "none",
@@ -137,10 +139,16 @@
       "tools": [
         "company_work_item",
         "company_capabilities",
+        "company_grant_open",
+        "company_session_status",
         "company_workflow_validate",
         "company_analysis_render",
         "company_table_profile",
-        "company_workspace_reference"
+        "company_workspace_reference",
+        "company_run_dossier",
+        "company_sign_receipt",
+        "company_catalog_replay",
+        "quantum_device_window"
       ],
       "handles": [],
       "approval": "none",
@@ -242,6 +250,34 @@
         "company_research_run",
         "company_research_status",
         "company_research_digest"
+      ],
+      "handles": [],
+      "approval": "human",
+      "provenance": ""
+    },
+    {
+      "id": "company.literature",
+      "kind": "literature",
+      "provider": "company-literature",
+      "contract_version": "company.literature/2.0",
+      "tools": [
+        "company_literature_search",
+        "company_literature_fetch",
+        "company_literature_index",
+        "company_literature_draft_card"
+      ],
+      "handles": [],
+      "approval": "none",
+      "provenance": ""
+    },
+    {
+      "id": "company.dingtalk",
+      "kind": "channel",
+      "provider": "company-dingtalk",
+      "contract_version": "company.dingtalk/2.0",
+      "tools": [
+        "company_dingtalk_inbox",
+        "company_dingtalk_reply"
       ],
       "handles": [],
       "approval": "human",

@@ -96,6 +96,7 @@ ALLOWED_SOURCE_CHILDREN = {
         "company-agent-office",
         "company-agent-plan",
         "company-agent-research",
+        "company-agent-literature",
     },
     "profiles": {"company-agent", "company-agent-minimal"},
     "runtime": set(),

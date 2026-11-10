@@ -1,0 +1,564 @@
+{
+  "candidates": [
+    {
+      "id": "development-order",
+      "kind": "verify",
+      "status": "ready",
+      "decision": "keep",
+      "priority": 50,
+      "hypothesis": "开发顺序仍是合同、适配器、插件、测试。",
+      "cost": 1
+    },
+    {
+      "id": "device-policy",
+      "kind": "verify",
+      "status": "ready",
+      "decision": "keep",
+      "priority": 40,
+      "hypothesis": "真机工具在 lab 和 sign 询问，在 boot 和 algo 拒绝。",
+      "cost": 1
+    },
+    {
+      "id": "not-a-second-runtime",
+      "kind": "verify",
+      "status": "ready",
+      "decision": "keep",
+      "priority": 30,
+      "hypothesis": "开发审查循环没有注册成工具，也没有进入公司运行时。",
+      "cost": 1
+    },
+    {
+      "id": "early-stop-disabled",
+      "kind": "verify",
+      "status": "ready",
+      "decision": "keep",
+      "priority": 20,
+      "hypothesis": "已登记候选会跑完，第一次保留不会结束这一轮。",
+      "cost": 1
+    },
+    {
+      "id": "proposal-continues",
+      "kind": "implement",
+      "status": "ready",
+      "priority": 10,
+      "hypothesis": "队列空了以后按目录提议下一项；目录用尽就要求新的书面协议。",
+      "allowed_paths": [
+        "scripts/dev_review_loop.py",
+        "scripts/dev_review_propose.py",
+        "tests/test_dev_review_loop.py"
+      ],
+      "cost": 1
+    },
+    {
+      "id": "charter-boundary",
+      "kind": "implement",
+      "status": "ready",
+      "decision": "keep",
+      "priority": 8,
+      "hypothesis": "同一实验的章程是问题、基线、指标和预算。回执只写新立或变了的槽位名。",
+      "allowed_paths": [
+        "contracts/tools.json",
+        "src/company_agent/research_clock.py",
+        "tests/test_research_clock.py"
+      ],
+      "cost": 1
+    },
+    {
+      "id": "surface-discards",
+      "kind": "implement",
+      "status": "ready",
+      "priority": 6,
+      "hypothesis": "目录用尽时，本拍已有的放弃项仍以 discarded 结束。",
+      "allowed_paths": [
+        "scripts/dev_review_loop.py",
+        "tests/test_dev_review_loop.py",
+        "docs/dev-review-loop.zh-CN.md"
+      ],
+      "cost": 1
+    },
+    {
+      "id": "snapshot-matches-ledger",
+      "kind": "implement",
+      "status": "ready",
+      "priority": 4,
+      "hypothesis": "状态快照和账本最后一拍必须是同一次循环、同一个停止原因。",
+      "allowed_paths": [
+        "scripts/dev_review_gates.py",
+        "docs/dev-review/STATUS.md",
+        "tests/test_dev_review_loop.py",
+        "docs/dev-review-loop.zh-CN.md"
+      ],
+      "cost": 1
+    },
+    {
+      "id": "release-boundary",
+      "kind": "implement",
+      "status": "ready",
+      "priority": 2,
+      "hypothesis": "发布完成计划写明四个预设、未开始的后三段，以及生产授权仍为否。",
+      "allowed_paths": [
+        "docs/release-completion.zh-CN.md",
+        "docs/super-dsh-handbook-2026-11-06.zh-CN.md",
+        "scripts/dev_review_gates.py",
+        "docs/dev-review-loop.zh-CN.md"
+      ],
+      "cost": 1
+    },
+    {
+      "id": "seat-card-once",
+      "kind": "implement",
+      "status": "ready",
+      "priority": 1,
+      "hypothesis": "每一拍编译并跑一张实验卡：未批准先询问，批准后留下短回执，未复现的基线不运行。",
+      "allowed_paths": [
+        "scripts/dev_review_gates.py",
+        "docs/release-completion.zh-CN.md",
+        "docs/dev-review-loop.zh-CN.md"
+      ],
+      "cost": 1
+    },
+    {
+      "id": "loop-writes-code",
+      "kind": "implement",
+      "status": "open",
+      "priority": 1,
+      "hypothesis": "开发循环按目录里的 edits 改允许路径中的文件，测量没有保留时把文件改回。",
+      "allowed_paths": [
+        "docs/dev-review-loop.zh-CN.md",
+        "docs/release-completion.zh-CN.md"
+      ],
+      "edits": [
+        {
+          "path": "docs/dev-review-loop.zh-CN.md",
+          "old": "       实现候选且 status=open → needs_implementation，本拍停在这里",
+          "new": "       实现候选且 status=open、没有 edits → needs_implementation，本拍停在这里\n       实现候选带有 edits → 循环只改 allowed_paths 里的文件，再测量"
+        },
+        {
+          "path": "docs/dev-review-loop.zh-CN.md",
+          "old": "循环不会自己发明下一项，也不会改名单以外的文件。",
+          "new": "循环不会自己发明下一项。实现候选附上 edits 时，循环只改 allowed_paths 里唯一匹配的旧文本；测量没有保留就把文件改回。"
+        },
+        {
+          "path": "docs/dev-review-loop.zh-CN.md",
+          "old": "| `seat-card-once` | 每一拍自己编译并跑一张实验卡，未批准先询问，未复现的基线不运行 |",
+          "new": "| `seat-card-once` | 每一拍自己编译并跑一张实验卡，未批准先询问，未复现的基线不运行 |\n| `loop-writes-code` | 实现候选附上 edits 时，循环改允许路径里的文件；测量未保留则改回 |"
+        },
+        {
+          "path": "docs/dev-review-loop.zh-CN.md",
+          "old": "| `needs_implementation` | 下一个候选要改代码，循环自己不改 | 只改该候选列出的路径，把 `status` 改成 `ready`，新开一轮 |",
+          "new": "| `needs_implementation` | 下一个实现候选没有附上 edits | 把改动写进该候选的 edits，再用新的输出目录开一轮 |"
+        },
+        {
+          "path": "docs/dev-review-loop.zh-CN.md",
+          "old": "填上标识、假设、成本、种类、状态和允许修改的路径。",
+          "new": "填上标识、假设、成本、种类、状态、允许修改的路径和 edits。"
+        },
+        {
+          "path": "docs/dev-review-loop.zh-CN.md",
+          "old": "2. 代码还没改时，状态写 `open`。循环会停住。改动只发生在该项列出的路径里。改完把状态写成 `ready`。",
+          "new": "2. 状态写 `open`，并写下 `edits`。每一处包含路径、旧文本和新文本。循环替换允许路径里的唯一匹配，再测量。没有保留时，循环把文件改回。"
+        },
+        {
+          "path": "docs/release-completion.zh-CN.md",
+          "old": "人用自然语言说下一件。执行的人把它写成 `docs/dev-review/catalog.json` 的一项，再用新的输出目录启动。允许修改的路径只含这一项列出的文件。人还没点批准、Owner 还没给地址时，循环停下来等，不自己发明下一件功能。",
+          "new": "人用自然语言说下一件。执行的人把它写成 `docs/dev-review/catalog.json` 的一项，附上 edits，再用新的输出目录启动。循环只改该项列出的文件。人还没点批准、Owner 还没给地址时，循环停下来等，不自己发明下一件功能。"
+        }
+      ],
+      "cost": 1
+    },
+    {
+      "id": "kernel-stays",
+      "kind": "implement",
+      "status": "open",
+      "priority": 1,
+      "hypothesis": "自动化可以改公司代码和启动界面。已安装的 DSH 运行时和 runCli 入口保持不动。",
+      "allowed_paths": [
+        "docs/dev-review-loop.zh-CN.md",
+        "docs/release-completion.zh-CN.md"
+      ],
+      "edits": [
+        {
+          "path": "docs/dev-review-loop.zh-CN.md",
+          "old": "| `loop-writes-code` | 实现候选附上 edits 时，循环改允许路径里的文件；测量未保留则改回 |",
+          "new": "| `loop-writes-code` | 实现候选附上 edits 时，循环改允许路径里的文件；测量未保留则改回 |\n| `kernel-stays` | 已安装运行时和 runCli 入口不改。启动界面可以改成公司账号和密码，再进入带公司风格的 DSH 界面 |"
+        },
+        {
+          "path": "docs/dev-review-loop.zh-CN.md",
+          "old": "只改文档或脚本时，写清相对路径即可。",
+          "new": "启动界面可以改：填写公司账号和密码，进入带公司风格和适配的 DSH 界面。已安装运行时和 `scripts/dsh-cli.mjs` 的 runCli 入口不改。只改文档或脚本时，写清相对路径即可。"
+        },
+        {
+          "path": "docs/dev-review-loop.zh-CN.md",
+          "old": "| `development_order` | 实现候选没有按开发顺序写路径 | 补上 `tests/` 路径 |",
+          "new": "| `development_order` | 实现候选没有按开发顺序写路径 | 补上 `tests/` 路径 |\n| `kernel_frozen` | 改动碰到已安装运行时或 runCli 入口 | 改启动界面或公司节点。启动仍是公司账号和密码，进去仍是 DSH 界面 |"
+        },
+        {
+          "path": "docs/release-completion.zh-CN.md",
+          "old": "循环只改该项列出的文件。",
+          "new": "循环只改该项列出的文件。启动界面可以改成公司账号和密码，进入后仍是带公司风格和适配的 DSH 界面。已安装运行时不改。"
+        }
+      ],
+      "cost": 1
+    },
+    {
+      "id": "portal-unset",
+      "kind": "implement",
+      "status": "open",
+      "priority": 1,
+      "hypothesis": "云门户和超算门户没有配置时保持关闭，不在工作台里写死地址。",
+      "allowed_paths": [
+        "apps/company-workspace/host.mjs",
+        "tests/ui/shell-host.test.mjs"
+      ],
+      "edits": [
+        {
+          "path": "apps/company-workspace/host.mjs",
+          "old": "    cloudPortal: cleanValue(savedConfig.cloudPortal || process.env.UQC_CLOUD_PORTAL) || 'https://220.178.61.185:8443',",
+          "new": "    cloudPortal: cleanValue(savedConfig.cloudPortal || process.env.UQC_CLOUD_PORTAL),"
+        },
+        {
+          "path": "apps/company-workspace/host.mjs",
+          "old": "    hpcPortal: cleanValue(savedConfig.hpcPortal || process.env.HPC_PORTAL) || 'http://192.168.110.37',",
+          "new": "    hpcPortal: cleanValue(savedConfig.hpcPortal || process.env.HPC_PORTAL),"
+        },
+        {
+          "path": "tests/ui/shell-host.test.mjs",
+          "old": "  assert.equal(plainBody.cloudApi,'http://127.0.0.1:8003');",
+          "new": "  assert.equal(plainBody.cloudApi,'http://127.0.0.1:8003');\n  assert.equal(plainBody.cloudPortal,'');\n  assert.equal(plainBody.hpcPortal,'');\n  const missing=streamingResponse();\n  await routes.get('/company-workspace/portal/cloud')({method:'GET',url:'/company-workspace/portal/cloud/',headers:{host:'127.0.0.1:3098',cookie:'fixture'}},missing);\n  assert.equal(missing.result().status,404);\n  assert.equal(missing.result().body,'portal not configured');"
+        }
+      ],
+      "cost": 1
+    },
+    {
+      "id": "probe-path",
+      "kind": "implement",
+      "status": "open",
+      "priority": 1,
+      "hypothesis": "云探测只用配置的解释器或 python3，不把开发机路径写进工作台。",
+      "allowed_paths": [
+        "apps/company-workspace/host.mjs",
+        "tests/ui/shell-host.test.mjs"
+      ],
+      "edits": [
+        {
+          "path": "apps/company-workspace/host.mjs",
+          "old": "    // Interpreter choice is env-driven for deployment; the two trailing\n    // entries are fallback conveniences: a known on-host venv that ships\n    // uqc_client, then the system python3. Candidates whose interpreter or\n    // module is missing simply fail through to the next entry, so foreign\n    // hosts degrade to python3 without configuration.\n    if (process.env.UQC_CLOUD_PROBE_PYTHON) list.push(process.env.UQC_CLOUD_PROBE_PYTHON);\n    list.push('/home/sunhl/projects/qchem_qml_md/.venv/bin/python', 'python3');",
+          "new": "    // Interpreter choice is env-driven. A missing module fails through to\n    // python3. No developer machine path is baked in.\n    if (process.env.UQC_CLOUD_PROBE_PYTHON) list.push(process.env.UQC_CLOUD_PROBE_PYTHON);\n    list.push('python3');"
+        },
+        {
+          "path": "tests/ui/shell-host.test.mjs",
+          "old": " assert.notEqual(allowed.status,0);assert.doesNotMatch(allowed.stderr,gate);assert.match(allowed.stderr,/COMPANY_AGENT_DSH_ENTRY/);\n});",
+          "new": " assert.notEqual(allowed.status,0);assert.doesNotMatch(allowed.stderr,gate);assert.match(allowed.stderr,/COMPANY_AGENT_DSH_ENTRY/);\n});\ntest('cloud probe does not bake a developer machine path', async () => {\n const {readFile} = await import('node:fs/promises');\n const text = await readFile(new URL('../../apps/company-workspace/host.mjs', import.meta.url), 'utf8');\n assert.equal(text.includes('/home/sunhl/'), false);\n assert.match(text, /UQC_CLOUD_PROBE_PYTHON/);\n assert.match(text, /python3/);\n});"
+        }
+      ],
+      "cost": 1
+    },
+    {
+      "id": "cloud-api-unset",
+      "kind": "implement",
+      "status": "open",
+      "priority": 1,
+      "hypothesis": "没有配置云接口时工作台保持空白，不拨预设的公网地址。",
+      "allowed_paths": [
+        "apps/company-workspace/host.mjs",
+        "tests/ui/shell-host.test.mjs"
+      ],
+      "edits": [
+        {
+          "path": "apps/company-workspace/host.mjs",
+          "old": "// Precedence per field: config file (saved from the workspace settings page) > process env > default.",
+          "new": "// Precedence per field: config file (saved from the workspace settings page) > process env. An unset value stays empty."
+        },
+        {
+          "path": "apps/company-workspace/host.mjs",
+          "old": "cloudApi: cleanValue(savedConfig.cloudApi || process.env.UQC_CLOUD_API_BASE_URL) || 'http://cloud.unitaryqubit.com:8003',",
+          "new": "cloudApi: cleanValue(savedConfig.cloudApi || process.env.UQC_CLOUD_API_BASE_URL),"
+        },
+        {
+          "path": "apps/company-workspace/host.mjs",
+          "old": "UQC_CLOUD_PORT: (() => {try {return String(new URL(CONFIG.cloudApi).port || '8003');} catch {return '';}})()",
+          "new": "UQC_CLOUD_PORT: (() => {try {return new URL(CONFIG.cloudApi).port;} catch {return '';}})()"
+        },
+        {
+          "path": "tests/ui/shell-host.test.mjs",
+          "old": "  const {routes}=await host('3098');\n  const post=(path,payload,headers={})=>{",
+          "new": "  const {routes}=await host('3098');\n  const unset=response();\n  await routes.get('/company-workspace/settings')({method:'GET',headers:{host:'127.0.0.1:3098',cookie:'fixture'}},unset);\n  assert.equal(JSON.parse(unset.body).cloudApi,'');\n  const post=(path,payload,headers={})=>{"
+        }
+      ],
+      "cost": 1
+    },
+    {
+      "id": "probe-endpoint",
+      "kind": "implement",
+      "status": "open",
+      "priority": 1,
+      "hypothesis": "云探测在没有主机和端口时直接闭合，Windows 上不用 SIGALRM。",
+      "allowed_paths": [
+        "apps/company-workspace/uqc-cloud-probe.py",
+        "tests/test_cloud.py"
+      ],
+      "edits": [
+        {
+          "path": "apps/company-workspace/uqc-cloud-probe.py",
+          "old": "  UQC_CLOUD_HOST     default cloud.unitaryqubit.com\n  UQC_CLOUD_PORT     default 8003",
+          "new": "  UQC_CLOUD_HOST     required; no baked host\n  UQC_CLOUD_PORT     required; no baked port"
+        },
+        {
+          "path": "apps/company-workspace/uqc-cloud-probe.py",
+          "old": "def _alarm(_sig, _frame):\n    raise _Timeout()\n",
+          "new": "def _alarm(_sig, _frame):\n    raise _Timeout()\n\n\ndef _arm() -> None:\n    alarm = getattr(signal, \"SIGALRM\", None)\n    if alarm is None:\n        return\n    signal.signal(alarm, _alarm)\n    signal.alarm(TIMEOUT_S)\n\n\ndef _disarm() -> None:\n    if getattr(signal, \"SIGALRM\", None) is None:\n        return\n    signal.alarm(0)\n"
+        },
+        {
+          "path": "apps/company-workspace/uqc-cloud-probe.py",
+          "old": "    host = (os.environ.get(\"UQC_CLOUD_HOST\") or \"cloud.unitaryqubit.com\").strip()\n    port = int((os.environ.get(\"UQC_CLOUD_PORT\") or \"8003\").strip() or \"8003\")\n    if not token:\n        print(json.dumps({\"connected\": False, \"reason\": \"missing_api_key\",\n                          \"detail\": \"UQC_CLOUD_API_KEY 未配置\"}, ensure_ascii=False))\n        return 0\n\n    signal.signal(signal.SIGALRM, _alarm)\n    signal.alarm(TIMEOUT_S)\n",
+          "new": "    host = (os.environ.get(\"UQC_CLOUD_HOST\") or \"\").strip()\n    port_text = (os.environ.get(\"UQC_CLOUD_PORT\") or \"\").strip()\n    if not token:\n        print(json.dumps({\"connected\": False, \"reason\": \"missing_api_key\",\n                          \"detail\": \"UQC_CLOUD_API_KEY 未配置\"}, ensure_ascii=False))\n        return 0\n    if not host or not port_text.isdigit():\n        print(json.dumps({\"connected\": False, \"reason\": \"missing_endpoint\",\n                          \"detail\": \"UQC_CLOUD_HOST 或 UQC_CLOUD_PORT 未配置\"}, ensure_ascii=False))\n        return 0\n    port = int(port_text)\n\n    _arm()\n"
+        },
+        {
+          "path": "apps/company-workspace/uqc-cloud-probe.py",
+          "old": "        signal.alarm(0)\n",
+          "new": "        _disarm()\n"
+        },
+        {
+          "path": "tests/test_cloud.py",
+          "old": "    assert env[\"WSLENV\"] == \"UQC_CLOUD_API_KEY:UQC_CLOUD_HOST:UQC_CLOUD_PORT\"\n",
+          "new": "    assert env[\"WSLENV\"] == \"UQC_CLOUD_API_KEY:UQC_CLOUD_HOST:UQC_CLOUD_PORT\"\n\n\ndef test_cloud_probe_stays_closed_without_a_configured_endpoint():\n    script = Path(__file__).resolve().parents[1] / \"apps\" / \"company-workspace\" / \"uqc-cloud-probe.py\"\n    env = os.environ.copy()\n    env.pop(\"UQC_CLOUD_HOST\", None)\n    env.pop(\"UQC_CLOUD_PORT\", None)\n    env[\"UQC_CLOUD_API_KEY\"] = \"sk-test\"\n    completed = subprocess.run(\n        [sys.executable, str(script)],\n        capture_output=True,\n        text=True,\n        env=env,\n        timeout=20,\n        check=False,\n    )\n    payload = json.loads(completed.stdout)\n    assert payload[\"connected\"] is False\n    assert payload[\"reason\"] == \"missing_endpoint\"\n    source = script.read_text(encoding=\"utf-8\")\n    assert \"cloud.unitaryqubit.com\" not in source\n    assert 'getattr(signal, \"SIGALRM\", None)' in source\n"
+        }
+      ],
+      "cost": 1
+    },
+    {
+      "id": "portal-page-unset",
+      "kind": "implement",
+      "status": "open",
+      "priority": 1,
+      "hypothesis": "工作台页面不保留云门户和超算地址，未配置时不加载嵌入页。",
+      "allowed_paths": [
+        "docs/quantum-agent-architecture.zh-CN.html",
+        "tests/ui/shell-host.test.mjs"
+      ],
+      "edits": [
+        {
+          "path": "docs/quantum-agent-architecture.zh-CN.html",
+          "old": "    // Connection settings live in DSH's native Plugins page; the page only\n    // carries the portal previews it renders itself.\n    const connectionUrls = {cloud:'https://220.178.61.185:8443',hpc:'http://192.168.110.37'};",
+          "new": "    // Connection settings live in DSH's native Plugins page. An unset portal\n    // stays closed: this page does not keep a portal address of its own."
+        },
+        {
+          "path": "docs/quantum-agent-architecture.zh-CN.html",
+          "old": "      const localPortal = `/company-workspace/portal/${kind}/`;\n      const initialFrame = ` src=\"${localPortal}\"`;\n      return `<div class=\"content-head\"><h3>${name}</h3><span class=\"muted-status\" id=\"${kind}-head-status\">检测中…</span></div><div class=\"portal-toolbar\"><span>页面已嵌入中栏，可直接操作。连接管理入口：侧栏底部「设置」→「平台连接」。</span><a id=\"${kind}-open-link\" class=\"button\" href=\"${connectionUrls[kind]}\" target=\"_blank\" rel=\"noopener noreferrer\">在浏览器打开 ↗</a></div><iframe class=\"portal-frame\" title=\"${name}页面\"${initialFrame} referrerpolicy=\"no-referrer\" data-portal-frame=\"${kind}\"></iframe>",
+          "new": "      return `<div class=\"content-head\"><h3>${name}</h3><span class=\"muted-status\" id=\"${kind}-head-status\">检测中…</span></div><div class=\"portal-toolbar\"><span>页面已嵌入中栏，可直接操作。连接管理入口：侧栏底部「设置」→「平台连接」。</span><a id=\"${kind}-open-link\" class=\"button\" href=\"#\" target=\"_blank\" rel=\"noopener noreferrer\">在浏览器打开 ↗</a></div><iframe class=\"portal-frame\" title=\"${name}页面\" referrerpolicy=\"no-referrer\" data-portal-frame=\"${kind}\"></iframe>"
+        },
+        {
+          "path": "docs/quantum-agent-architecture.zh-CN.html",
+          "old": "      const frame = document.querySelector('[data-portal-frame=\"cloud\"]');\n      if (frame && panel.status?.portal && frame.src !== `/company-workspace/portal/cloud/`) frame.src = `/company-workspace/portal/cloud/`;\n      const open = document.getElementById('cloud-open-link');\n      if (open) {open.hidden = !panel.status?.portal;open.href = panel.status?.portal || connectionUrls.cloud || '#';}",
+          "new": "      const frame = document.querySelector('[data-portal-frame=\"cloud\"]');\n      if (frame) {\n        frame.hidden = !panel.status?.portal;\n        if (!frame.hidden && frame.src !== `/company-workspace/portal/cloud/`) frame.src = `/company-workspace/portal/cloud/`;\n      }\n      const open = document.getElementById('cloud-open-link');\n      if (open) {open.hidden = !panel.status?.portal;open.href = panel.status?.portal || '#';}"
+        },
+        {
+          "path": "docs/quantum-agent-architecture.zh-CN.html",
+          "old": "      if (open) {open.hidden = !status?.portal;open.href = status?.portal || connectionUrls.hpc || '#';}",
+          "new": "      if (open) {open.hidden = !status?.portal;open.href = status?.portal || '#';}"
+        },
+        {
+          "path": "tests/ui/shell-host.test.mjs",
+          "old": " assert.equal(res.status,200);assert.doesNotMatch(res.body,/<iframe id=\"dsh-native-frame\"/);assert.match(res.body,/content-embed/);",
+          "new": " assert.equal(res.status,200);assert.doesNotMatch(res.body,/<iframe id=\"dsh-native-frame\"/);assert.match(res.body,/content-embed/);\n assert.doesNotMatch(res.body,/220\\.178\\.61\\.185/);assert.doesNotMatch(res.body,/192\\.168\\.110\\.37/);assert.doesNotMatch(res.body,/connectionUrls/);"
+        }
+      ],
+      "cost": 1
+    },
+    {
+      "id": "portal-script",
+      "kind": "implement",
+      "status": "open",
+      "priority": 1,
+      "hypothesis": "配置了门户之后，同源代理把嵌入页引用的静态脚本取回并返回 200。",
+      "allowed_paths": [
+        "tests/ui/shell-host.test.mjs",
+        "docs/super-dsh-handbook-2026-11-06.zh-CN.md"
+      ],
+      "edits": [
+        {
+          "path": "tests/ui/shell-host.test.mjs",
+          "old": "  if(req.url==='/login'&&req.method==='POST'){\n   let body='';req.on('data',chunk=>body+=chunk);req.on('end',()=>{res.setHeader('content-type','text/plain');res.end(JSON.stringify({body,cookie:req.headers.cookie||''}));});return;\n  }\n  res.statusCode=404;res.end('missing');",
+          "new": "  if(req.url==='/app.js'){\n   res.setHeader('content-type','text/javascript');res.end('window.portalReady=true');return;\n  }\n  if(req.url==='/login'&&req.method==='POST'){\n   let body='';req.on('data',chunk=>body+=chunk);req.on('end',()=>{res.setHeader('content-type','text/plain');res.end(JSON.stringify({body,cookie:req.headers.cookie||''}));});return;\n  }\n  res.statusCode=404;res.end('missing');"
+        },
+        {
+          "path": "tests/ui/shell-host.test.mjs",
+          "old": "  const pageResult=page.result();assert.equal(pageResult.status,200);assert.match(pageResult.body,/\\/company-workspace\\/portal\\/hpc\\/app\\.js/);assert.match(pageResult.body,/\\/company-workspace\\/portal\\/hpc\\/login/);assert.match(pageResult.headers['set-cookie'][0],/^UQC_PORTAL_HPC_SESSIONID=/);\n  const post=streamingResponse();",
+          "new": "  const pageResult=page.result();assert.equal(pageResult.status,200);assert.match(pageResult.body,/\\/company-workspace\\/portal\\/hpc\\/app\\.js/);assert.match(pageResult.body,/\\/company-workspace\\/portal\\/hpc\\/login/);assert.match(pageResult.headers['set-cookie'][0],/^UQC_PORTAL_HPC_SESSIONID=/);\n  const script=streamingResponse();await handler({method:'GET',url:'/company-workspace/portal/hpc/app.js',headers:{host:'127.0.0.1:3099',cookie:'fixture'}},script);await new Promise(resolve=>setTimeout(resolve,30));\n  const scriptResult=script.result();assert.equal(scriptResult.status,200);assert.equal(scriptResult.body,'window.portalReady=true');\n  const post=streamingResponse();"
+        },
+        {
+          "path": "docs/super-dsh-handbook-2026-11-06.zh-CN.md",
+          "old": "- 云门户嵌入脚本此前返回 404。嵌入页和 iframe 沙箱都还没改。",
+          "new": "- 云门户嵌入脚本由同源代理取回，测试确认静态脚本返回 200。嵌入页和 iframe 沙箱不放宽。"
+        }
+      ],
+      "cost": 1
+    },
+    {
+      "id": "card-cells",
+      "kind": "verify",
+      "status": "ready",
+      "priority": 1,
+      "hypothesis": "办公表的单元格交给编译，研究插件不打开表格，基线未复现则不运行。",
+      "allowed_paths": [
+        "src/company_agent/experiment_card.py",
+        "tests/test_experiment_card.py"
+      ],
+      "cost": 1
+    },
+    {
+      "id": "workbench-receipts",
+      "kind": "implement",
+      "status": "open",
+      "priority": 1,
+      "hypothesis": "工作台中栏读取受理回执；回执不可用时不把空列表当成没有任务，审批和账单仍不投影。",
+      "allowed_paths": [
+        "docs/quantum-agent-architecture.zh-CN.html",
+        "tests/ui/shell-host.test.mjs"
+      ],
+      "edits": [
+        {
+          "path": "docs/quantum-agent-architecture.zh-CN.html",
+          "old": "    async function mountWorkbench() {\n      const el = document.getElementById('workbench-real');\n      if (!el) return;\n      el.innerHTML = `<p class=\"small-note\">正在读取运行 / 排队 / 历史任务…</p>`;\n      await Promise.all([loadRemoteStatus('hpc'), loadRemoteStatus('cloud')]);\n      const h = remotePanels.hpc, c = remotePanels.cloud;\n      const blocks = [];\n      if (h.status && h.status.connected && h.overview && h.overview.reason === 'ok') {\n        const runningCount = (h.overview.running || []).length;\n        const histCount = (h.overview.history || []).length;\n        blocks.push(`<div class=\"remote-section-label\">HPC 运行 / 排队（squeue · ${runningCount}）</div>${slurmTable(h.overview.running, ['job','part','state','elapsed','start'], '当前没有运行或排队中的集群作业。')}<div class=\"remote-section-label\">HPC 近 7 天历史（sacct · ${histCount}）</div>${slurmTable(h.overview.history, ['job','part','state','elapsed','end'], '近 7 天无集群作业记录。')}`);\n      } else {\n        blocks.push(`<div class=\"remote-section-label\">HPC 集群</div><div class=\"resource-row\"><strong>${h.status ? remoteChipText(h.status) : '未连接'}</strong><small>${h.status && h.status.reason === 'unconfigured' ? '服务端未配置集群连接；配置后此处显示 squeue / sacct 作业。' : '状态数据暂不可读；用「刷新任务」重试。'}</small></div>`);\n      }\n      if (c.status && c.status.connected && c.overview && c.overview.reason === 'ok') {\n        const jobs = c.overview.jobs || [];\n        blocks.push(`<div class=\"remote-section-label\">云平台最近任务（${jobs.length}）</div>${taskTable(jobs.slice(0, 15), '云平台暂无任务记录：在右侧对话让 Agent 提交作业。')}`);\n      } else {\n        blocks.push(`<div class=\"remote-section-label\">云平台任务</div><div class=\"resource-row\"><strong>${c.status ? remoteChipText(c.status) : '未连接'}</strong><small>${c.status && c.status.reason === 'auth_failed' ? '云服务拒绝了当前密钥：' + (c.status.detail || '') : '云平台连接未就绪；在「平台连接」页申请开通后此处显示提交 / 排队 / 历史任务。'}</small></div>`);\n      }\n      el.innerHTML = blocks.join('');\n      renderTaskRows();\n    }\n",
+          "new": "    let receiptTasks = {available:false, tasks:[], reason:'unread'};\n    async function loadReceiptTasks() {\n      if (typeof fetch !== 'function') {receiptTasks = {available:false, tasks:[], reason:'no_backend'}; return;}\n      try {\n        const res = await fetch('/company-workspace/workbench/tasks');\n        if (!res.ok) {receiptTasks = {available:false, tasks:[], reason:'receipt_unavailable'}; return;}\n        const body = await res.json();\n        receiptTasks = body && typeof body === 'object' ? body : {available:false, tasks:[], reason:'receipt_unavailable'};\n      } catch {\n        receiptTasks = {available:false, tasks:[], reason:'unreachable'};\n      }\n    }\n    function receiptBlock() {\n      const body = receiptTasks;\n      if (!body || body.available !== true) {\n        const reason = body && body.reason === 'unconfigured' ? '本机未配置回执读取。' : '回执暂不可用，空列表不当成没有任务。';\n        return `<div class=\"remote-section-label\">受理回执</div>${honestBox('受理回执未就绪', reason)}`;\n      }\n      const rows = Array.isArray(body.tasks) ? body.tasks.slice(0, 24) : [];\n      if (!rows.length) return `<div class=\"remote-section-label\">受理回执</div><div class=\"empty-state compact\"><p>当前没有云、超算或设备的受理回执。</p></div>`;\n      const names = {'cloud.submit':'云平台受理','hpc.submit':'超算受理','device.run':'设备受理'};\n      const states = {completed:'已完成', refused:'已拒绝', unknown:'结果未知'};\n      const head = `<tr><th>受理</th><th>状态</th><th>平台引用</th><th>连接</th></tr>`;\n      const line = rows.map(task => `<tr><td>${escapeHtml(names[task.operation] || task.operation || '—')}</td><td>${escapeHtml(states[task.status] || task.status || 'unknown')}</td><td class=\"mono\">${escapeHtml(task.business_ref || '—')}</td><td>${escapeHtml(task.connection_state || '—')}</td></tr>`).join('');\n      return `<div class=\"remote-section-label\">受理回执（${rows.length}）</div><table class=\"jobs-table\">${head}${line}</table><p class=\"small-note\">来自 /company-workspace/workbench/tasks。审批和账单仍是 not_projected，这里不显示成已批准或已计费。</p>`;\n    }\n    async function mountWorkbench() {\n      const el = document.getElementById('workbench-real');\n      if (!el) return;\n      el.innerHTML = `<p class=\"small-note\">正在读取运行 / 排队 / 历史任务…</p>`;\n      await Promise.all([loadRemoteStatus('hpc'), loadRemoteStatus('cloud'), loadReceiptTasks()]);\n      const h = remotePanels.hpc, c = remotePanels.cloud;\n      const blocks = [receiptBlock()];\n      if (h.status && h.status.connected && h.overview && h.overview.reason === 'ok') {\n        const runningCount = (h.overview.running || []).length;\n        const histCount = (h.overview.history || []).length;\n        blocks.push(`<div class=\"remote-section-label\">HPC 运行 / 排队（squeue · ${runningCount}）</div>${slurmTable(h.overview.running, ['job','part','state','elapsed','start'], '当前没有运行或排队中的集群作业。')}<div class=\"remote-section-label\">HPC 近 7 天历史（sacct · ${histCount}）</div>${slurmTable(h.overview.history, ['job','part','state','elapsed','end'], '近 7 天无集群作业记录。')}`);\n      } else {\n        blocks.push(`<div class=\"remote-section-label\">HPC 集群</div><div class=\"resource-row\"><strong>${h.status ? remoteChipText(h.status) : '未连接'}</strong><small>${h.status && h.status.reason === 'unconfigured' ? '服务端未配置集群连接；配置后此处显示 squeue / sacct 作业。' : '状态数据暂不可读；用「刷新任务」重试。'}</small></div>`);\n      }\n      if (c.status && c.status.connected && c.overview && c.overview.reason === 'ok') {\n        const jobs = c.overview.jobs || [];\n        blocks.push(`<div class=\"remote-section-label\">云平台最近任务（${jobs.length}）</div>${taskTable(jobs.slice(0, 15), '云平台暂无任务记录：在右侧对话让 Agent 提交作业。')}`);\n      } else {\n        blocks.push(`<div class=\"remote-section-label\">云平台任务</div><div class=\"resource-row\"><strong>${c.status ? remoteChipText(c.status) : '未连接'}</strong><small>${c.status && c.status.reason === 'auth_failed' ? '云服务拒绝了当前密钥：' + (c.status.detail || '') : '云平台连接未就绪；在「平台连接」页申请开通后此处显示提交 / 排队 / 历史任务。'}</small></div>`);\n      }\n      el.innerHTML = blocks.join('');\n      renderTaskRows();\n    }\n"
+        },
+        {
+          "path": "docs/quantum-agent-architecture.zh-CN.html",
+          "old": "任务清单优先展示云平台与集群返回的真实任务；示例行为布局演示。审批队列、进度取消与计费记录由平台服务返回。",
+          "new": "上方受理回执来自服务端回执；云平台与集群状态仍各自读取。示例行为布局演示。审批和账单仍是 not_projected，不在这里显示成已批准或已计费。"
+        },
+        {
+          "path": "tests/ui/shell-host.test.mjs",
+          "old": " assert.doesNotMatch(res.body,/220\\.178\\.61\\.185/);assert.doesNotMatch(res.body,/192\\.168\\.110\\.37/);assert.doesNotMatch(res.body,/connectionUrls/);",
+          "new": " assert.doesNotMatch(res.body,/220\\.178\\.61\\.185/);assert.doesNotMatch(res.body,/192\\.168\\.110\\.37/);assert.doesNotMatch(res.body,/connectionUrls/);\n assert.match(res.body,/\\/company-workspace\\/workbench\\/tasks/);\n assert.match(res.body,/空列表不当成没有任务/);\n assert.match(res.body,/not_projected/);"
+        }
+      ],
+      "cost": 1
+    },
+    {
+      "id": "metric-floor",
+      "kind": "verify",
+      "status": "ready",
+      "priority": 2,
+      "hypothesis": "开发循环的轮次、尝试和预算下限提高到 1000，研究实验卡的尝试次数仍是 1 到 5。",
+      "cost": 1
+    },
+    {
+      "id": "local-workspace",
+      "kind": "implement",
+      "status": "open",
+      "priority": 1,
+      "hypothesis": "本机工作区读取宿主已经登记的目录，读失败时不显示成空目录。",
+      "allowed_paths": [
+        "apps/company-workspace/host.mjs",
+        "docs/quantum-agent-architecture.zh-CN.html",
+        "tests/ui/shell-host.test.mjs"
+      ],
+      "edits": [
+        {
+          "path": "apps/company-workspace/host.mjs",
+          "old": "    const clean = String(relativePath || '').replace(/\\\\\\\\/g, '/');\n    if (clean.split('/').some(part => !part || part === '.' || part === '..')) return {error:'invalid path'};",
+          "new": "    const clean = String(relativePath || '').replace(/\\\\\\\\/g, '/').replace(/^\\/+|\\/+$/g, '');\n    if (clean.split('/').filter(Boolean).some(part => part === '.' || part === '..')) return {error:'invalid path'};"
+        },
+        {
+          "path": "apps/company-workspace/host.mjs",
+          "old": "  jsonRoute('/company-workspace/workbench/tasks', workbenchTasks, 'company-workspace: workbench tasks');",
+          "new": "  const workspaceView = async () => {\n    const state = workspaceState();\n    const first = state.workspaces[0];\n    if (!first || !first.workspaceId) return {...state, entries: []};\n    const files = await localFiles(first.workspaceId, '');\n    if (!files || files.error) return {...state, entries: [], filesError: files && files.error || 'workspace unavailable'};\n    const entries = Array.isArray(files.entries) ? files.entries.slice(0, 64).map(entry => ({name: entry.name, kind: entry.kind})) : [];\n    return {...state, entries};\n  };\n  jsonRoute('/company-workspace/workspace', workspaceView, 'company-workspace: workspace');\n  jsonRoute('/company-workspace/workbench/tasks', workbenchTasks, 'company-workspace: workbench tasks');"
+        },
+        {
+          "path": "docs/quantum-agent-architecture.zh-CN.html",
+          "old": "    async function mountWorkbench() {",
+          "new": "    async function mountLocalWorkspace() {\n      const el = document.getElementById('local-workspace-real');\n      if (!el) return;\n      if (typeof fetch !== 'function') {el.innerHTML = honestBox('本机工作区未就绪', '工作区目录暂不可读，不显示成空目录。'); return;}\n      try {\n        const res = await fetch('/company-workspace/workspace');\n        if (!res.ok) {el.innerHTML = honestBox('本机工作区未就绪', '工作区目录暂不可读，不显示成空目录。'); return;}\n        const body = await res.json();\n        if (!body || body.ready !== true) {\n          el.innerHTML = honestBox('尚未选择本机目录', escapeHtml(body && body.note || '请先用 DSH 原生工作区选择器选择真实本机目录。'));\n          return;\n        }\n        const workspace = Array.isArray(body.workspaces) ? body.workspaces[0] : null;\n        const entries = Array.isArray(body.entries) ? body.entries.slice(0, 64) : [];\n        const title = escapeHtml(workspace && (workspace.title || workspace.path) || 'Workspace');\n        const listed = entries.length\n          ? entries.map(entry => `<div class=\"resource-row\"><strong>${escapeHtml(entry.name || '—')}</strong><small>${escapeHtml(entry.kind || 'file')}</small></div>`).join('')\n          : '<div class=\"empty-state compact\"><p>这个目录里没有可列出的条目。</p></div>';\n        el.className = '';\n        el.innerHTML = `<div class=\"remote-section-label\">${title}</div><p class=\"small-note\">${escapeHtml(workspace && workspace.path || '')}</p>${listed}`;\n      } catch {\n        el.innerHTML = honestBox('本机工作区未就绪', '工作区目录暂不可读，不显示成空目录。');\n      }\n    }\n    async function mountWorkbench() {"
+        },
+        {
+          "path": "docs/quantum-agent-architecture.zh-CN.html",
+          "old": "      if (name === 'workbench') {renderTaskRows();mountWorkbench();}",
+          "new": "      if (name === 'workbench') {renderTaskRows();mountWorkbench();}\n      if (name === 'local-workspace') mountLocalWorkspace();"
+        },
+        {
+          "path": "tests/ui/shell-host.test.mjs",
+          "old": " assert.match(text, /python3/);\n});",
+          "new": " assert.match(text, /python3/);\n});\ntest('workspace route lists the registered directory and does not invent an empty root',async()=>{\n const previous=process.env.COMPANY_AGENT_DSH_PORT;\n const dir=await mkdtemp(join(tmpdir(),'unitqc-workspace-'));\n await writeFile(join(dir,'notes.txt'),'ok','utf8');\n try{\n  process.env.COMPANY_AGENT_DSH_PORT='3098';\n  const routes=new Map();\n  const ctx={effect:fn=>fn(),workspaceRegistry:{list:()=>[{id:'ws-1',title:'项目',path:dir,sessionIds:['s1'],updatedAt:'2026-11-09'}]},connection:{authorizeIndex:(req,res)=>{if(String(req.headers.cookie||'').split(';').some(part=>part.trim()==='fixture'))return true;res.writeHead(401);res.end();return false;}},webServer:{register:route=>{routes.set(route.path,route.handler);return()=>routes.delete(route.path);},tapIndex:()=>{}}};\n  await apply(ctx);\n  const handler=routes.get('/company-workspace/workspace');\n  assert.ok(handler);\n  const unauth=response();\n  await handler({method:'GET',headers:{host:'127.0.0.1:3098'}},unauth);\n  assert.equal(unauth.status,401);\n  const ok=response();\n  await handler({method:'GET',url:'/company-workspace/workspace?path=..',headers:{host:'127.0.0.1:3098',cookie:'fixture'}},ok);\n  assert.equal(ok.status,200);\n  const body=JSON.parse(ok.body);\n  assert.equal(body.ready,true);\n  assert.equal(body.workspaces[0].path,dir);\n  assert.ok(body.entries.some(entry=>entry.name==='notes.txt'&&entry.kind==='file'));\n  assert.equal(body.entries.some(entry=>String(entry.name).includes('..')),false);\n }finally{\n  await rm(dir,{recursive:true,force:true});\n  if(previous===undefined)delete process.env.COMPANY_AGENT_DSH_PORT;\n  else process.env.COMPANY_AGENT_DSH_PORT=previous;\n }\n});"
+        }
+      ],
+      "cost": 1
+    },
+    {
+      "id": "resource-tables",
+      "kind": "implement",
+      "status": "open",
+      "priority": 1,
+      "hypothesis": "云平台设备表补上类型和状态，超算作业表保留作业号和节点，登录节点没接通时不把作业显示成空结果。",
+      "allowed_paths": [
+        "apps/company-workspace/host.mjs",
+        "apps/company-workspace/uqc-cloud-probe.py",
+        "docs/quantum-agent-architecture.zh-CN.html",
+        "tests/ui/shell-host.test.mjs",
+        "tests/test_cloud.py"
+      ],
+      "edits": [
+        {
+          "path": "apps/company-workspace/host.mjs",
+          "old": ".map(({_rank,_record,...task})=>task);\n}\n\nexport function restoreWorkbenchTasks(snapshot, records, options = {}) {",
+          "new": ".map(({_rank,_record,...task})=>task);\n}\n\nexport function projectSqueueLine(line) {\n  const [id, name, part, state, elapsed, start, nodes] = String(line || '').split('|').map(part => part.trim().slice(0, 60));\n  if (!id) return null;\n  return {id, job: id, name: name || '', part: part || '', state: state || '', elapsed: elapsed || '', start: start || '', nodes: nodes || ''};\n}\n\nexport function projectSacctLine(line) {\n  const [id, name, part, state, elapsed, start, end] = String(line || '').split('|').map(part => part.trim().slice(0, 60));\n  if (!id || !state || /[.](?:batch|extern|\\d+)$/.test(id)) return null;\n  return {id, job: id, name: name || '', part: part || '', state, elapsed: elapsed || '', start: start || '', end: end || ''};\n}\n\nexport function projectHpcFiles(stdout) {\n  const rows = [];\n  for (const line of String(stdout || '').split(/\\r?\\n/)) {\n    if (!line || rows.length >= 64) continue;\n    const [name, kind] = line.split('\\t');\n    const clean = String(name || '').trim().slice(0, 160);\n    if (!clean || clean.includes('..') || clean.includes('/') || clean.includes('\\\\')) continue;\n    rows.push({name: clean, kind: kind === 'd' ? 'directory' : 'file'});\n  }\n  return rows;\n}\n\nexport function restoreWorkbenchTasks(snapshot, records, options = {}) {"
+        },
+        {
+          "path": "apps/company-workspace/host.mjs",
+          "old": "    if (!sshTarget()) return {connected:false, sshOk:false, reason:'unconfigured', gateway:CONFIG.hpcGateway,\n      portal:CONFIG.hpcPortal, embeddable:true, framePolicy:'proxied'};",
+          "new": "    if (!sshTarget()) return {connected:false, sshOk:false, reason:'portal_ok_without_ssh', gateway:CONFIG.hpcGateway,\n      portal:CONFIG.hpcPortal, embeddable:true, framePolicy:'proxied'};"
+        },
+        {
+          "path": "apps/company-workspace/host.mjs",
+          "old": "  const hpcOverview = (req) => cached('hpc-overview', 15, async () => {\n    if (!sshTarget()) return {reason:'unconfigured', running:null, history:null};\n    try {\n      const {stdout} = await sshRun(`squeue -u $USER -h -o '%.18i %.30j %.9P %.12T %.10M %.12S' ; echo '##' ; sacct -u $USER -S $(date -d '-7 days' +%Y-%m-%d) --noheader -P -o 'JobID,JobName%30,Partition,State,Elapsed,Start,End' | grep -v '\\\\.batch\\\\|\\\\.extern\\\\|\\\\.0' | tail -25`);\n      const [live, hist] = stdout.split('##');\n      const liveRows = live.trim().split('\\n').filter(Boolean).map(line => {\n        const [id, job, part, state, elapsed, start] = line.trim().split(/\\s+/).map(c => c.trim().slice(0,60));\n        return {id, job, part, state, elapsed, start};\n      });\n      const histRows = hist.trim().split('\\n').filter(Boolean).map(line => {\n        const [id, job, part, state, elapsed, start, end] = line.trim().split('|').map(c => c.trim().slice(0,60));\n        return {id, job, part, state, elapsed, start, end};\n      }).filter(j => j.id && j.state);\n      let files = [];\n      try {\n        const fileResult = await sshRun(\"find \\\"$HOME\\\" -maxdepth 1 -mindepth 1 -printf '%f\\\\t%y\\\\n' | head -64\");\n        if (fileResult.stdout) files = fileResult.stdout.split('\\\\n').filter(Boolean).slice(0,64).map(line => {\n          const [name, kind] = line.split('\\\\t');\n          return {name: String(name || '').slice(0,160), kind: kind === 'd' ? 'directory' : 'file'};\n        });\n      } catch {}\n      return {reason:'ok', running:liveRows.slice(0, 15), history:histRows.slice(-15).reverse(),\n        files, filesNote: 'HPC 远端目录通过 SSH 读取；文件上传、下载、创建和删除仍由对话工具执行并逐次审批。'};\n    } catch (exc) {\n      return {reason:'unreachable', detail:String(exc && exc.message || exc).slice(0,140), running:null, history:null};\n    }\n  });\n",
+          "new": "  const hpcOverview = (req) => cached('hpc-overview', 15, async () => {\n    if (!sshTarget()) return {reason:'unconfigured', running:null, history:null};\n    try {\n      const {stdout} = await sshRun(\"squeue -u \\\"$USER\\\" -h -o '%i|%j|%P|%T|%M|%S|%D' ; echo '##' ; sacct -u \\\"$USER\\\" -S $(date -d '-7 days' +%Y-%m-%d) --noheader -P -o 'JobID,JobName%30,Partition,State,Elapsed,Start,End'\");\n      const [live, hist] = String(stdout || '').split('##');\n      const running = live.split(/\\r?\\n/).map(projectSqueueLine).filter(Boolean).slice(0, 15);\n      const history = hist.split(/\\r?\\n/).map(projectSacctLine).filter(Boolean).slice(-15).reverse();\n      let files = [];\n      try {\n        const fileResult = await sshRun(\"find \\\"$HOME\\\" -maxdepth 1 -mindepth 1 -printf '%f\\\\t%y\\\\n' | head -64\");\n        files = projectHpcFiles(fileResult.stdout);\n      } catch {}\n      return {reason:'ok', running, history, files,\n        filesNote: 'HPC 远端目录通过 SSH 读取；文件上传、下载、创建和删除仍由对话工具执行并逐次审批。'};\n    } catch (exc) {\n      return {reason:'unreachable', detail:String(exc && exc.message || exc).slice(0,140), running:null, history:null};\n    }\n  });\n"
+        },
+        {
+          "path": "apps/company-workspace/host.mjs",
+          "old": "    devices: Array.isArray(probe.chips) ? probe.chips : null,",
+          "new": "    devices: Array.isArray(probe.chips) ? probe.chips.map(chip => ({...chip, kind: chip.kind || chip.chip_type || '', state: chip.state || chip.status || ''})) : null,"
+        },
+        {
+          "path": "apps/company-workspace/uqc-cloud-probe.py",
+          "old": "        rows.append({\n            \"id\": str(name),\n            \"name\": str(chip.get(\"description\") or chip.get(\"name\") or name),\n            \"status\": str(chip.get(\"status\") or info.get(\"chip_status\") or \"未知\"),\n            \"qubits\": chip.get(\"qubits\") if chip.get(\"qubits\") is not None else info.get(\"qubit_count\"),\n            \"region\": chip.get(\"region\") or \"\",\n            \"chip_type\": chip.get(\"chip_type\") or \"\",\n            \"max_shots\": info.get(\"max_shots\") or \"\",\n        })",
+          "new": "        status = str(chip.get(\"status\") or info.get(\"chip_status\") or \"未知\")\n        kind = str(chip.get(\"chip_type\") or \"\")\n        rows.append({\n            \"id\": str(name),\n            \"name\": str(chip.get(\"description\") or chip.get(\"name\") or name),\n            \"status\": status,\n            \"state\": status,\n            \"qubits\": chip.get(\"qubits\") if chip.get(\"qubits\") is not None else info.get(\"qubit_count\"),\n            \"region\": chip.get(\"region\") or \"\",\n            \"chip_type\": kind,\n            \"kind\": kind,\n            \"max_shots\": info.get(\"max_shots\") or \"\",\n        })"
+        },
+        {
+          "path": "docs/quantum-agent-architecture.zh-CN.html",
+          "old": "      : status.reason === 'unconfigured' ? '未配置'\n      : '未连接';",
+          "new": "      : status.reason === 'unconfigured' ? '未配置'\n      : status.reason === 'portal_ok_without_ssh' ? '门户已通'\n      : status.reason === 'probe_error' ? '探测失败'\n      : status.reason === 'missing_endpoint' ? '未配置地址'\n      : '未连接';"
+        },
+        {
+          "path": "docs/quantum-agent-architecture.zh-CN.html",
+          "old": "      const head = `<tr><th>设备</th><th>名称</th><th>状态</th><th>量子比特</th></tr>`;\n      const body = rowsData.map(d => `<tr><td class=\"mono\">${escapeHtml(d.id || '—')}</td><td>${escapeHtml(d.name || '—')}</td><td><span class=\"${taskChipClass(d.status)}\">${escapeHtml(d.status || '未知')}</span></td><td>${escapeHtml(d.qubits || '—')}</td></tr>`).join('');",
+          "new": "      const head = `<tr><th>设备</th><th>名称</th><th>类型</th><th>状态</th><th>量子比特</th></tr>`;\n      const body = rowsData.map(d => `<tr><td class=\"mono\">${escapeHtml(d.id || '—')}</td><td>${escapeHtml(d.name || '—')}</td><td>${escapeHtml(d.kind || d.chip_type || '—')}</td><td><span class=\"${taskChipClass(d.state || d.status)}\">${escapeHtml(d.state || d.status || '未知')}</span></td><td>${escapeHtml(d.qubits || '—')}</td></tr>`).join('');"
+        },
+        {
+          "path": "docs/quantum-agent-architecture.zh-CN.html",
+          "old": "      const labels = {job:'作业', id:'任务', device:'设备', part:'分区', state:'状态', elapsed:'运行时长', start:'开始', submitted:'提交', updated:'更新', end:'结束'};",
+          "new": "      const labels = {job:'作业', id:'任务', name:'名称', nodes:'节点', device:'设备', part:'分区', state:'状态', elapsed:'运行时长', start:'开始', submitted:'提交', updated:'更新', end:'结束'};"
+        },
+        {
+          "path": "docs/quantum-agent-architecture.zh-CN.html",
+          "old": "      if (!panel.overview) {\n        el.innerHTML = `<div class=\"remote-section-label\">集群门户（${status.embeddable ? '嵌入展示' : '禁止嵌入 · ' + (status.framePolicy === 'self' ? 'SAMEORIGIN' : status.framePolicy === 'deny' ? 'DENY' : 'frame-ancestors 限制')}）</div>${portalBody(status)}<div class=\"remote-section-label\">作业情况</div>${chip}<p class=\"small-note\">正在读取 squeue / sacct…</p>${jobsNote}`;\n        return;\n      }\n      const runningTable = slurmTable(panel.overview.running, ['job','part','state','elapsed','start'], '当前没有运行或排队中的作业（squeue）。');\n      const historyTable = slurmTable(panel.overview.history, ['job','part','state','elapsed','end'], '近 7 天无集群作业记录。');",
+          "new": "      if (!status.connected || status.sshOk === false) {\n        el.innerHTML = `<div class=\"remote-section-label\">集群门户</div>${portalBody(status)}<div class=\"remote-section-label\">作业情况</div>${chip}${honestBox('登录节点未接通', '门户可以打开，但作业表和远端目录先不显示成空结果。登录节点 SSH 接通后再读取 squeue / sacct。')}`;\n        return;\n      }\n      if (!panel.overview) {\n        el.innerHTML = `<div class=\"remote-section-label\">集群门户（${status.embeddable ? '嵌入展示' : '禁止嵌入 · ' + (status.framePolicy === 'self' ? 'SAMEORIGIN' : status.framePolicy === 'deny' ? 'DENY' : 'frame-ancestors 限制')}）</div>${portalBody(status)}<div class=\"remote-section-label\">作业情况</div>${chip}<p class=\"small-note\">正在读取 squeue / sacct…</p>${jobsNote}`;\n        return;\n      }\n      const runningTable = slurmTable(panel.overview.running, ['job','name','part','state','elapsed','start','nodes'], '当前没有运行或排队中的作业（squeue）。');\n      const historyTable = slurmTable(panel.overview.history, ['job','name','part','state','elapsed','end'], '近 7 天无集群作业记录。');"
+        },
+        {
+          "path": "tests/ui/shell-host.test.mjs",
+          "old": "import {apply, projectWorkbenchTasks, restoreWorkbenchTasks, resolveTrustedSubject, scopedFactKey, workbenchEventRank, workbenchTaskFromEvent} from '../../apps/company-workspace/host.mjs';",
+          "new": "import {apply, projectHpcFiles, projectSacctLine, projectSqueueLine, projectWorkbenchTasks, restoreWorkbenchTasks, resolveTrustedSubject, scopedFactKey, workbenchEventRank, workbenchTaskFromEvent} from '../../apps/company-workspace/host.mjs';"
+        },
+        {
+          "path": "tests/ui/shell-host.test.mjs",
+          "old": " assert.match(text, /python3/);\n});",
+          "new": " assert.match(text, /python3/);\n});\ntest('hpc projection keeps the job id and splits files on real lines',()=>{\n const row=projectSqueueLine('5010|train job|cpu|RUNNING|1:02|2026-11-09|2');\n assert.equal(row.job,'5010');\n assert.equal(row.name,'train job');\n assert.equal(row.nodes,'2');\n assert.equal(projectSacctLine('5010.batch|train|cpu|COMPLETED|1:00|t0|t1'),null);\n assert.deepEqual(projectHpcFiles('notes.txt\\tf\\nruns\\td\\n'),[{name:'notes.txt',kind:'file'},{name:'runs',kind:'directory'}]);\n});"
+        },
+        {
+          "path": "tests/test_cloud.py",
+          "old": "    assert \"cloud.unitaryqubit.com\" not in source\n    assert 'getattr(signal, \"SIGALRM\", None)' in source\n",
+          "new": "    assert \"cloud.unitaryqubit.com\" not in source\n    assert 'getattr(signal, \"SIGALRM\", None)' in source\n\n\ndef test_probe_chip_rows_fill_the_resource_columns():\n    import importlib.util\n    script = Path(__file__).resolve().parents[1] / \"apps\" / \"company-workspace\" / \"uqc-cloud-probe.py\"\n    spec = importlib.util.spec_from_file_location(\"uqc_cloud_probe_columns\", script)\n    module = importlib.util.module_from_spec(spec)\n    spec.loader.exec_module(module)\n    rows = module._normalize_chips({\n        \"qpu-1\": {\"chip_type\": \"hardware\", \"status\": \"online\",\n                  \"device_info\": {\"qubit_count\": 8, \"max_shots\": 1000}},\n    })\n    assert rows[0][\"kind\"] == \"hardware\"\n    assert rows[0][\"state\"] == \"online\"\n    assert rows[0][\"status\"] == \"online\"\n    assert rows[0][\"qubits\"] == 8\n    assert rows[0][\"max_shots\"] == 1000\n"
+        }
+      ],
+      "cost": 1
+    }
+  ]
+}

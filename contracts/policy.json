@@ -104,5 +104,72 @@
     "boot",
     "algo",
     "sign"
+  ],
+  "session_grant": {
+    "tool": "company_grant_open",
+    "max_calls_per_tool": 20,
+    "max_ttl_seconds": 14400,
+    "tools": [
+      "quantum_device_run",
+      "hpc_submit",
+      "hpc_stage_file",
+      "hpc_job_cancel",
+      "hpc_dir_create",
+      "hpc_file_remove",
+      "quantum_cloud_submit",
+      "company_latex_edit",
+      "company_latex_batch_edit",
+      "company_latex_revert",
+      "company_latex_push",
+      "company_latex_overleaf_push",
+      "company_latex_issue_note",
+      "company_plan_issue_create",
+      "company_plan_note_create",
+      "company_plan_issue_write",
+      "company_plan_milestone_create",
+      "company_research_run",
+      "company_dingtalk_reply"
+    ]
+  },
+  "knowledge_note_tool": "company_knowledge_note",
+  "knowledge_note_ask_presets": [
+    "lab"
+  ],
+  "knowledge_note_deny_presets": [
+    "boot",
+    "algo",
+    "sign"
+  ],
+  "sign_receipt_tool": "company_sign_receipt",
+  "sign_receipt_allow_presets": [
+    "sign"
+  ],
+  "catalog_replay_tool": "company_catalog_replay",
+  "catalog_replay_allow_presets": [
+    "algo",
+    "lab"
+  ],
+  "catalog_replay_deny_presets": [
+    "boot",
+    "sign"
+  ],
+  "device_window_tool": "quantum_device_window",
+  "device_window_allow_presets": [
+    "algo",
+    "lab",
+    "sign"
+  ],
+  "device_window_deny_presets": [
+    "boot"
+  ],
+  "dingtalk_reply_tool": "company_dingtalk_reply",
+  "dingtalk_reply_provider": "company-dingtalk",
+  "dingtalk_reply_ask_presets": [
+    "lab"
+  ],
+  "dingtalk_reply_deny_presets": [
+    "boot",
+    "algo",
+    "sign"
   ]
 }

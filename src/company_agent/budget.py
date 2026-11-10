@@ -3,9 +3,9 @@
 P3「token、调用次数、墙钟、费用和审批等待等终止预算」work package. The ledger is
 a per-turn durable counter under the receipt store: the turn key comes from
 ``COMPANY_AGENT_TURN_ID`` (hashed together with the receipt subject, never
-stored in plaintext) and a missing turn id falls back to a per-process
-bucket, so a host that does not yet declare turns stays bounded inside one
-process. Checks run after policy but before any dispatch; a denied call
+stored in plaintext) and a missing turn id falls back to a bucket for this
+process id, so a finished process cannot exhaust the next one. Checks run
+after policy but before any dispatch; a denied call
 never charges. ``precheck`` fails closed on invocations, remaining wall
 budget and the per-tool sublimits; ``charge`` is best effort so ledger I/O
 can never mask a tool response. This module creates no model, session or
@@ -46,7 +46,9 @@ class BudgetError(ValueError):
 def _turn() -> str:
     contract = load_budgets()
     raw = _TURN_CONTROL_PATTERN.sub("", str(os.environ.get(contract["turn_env"]) or "")).strip()
-    key = (raw or _PLACEHOLDER_TURN).casefold()
+    # A shared literal would survive every process and, once full, block later
+    # company_work_item calls that have no session turn.
+    key = raw.casefold() if raw else f"{_PLACEHOLDER_TURN}:{os.getpid()}"
     if len(key.encode("utf-8")) > int(contract["ledger"]["max_turn_key_bytes"]):
         raise BudgetError("termination budget turn identifier is too long")
     return key

@@ -9,7 +9,9 @@ from typing import Any
 
 from company_agent import analysis as _analysis_module
 from company_agent import budget
+from company_agent import dingtalk as _dingtalk
 from company_agent import latex_workspace as _latex_workspace
+from company_agent import literature as _literature
 from company_agent import office_audit as _office_audit
 from company_agent import office_chart as _office_chart
 from company_agent import office_compare as _office_compare
@@ -36,9 +38,14 @@ from company_agent import workspace_reference as _workspace_reference
 from company_agent.capabilities import capability
 from company_agent.catalog import contract_snapshot, load_presets, load_result_policy, load_tools
 from company_agent.contracts import HANDLE_PREFIXES, HANDLES, Invocation
+from company_agent.cloud_results import read_page
 from company_agent.diagnostics import emit, invocation_events
-from company_agent.knowledge import search
+from company_agent.dossier import read as read_dossier, remember as remember_dossier
+from company_agent.grants import GRANT_TOOLS, clear_handoff, consume_grant, open_grant
+from company_agent.knowledge import search, write_note
 from company_agent.policy import decide
+from company_agent.seat_path import catalog_replay, device_window, sign_receipt
+from company_agent.session_status import status as session_status
 from company_agent.providers import ProviderError, client_by_provider
 from company_agent.sanitize import validate_output_content, validate_result_size
 from company_agent.schema import SchemaError, validate_json_schema
@@ -56,7 +63,9 @@ def _capability_payload(preset: str) -> dict[str, Any]:
     visible = set(load_presets()["presets"][preset]["visible_tools"])
 
     def provider_state(item):
-        if item.kind in {"knowledge", "workflow", "document", "plan", "portal", "research"}:
+        if item.kind in {
+            "knowledge", "workflow", "document", "plan", "portal", "research", "literature", "channel",
+        }:
             return "local"
         return "configured_unverified" if client_by_provider(item.provider).configured() else "unconfigured"
 
@@ -161,6 +170,25 @@ _LOCAL_TOOLS = {
     "company_research_run": _research_clock.run_spec,
     "company_research_status": _research_clock.read_status,
     "company_research_digest": _research_clock.read_digest,
+    "company_literature_search": _literature.search,
+    "company_literature_fetch": _literature.fetch,
+    "company_literature_index": _literature.index,
+    "company_literature_draft_card": _literature.draft_card,
+    "company_run_dossier": read_dossier,
+    "company_sign_receipt": sign_receipt,
+    "company_knowledge_note": write_note,
+    "company_catalog_replay": catalog_replay,
+    "quantum_device_window": device_window,
+    "company_dingtalk_inbox": _dingtalk.inbox,
+    "company_dingtalk_reply": _dingtalk.reply,
+    "company_grant_open": open_grant,
+    "company_session_status": session_status,
+    "quantum_cloud_result_page": lambda arguments: read_page(
+        str(os.environ.get("COMPANY_AGENT_TOOL_WORKSPACE") or ""),
+        arguments["cloud_task"],
+        arguments.get("offset", 0),
+        arguments.get("limit"),
+    ),
 }
 
 
@@ -511,8 +539,14 @@ def _invoke(
     try:
         load_result_policy()
         budget.precheck(tool)
+        if decision == "allow" and tool in GRANT_TOOLS:
+            if not consume_grant(tool):
+                if not approved:
+                    budget.charge_approval_wait()
+                    return Invocation(tool, "ask", "needs_ask")
+                return Invocation(tool, decision, "error", error="grant exhausted")
         if tool in _LOCAL_TOOLS:
-            if tool == "company_capabilities":
+            if tool in {"company_capabilities", "company_session_status"}:
                 payload = _LOCAL_TOOLS[tool](preset)
             elif tool == "company_knowledge_search":
                 payload = _LOCAL_TOOLS[tool](arguments, preset=preset)
@@ -547,6 +581,12 @@ def _invoke(
         _validate_handles(tool, payload, arguments)
         _validate_output(tool, payload)
         validate_result_size(payload)
+        try:
+            remember_dossier(tool, arguments, payload)
+        except (OSError, RuntimeError, TypeError, ValueError):
+            pass
+        if decision == "ask":
+            clear_handoff(tool)
         budget.charge(tool, elapsed_ms=int((time.monotonic_ns() - started_ns) // 1_000_000))
         return Invocation(tool, decision, "ok", payload=payload)
     except (KeyError, TypeError, ValueError, ProviderError) as exc:

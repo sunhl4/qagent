@@ -6,7 +6,7 @@ description: 管理公司计划与文档流程：读任务、经人审建任务/
 # 公司计划与文档流程
 
 本 skill 约束 `company.plan` 工具组（GitLab 计划中枢）的用法。所有读操作在配置了 allowlist 后按名单过滤，
-写操作一律需要人工批准（lab 预设 ask），algo 只读，boot/sign 不可见本组工具。
+写操作在 `company_grant_open` 覆盖的次数用尽前沿用那一张卡；次数用尽、授权过期或另一条会话时重新询问。algo 只读，boot 拒绝这些写操作。
 
 ## 工具选择
 

@@ -48,15 +48,15 @@ bash scripts/start_runtime.sh
 
 `bootstrap_dsh.sh` 会按 `runtime/pnpm-lock.yaml` 冻结安装顶层 DSH CLI `0.1.5-rc.2`、Node `22.22.0` 和 pnpm `12.5.1`；DSH 的传递组件版本由对应锁文件分别确定，不假定全部组件与 CLI 同版。系统自带 Node 20 不再直接承载 DSH；`start_runtime.sh` 始终使用这份隔离运行时。DSH 的可写状态默认放在 `${XDG_CACHE_HOME:-$HOME/.cache}/unitqc-company-agent/dsh-home`，避免 WSL 的 `/mnt/*` 文件系统无法落实凭据文件的仅属主权限；需要固定位置时可设置 `COMPANY_AGENT_DSH_HOME`。验证脚本为完整 profile 的 `boot/lab/algo/sign` 和最小 profile 的 `boot/algo` 六个合法组合分别分配独立临时 `DSH_HOME`，先检查展开配置，再启动 Web Runtime、通过认证接口真实创建会话，并核对合同推导的工具清单及与启动脚本一致的 Skill 集合；还验证仅有 system-trust 的 `company-agent` preset、复制被只读策略拒绝、切换到非受管 preset 被拒绝且会话工具不变。最小 profile 的 `lab/sign` 必须启动失败。失败会区分为 `config_error`、`plugin_error`、`credential_error` 或一般 `startup_error`。
 
-默认 profile 是 `company-agent`。造包使用 `company-agent-minimal`，该 profile 不加载设备插件。两个 profile 都关闭 DSH 内置 preset 和用户可写 preset 根，只从项目复制到隔离运行目录的 system-trust preset 根挂载 `company-agent` 组合，避免创建或切换到带 shell 的编码 preset 绕过设备审批。完整 profile 只在宿主侧注册官方 Codex provider，并保持 `permissionMode: never`、`inheritsParentContext: false`；它不挂载模型可见的 Codex 委派工具，因此不会继承 Company Agent 的设备工具。
+命令行默认 profile 是 `company-agent`。造包使用 `company-agent-minimal`，该 profile 不加载设备插件。这两份命令行档案关闭 DSH 内置 preset 和用户可写 preset 根，只从项目复制到隔离运行目录的 system-trust preset 根挂载 `company-agent` 组合。开发桌面不使用这两份档案，会话预设是上游 `standard`，公司插件和 `lab` 策略留在 `desktop/profile`。完整 profile 只在宿主侧注册官方 Codex provider，并保持 `permissionMode: never`、`inheritsParentContext: false`；它不挂载模型可见的 Codex 委派工具，因此不会把设备工具交给 Codex。
 
 ## 通过界面使用
 
 1. 运行 `bash scripts/start_runtime.sh`，在本机浏览器打开终端输出的带登录 token 的完整地址。默认监听 `127.0.0.1:3081`；该地址中的 token 是访问凭据，不要分享或提交到仓库。
 2. 首次出现 `Add an API key to get started` 时，在界面配置真实的 DeepSeek API key；也可以在启动进程前设置 `DEEPSEEK_API_KEY`。`Configure later` 只会关闭提示，不表示模型已可调用。
-3. 点击 `Choose workspace` 选择实际工作目录，保持 `Company Agent`，创建会话。例如先发送“请列出公司能力，并检索设备执行的审批要求”。模型可调用 `company_capabilities` 和 `company_knowledge_search`，工具记录可展开查看。
+3. 点击 `Choose workspace` 选择实际工作目录后创建会话。开发桌面保持上游 `standard`。命令行 Runtime 的会话预设是 `company-agent`。例如先发送“请列出公司能力，并检索设备执行的审批要求”。模型可调用 `company_capabilities` 和 `company_knowledge_search`，工具记录可展开查看。
 4. 科学任务先用 `quantum_algorithm_catalog` 向平台发现当前算法，再用 `company_workflow_validate` 校验计划，然后调用算法、资产、电路导出、模拟或编译工具。按任务需要配置下文的真实服务地址和 token；修改环境变量后须重启 Runtime，现有进程不会自动继承新值。新算法的目录、机器参数合同及可信执行入口在 `company-quantum-platform` 统一注册并通过服务准入后，不必改 Agent 分支；仅登记元数据或配置 URL/token 不会使其自动可运行。
-5. 设备执行出现 `Waiting for approval` 后，核对 `quantum_device_run` 的电路句柄和执行参数。`Reject` 拒绝本次调用；`Allow once` 只批准本次调用，再次执行仍需批准。
+5. 设备执行出现 `Waiting for approval` 后，核对 `quantum_device_run` 的电路句柄和执行参数。`Reject` 拒绝本次调用。`Allow once` 批准这一次询问。同一会话可以先批准 `company_grant_open`，一张卡盖住点名工具的后续调用，每个工具最多 20 次或 14400 秒，用尽后重新询问。点名真机、超算提交或云提交时要写明主体和限额。研究交接之后的下一次提交重新询问，不扣旧卡。`boot` 和 `algo` 即使持有这张卡，也拒绝真机、超算提交和云提交。
 
 本地知识检索和工作流校验不依赖科学服务，但通过聊天界面自动选择工具仍需要可用的模型。`company-agent-minimal` 默认只暴露本地公司工具，不加载设备插件。
 
@@ -95,9 +95,9 @@ Agent 使用严格的 `company-agent-provider/1.0` JSON 信封。每类真实服
 
 ## 产品界面
 
-日常座席是开发桌面：在 harness 检出目录运行本仓库的 `scripts/dev_desktop.ps1 -SkipBuild`。界面用 DSH 原生座位，公司工具和预设插在对应位置。不另开一套覆盖层。
+日常座席是开发桌面：在 harness 检出目录运行本仓库的 `scripts/dev_desktop.ps1 -SkipBuild`。界面用 DSH 上游标准预设。公司插件、技能目录、公司中转模型和 `algo` 策略插在 `desktop/profile`。菜单默认 `standard`。PTC、极简、创造和 Company Agent 会话预设关闭。
 
-开发桌面使用公司 profile 和 `lab` 预设。生产 profile 关闭 DSH 内置 preset 和用户可写 preset 根，只挂 system-trust 的 `company-agent`。官方 Codex 保持 `permissionMode: never` 和 `inheritsParentContext: false`，不挂载模型可见的委派工具。
+命令行全量档案关闭 DSH 内置 preset 和用户可写 preset 根，只挂 system-trust 的 `company-agent`。官方 Codex 保持 `permissionMode: never` 和 `inheritsParentContext: false`，不挂载模型可见的委派工具。科学工具的询问和拒绝仍由 `boot`、`lab`、`algo`、`sign` 决定。开发桌面启动时策略预设是 `algo`。升到 `lab` 或 `sign` 由人改环境并重启。
 
 工作台界面回归独立运行：`npm test --prefix tests/ui`。它不安装到受管 DSH Runtime，也不调用模型或科学服务。
 

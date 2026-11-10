@@ -89,11 +89,12 @@
         "properties": {
           "type": {
             "type": "string",
-            "enum": ["paper_page", "paper_section", "figure", "table", "equation", "code_line", "issue", "abstract"]
+            "enum": ["paper_page", "paper_section", "figure", "table", "equation", "code_line", "issue", "abstract", "supplement", "data_file"]
           },
           "location": {"type": "string", "minLength": 1},
-          "quote": {"type": ["string", "null"]},
-          "ref": {"type": ["string", "null"]}
+          "quote": {"type": ["string", "null"], "maxLength": 500},
+          "ref": {"type": ["string", "null"]},
+          "ledger_id": {"type": ["string", "null"]}
         }
       }
     },

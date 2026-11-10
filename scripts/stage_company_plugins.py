@@ -24,6 +24,7 @@ PACKAGES = (
     "company-agent-office",
     "company-agent-plan",
     "company-agent-research",
+    "company-agent-literature",
 )
 PRESET = ROOT / "desktop" / "company-agent-preset"
 LOCAL = Path(os.environ["LOCALAPPDATA"]) / "UnitQC" / "company-agent"

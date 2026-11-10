@@ -784,7 +784,7 @@ def test_provider_http_errors_never_echo_arbitrary_remote_text(monkeypatch, prov
         {"accessToken": "private-fixture"},
         {"provenance": "qccd-twin"},
         {"text": "OPENQASM 3.0; qubit q;"},
-        {f"metric{index}": "x" * 4000 for index in range(17)},
+        {f"metric{index}": "x" * 4000 for index in range(34)},
     ],
 )
 def test_provider_result_boundaries_fail_closed_end_to_end(monkeypatch, provider_url, summary) -> None:

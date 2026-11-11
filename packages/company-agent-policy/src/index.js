@@ -186,7 +186,12 @@ export function apply(ctx) {
     clearApprovalCard(exec);
     const sessionTurn = String(exec?.agent?.id ?? exec?.agent?.session?.header?.id ?? "");
     const session = sessionTurn ? `dsh:${sessionTurn}` : undefined;
-    const result = await policyCheck(exec?.name, exec?.arguments || {}, exec?.signal, session);
+    let result;
+    try {
+      result = await policyCheck(exec?.name, exec?.arguments || {}, exec?.signal, session);
+    } catch {
+      return { kind: "deny", reason: "company-agent-policy" };
+    }
     if (result === null) return next();
     if (result.decision === "deny") {
       return { kind: "deny", reason: result.error || "company-agent-policy" };

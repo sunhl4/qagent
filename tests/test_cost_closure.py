@@ -13,7 +13,7 @@ import pytest
 
 from company_agent import budget, cloud
 from company_agent.cloud_results import read_page, store_table
-from company_agent.grants import _locked, _path, grant_view
+from company_agent.grants import _locked, _path, consume_grant, grant_view
 from company_agent.hpc_ssh import (
     AdapterError,
     _validated_path_argument,
@@ -60,6 +60,76 @@ def test_grant_covers_one_session_then_returns_to_ask(monkeypatch) -> None:
     assert decide("hpc_job_cancel", "lab", {}) == "ask"
     monkeypatch.setenv("COMPANY_AGENT_SESSION_ID", "dsh:other-session")
     assert decide("quantum_device_run", "lab", {}) == "ask"
+
+
+def test_same_arguments_do_not_keep_an_allow_after_the_grant_is_spent(monkeypatch) -> None:
+    monkeypatch.setenv("COMPANY_AGENT_SESSION_ID", "dsh:grant-same-args")
+    monkeypatch.setenv("COMPANY_AGENT_UNATTENDED", "1")
+    args = {
+        "job_name": "smoke",
+        "script": "/data/jobs/demo.sh",
+        "nodes": 1,
+        "experiment_id": "exp-same",
+    }
+    assert decide("hpc_submit", "lab", args) == "ask"
+    assert decide("hpc_submit", "lab", args) == "ask"
+    opened = invoke(
+        "company_grant_open",
+        "lab",
+        {
+            "tools": ["hpc_submit", "quantum_device_run", "quantum_cloud_submit"],
+            "max_calls": 1,
+            "ttl_seconds": 60,
+            "subject": {
+                "kind": "experiment",
+                "id": "exp-same",
+                "resource": "hpc",
+                "limit_kind": "node_hours",
+                "limit": 1,
+            },
+        },
+        approved=True,
+    )
+    assert opened.status == "ok"
+    assert decide("hpc_submit", "lab", args) == "allow"
+    assert decide("hpc_submit", "sign", args) == "allow"
+    wider = {**args, "nodes": 2}
+    assert decide("hpc_submit", "lab", wider) == "ask"
+    assert decide("hpc_submit", "boot", args) == "deny"
+    assert decide("hpc_submit", "algo", args) == "deny"
+    assert decide("quantum_device_run", "boot", {"circuit_id": "circ_x", "shots": 8}) == "deny"
+    assert decide("quantum_cloud_submit", "algo", {"shots": 1, "experiment_id": "exp-same"}) == "deny"
+    assert consume_grant("hpc_submit") is True
+    assert decide("hpc_submit", "lab", args) == "ask"
+    assert decide("hpc_submit", "sign", args) == "ask"
+
+
+def test_observe_does_not_turn_an_ask_into_an_allow(monkeypatch, tmp_path) -> None:
+    from company_agent.super_dsh import topology
+    from company_agent.work_items import WorkItemStore
+
+    monkeypatch.setenv("COMPANY_AGENT_SESSION_ID", "dsh:grant-observe")
+    monkeypatch.setenv("COMPANY_AGENT_UNATTENDED", "1")
+    device = {"circuit_id": "circ_x", "shots": 8}
+    assert topology()["flow_foundation"]["unattended"]["company_policy_still_applies"] is True
+    assert topology()["flow_foundation"]["unattended"]["default_until_rule"] == "observe"
+    with WorkItemStore(tmp_path / "observe.sqlite3") as store:
+        trigger = store.receive(
+            "company", "thread", "bot", "Possible device run", human=False, tenant_id="local",
+        )
+        observed = store.evaluate(
+            trigger["trigger_id"], mode="observe", strength="explicit", scope="lab",
+            title="Possible device run", reason="candidate", evidence="circ_x", tenant_id="local",
+        )
+    assert observed["observed"] is True
+    assert observed["ticket_id"] is None
+    assert decide("quantum_device_run", "lab", device) == "ask"
+    assert decide("quantum_device_run", "sign", device) == "ask"
+    assert decide("quantum_device_run", "boot", device) == "deny"
+    assert decide("quantum_device_run", "algo", device) == "deny"
+    assert decide("hpc_submit", "boot", {}) == "deny"
+    assert decide("quantum_cloud_submit", "algo", {}) == "deny"
+    assert grant_view()["active"] is False
 
 
 def test_budget_refusal_does_not_spend_a_grant(monkeypatch) -> None:

@@ -20,6 +20,7 @@ const ctx = {
 apply(ctx);
 const gate = listeners[0];
 const downstream = { kind: 'allow', source: 'dsh' };
+let thrownProceeded = false;
 const run = async (name, args = {}) => await gate(
   { name, arguments: args },
   async () => downstream,
@@ -46,6 +47,11 @@ console.log(JSON.stringify({
   latexPush: await run('company_latex_push',
     { project: 'probe', repo: 'team-a/probe', message: 'probe push' }),
   directNative: await policyDecision('bash', {}),
+  thrown: await gate(
+    { name: 'quantum_device_run', arguments: { circuit_id: 'circ_x', shots: Number.NaN } },
+    async () => { thrownProceeded = true; return downstream; },
+  ),
+  thrownProceeded,
 }));
 """
 
@@ -136,3 +142,5 @@ def test_policy_plugin_scopes_company_contract_without_blocking_dsh_tools() -> N
         "reason": "Company Agent latex push approval: provider=company-latex; "
                   "project=probe; repo=team-a/probe",
     }
+    assert payload["thrown"] == {"kind": "deny", "reason": "company-agent-policy"}
+    assert payload["thrownProceeded"] is False

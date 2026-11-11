@@ -123,7 +123,7 @@ def _with_grant(tool: str, preset: str, ask_presets: set[str], args: Mapping[str
     return "ask"
 
 
-def decide(tool: str, preset: str, args: Mapping[str, Any] | None = None) -> Decision:
+def _preset_decide(tool: str, preset: str, args: Mapping[str, Any] | None = None) -> Decision:
     if not isinstance(tool, str) or not tool or len(tool) > 128:
         return "deny"
     if not isinstance(preset, str) or not preset or len(preset) > 32:
@@ -204,10 +204,6 @@ def decide(tool: str, preset: str, args: Mapping[str, Any] | None = None) -> Dec
     if not isinstance(forbidden_raw, list) or any(not isinstance(item, str) for item in forbidden_raw):
         return "deny"
     if tool in set(forbidden_raw):
-        return "deny"
-    # Preset denial has already returned. The account list cannot reopen it,
-    # and a session grant only runs inside the ask path below.
-    if not _account_allows(tool):
         return "deny"
     if tool == policy.get("device_tool"):
         if tool != "quantum_device_run":
@@ -354,3 +350,12 @@ def decide(tool: str, preset: str, args: Mapping[str, Any] | None = None) -> Dec
             return "deny"
         return "allow" if preset in set(policy.get("device_window_allow_presets") or ()) else "deny"
     return "allow"
+
+
+def decide(tool: str, preset: str, args: Mapping[str, Any] | None = None) -> Decision:
+    """Preset decision first. An account list can narrow allow or ask; it cannot reopen a denial."""
+
+    decision = _preset_decide(tool, preset, args)
+    if decision == "deny" or _account_allows(tool):
+        return decision
+    return "deny"

@@ -16,8 +16,13 @@ from pathlib import Path
 
 import pytest
 
-from company_agent.catalog import load_tenants, load_tools, load_tools_for_preset, load_visible_tools_for_preset
 from company_agent.capabilities import list_capabilities
+from company_agent.catalog import (
+    load_tenants,
+    load_tools,
+    load_tools_for_preset,
+    load_visible_tools_for_preset,
+)
 from company_agent.invoke import invoke
 from company_agent.policy import decide
 from company_agent.receipts import subject, subject_source

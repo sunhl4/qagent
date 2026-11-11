@@ -12,7 +12,7 @@ from company_agent.catalog import (
     load_presets,
     load_tools,
 )
-from company_agent.policy import decide
+from company_agent.policy import _preset_decide
 
 _FRAMEWORK_KEYS = {
     "runtime", "compatible_runtime_versions", "prototype", "prototype_objects",
@@ -156,7 +156,9 @@ def migration_manifest() -> dict:
         visible = list(presets[preset]["visible_tools"])
         if any(name not in tools for name in visible):
             reasons.append(f"preset {preset} exposes an unknown tool")
-        device = decide(policy["device_tool"], preset, {})
+        # Install drift only. Account narrowing lives in decide() and must not
+        # make an otherwise valid preset look like a broken contract.
+        device = _preset_decide(policy["device_tool"], preset, {})
         expected = "ask" if preset in policy["device_ask_presets"] else "deny"
         if device != expected:
             reasons.append(f"device decision for {preset} drifted")

@@ -75,15 +75,15 @@ def run_scenarios(store_dir: Path) -> list[dict[str, Any]]:
     from company_agent.catalog import current_contract_digest
     from company_agent.invoke import invoke
     from company_agent.policy import decide
-    from company_agent.receipts import subject as receipt_subject
-    from company_agent.receipts import subject_source as receipt_subject_source
-    from company_agent.tenants import projection as tenant_projection
     from company_agent.receipts import (
         load_records,
         reconcile,
         record_dispatch,
         record_outcome,
+        subject as receipt_subject,
+        subject_source as receipt_subject_source,
     )
+    from company_agent.tenants import projection as tenant_projection
     report: list[dict[str, Any]] = []
 
     def row(session: str, scenario: str, category: str, expect: str, observed: Any, ok: bool) -> None:

@@ -20,7 +20,7 @@ from typing import Any
 
 from company_agent.catalog import load_tenants
 from company_agent.jsonutil import loads as strict_json_loads
-from company_agent.receipts import _SUBJECT_PATTERN
+from company_agent.receipts import _SUBJECT_PATTERN, subject, subject_source
 
 _SERVICES: tuple[str, ...] | None = None
 
@@ -246,8 +246,6 @@ def account_allows(capability: str) -> bool:
 
     if not isinstance(capability, str) or not capability:
         return False
-    from company_agent.receipts import subject, subject_source
-
     facts = projection(subject(), subject_source())
     if facts.get("regime") == "legacy-single-user":
         return True
